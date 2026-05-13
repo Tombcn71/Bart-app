@@ -10,7 +10,7 @@ const COLORS = {
   bgLight: "#f4f7f9",
 };
 
-// SVG Componenten
+// SVG Componenten (ongewijzigd qua inhoud, wel geoptimaliseerd voor schaling)
 const GlassVast = ({ x }: { x: number }) => (
   <g transform={`translate(${x}, 0)`}>
     <rect
@@ -125,8 +125,6 @@ export default function BartMooiConfigurator() {
       best: true,
       components: [<GlassKiep key="1" x={0} />],
     },
-
-    // 2 vakken
     {
       id: 4,
       slug: "draai-kiep-vast-kozijn",
@@ -154,8 +152,6 @@ export default function BartMooiConfigurator() {
       best: true,
       components: [<GlassVast key="1" x={0} />, <GlassVast key="2" x={100} />],
     },
-
-    // 3 vakken
     {
       id: 7,
       slug: "draai-kiep-vast-draai-kiep-kozijn",
@@ -192,8 +188,6 @@ export default function BartMooiConfigurator() {
         <GlassVast key="3" x={200} />,
       ],
     },
-
-    // 4 vakken
     {
       id: 10,
       slug: "draai-kiep-vast-vast-draai-kiep-kozijn",
@@ -204,7 +198,7 @@ export default function BartMooiConfigurator() {
         <GlassDK key="1" x={0} />,
         <GlassVast key="2" x={100} />,
         <GlassVast key="3" x={200} />,
-        <GlassDK key="4" x={300} mirror />,
+        <GlassDK key="4" mirror x={300} />,
       ],
     },
     {
@@ -223,49 +217,55 @@ export default function BartMooiConfigurator() {
   ];
 
   return (
-    <div className="max-w-[1200px] mx-auto p-8 md:p-16 font-sans bg-white min-h-screen">
-      <div className="mb-12 border-l-4 border-[#1066a3] pl-6">
-        <h1 className="text-4xl font-bold text-[#1a1a1a] mb-3 tracking-tight">
+    <div className="max-w-[1200px] mx-auto p-4 md:p-12 lg:p-16 font-sans bg-white min-h-screen">
+      {/* Header Section */}
+      <div className="mb-8 md:mb-12 border-l-4 border-[#1066a3] pl-4 md:pl-6">
+        <h1 className="text-2xl md:text-4xl font-bold text-[#1a1a1a] mb-1 md:mb-3 tracking-tight">
           Kozijnen op maat
         </h1>
-        <p className="text-[#1066a3] font-medium text-xl uppercase tracking-tighter">
+        <p className="text-[#1066a3] font-medium text-sm md:text-xl uppercase tracking-tighter">
           Selecteer uw type kozijn
         </p>
       </div>
 
-      <div className="flex justify-start mb-12">
-        <div className="flex bg-[#f4f7f9] p-1.5 rounded-xl">
+      {/* Tabs - Scrollbaar op mobiel */}
+      <div className="flex justify-start mb-8 overflow-x-auto pb-2 scrollbar-hide">
+        <div className="flex bg-[#f4f7f9] p-1 rounded-xl whitespace-nowrap">
           {[1, 2, 3, 4].map((n) => (
             <button
               key={n}
               onClick={() => setActiveTab(n)}
-              className={`px-8 py-3 text-sm font-bold rounded-lg transition-colors ${activeTab === n ? "bg-[#1066a3] text-white shadow-md" : "text-[#666666] hover:text-[#1066a3]"}`}>
+              className={`px-6 md:px-8 py-2.5 md:py-3 text-xs md:text-sm font-bold rounded-lg transition-all ${
+                activeTab === n
+                  ? "bg-[#1066a3] text-white shadow-md"
+                  : "text-[#666666] hover:text-[#1066a3]"
+              }`}>
               {n} {n === 1 ? "vak" : "vakken"}
             </button>
           ))}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+      {/* Grid - Smart responsive columns */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
         {kozijnen
           .filter((k) => k.v === activeTab)
           .map((item) => (
             <Link
               href={`/configurator/${item.slug}`}
               key={item.id}
-              className="group">
-              <div className="relative h-[280px] bg-white border border-slate-100 rounded-2xl flex items-center justify-center p-8 shadow-sm">
+              className="group flex flex-col">
+              <div className="relative aspect-[4/3] sm:aspect-square md:h-[280px] bg-white border border-slate-100 rounded-2xl flex items-center justify-center p-6 md:p-8 shadow-sm group-hover:shadow-md transition-shadow">
                 {item.best && (
-                  <div className="absolute top-4 left-4 bg-[#1066a3] text-white text-[9px] font-black px-3 py-1.5 rounded-full tracking-widest z-10 uppercase">
+                  <div className="absolute top-3 left-3 md:top-4 md:left-4 bg-[#1066a3] text-white text-[8px] md:text-[9px] font-black px-2 py-1 md:px-3 md:py-1.5 rounded-full tracking-widest z-10 uppercase">
                     POPULAIR
                   </div>
                 )}
                 <div className="w-full h-full flex items-center justify-center">
-                  <div
-                    style={{ width: `${item.v * 20 + 20}%`, maxWidth: "100%" }}>
+                  <div style={{ width: `${Math.min(item.v * 25 + 15, 100)}%` }}>
                     <svg
                       viewBox={`0 0 ${item.v * 100} 100`}
-                      className="w-full h-auto">
+                      className="w-full h-auto drop-shadow-sm">
                       <rect
                         x="0.5"
                         y="0.5"
@@ -291,11 +291,15 @@ export default function BartMooiConfigurator() {
                   </div>
                 </div>
               </div>
-              <h3 className="mt-6 text-center font-bold text-[#1a1a1a] text-base group-hover:text-[#1066a3] transition-colors uppercase tracking-tight">
-                {item.name}
-              </h3>
-              <div className="mt-2 text-center text-[10px] font-bold text-[#1066a3] opacity-0 group-hover:opacity-100 transition-opacity uppercase tracking-widest">
-                Bekijk configurator →
+
+              <div className="mt-4 md:mt-6 text-center">
+                <h3 className="font-bold text-[#1a1a1a] text-sm md:text-base group-hover:text-[#1066a3] transition-colors uppercase tracking-tight leading-tight">
+                  {item.name}
+                </h3>
+                {/* Altijd zichtbaar op mobiel, hover op desktop */}
+                <div className="mt-1 md:mt-2 text-[10px] font-bold text-[#1066a3] opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity uppercase tracking-widest">
+                  Configureer nu →
+                </div>
               </div>
             </Link>
           ))}
