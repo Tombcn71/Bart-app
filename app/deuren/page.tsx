@@ -255,7 +255,7 @@ export default function BartMooiDeurenConfigurator() {
       {/* Header Section - Nu flexibel voor mobiel */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end mb-10 border-l-4 border-[#1066a3] pl-4 md:pl-6">
         <div className="mb-6 lg:mb-0">
-          <h1 className="text-2xl md:text-4xl font-bold text-[#1a1a1a] mb-1 md:mb-3 tracking-tight uppercase">
+          <h1 className="text-2xl md:text-4xl font-bold text-[#1a1a1a] mb-1 md:mb-3 ">
             Kunststof deuren
           </h1>
           <p className="text-[#1066a3] font-medium text-sm md:text-xl uppercase tracking-tighter">
