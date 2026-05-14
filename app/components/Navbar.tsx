@@ -20,20 +20,19 @@ const Navbar = () => {
 
         {/* Desktop Menu */}
         <div className="hidden md:flex items-center gap-8 text-sm font-bold text-[#2d3748] uppercase tracking-tight">
-          <Link
-            href="/kozijnen"
-            className="hover:text-[#1066a3] transition-colors">
+          <Link href="/" className="hover:text-[#1066a3] transition-colors">
             Kozijnen
           </Link>
           <Link
-            href="/over-ons"
+            href="/deuren"
             className="hover:text-[#1066a3] transition-colors">
-            Over ons
+            Deuren{" "}
           </Link>
           <Link
-            href="/contact"
+            href="/schuifpui
+            "
             className="hover:text-[#1066a3] transition-colors">
-            Contact
+            Schuifpui
           </Link>
         </div>
 
@@ -95,22 +94,22 @@ const Navbar = () => {
         className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out bg-white border-t border-slate-50 ${isOpen ? "max-h-64 opacity-100" : "max-h-0 opacity-0"}`}>
         <div className="flex flex-col p-4 gap-4 text-center font-bold text-[#2d3748] uppercase tracking-wide">
           <Link
-            href="/kozijnen"
+            href="/"
             onClick={() => setIsOpen(false)}
             className="py-2 hover:text-[#1066a3]">
             Kozijnen
           </Link>
           <Link
-            href="/over-ons"
+            href="/deuren"
             onClick={() => setIsOpen(false)}
             className="py-2 hover:text-[#1066a3]">
-            Over ons
+            Deuren
           </Link>
           <Link
-            href="/contact"
+            href="/schuifpui"
             onClick={() => setIsOpen(false)}
             className="py-2 hover:text-[#1066a3]">
-            Contact
+            Schuifpui
           </Link>
         </div>
       </div>
