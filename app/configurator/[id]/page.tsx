@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
@@ -10,7 +10,27 @@ const COLORS = {
   frame: "#2d3748",
 };
 
-// SVG componenten met verfijnde lijndiktes
+// --- EXACTE TARIEVEN EN MULTIPLIERS VAN JOUW MATRIX ---
+const BASE_RATES = {
+  materiaal: {
+    kunststof: 280, // €280 per m²
+  },
+  vakMultiplier: {
+    vast: 0.7,
+    dk: 1.0,
+    kiep: 0.95,
+  },
+  glasType: {
+    "hr-2": 120, // GECORRIGEERD: €120 per m² conform jouw data
+    triple: 180, // €180 per m²
+  },
+  kleur: {
+    wit: 0,
+    antraciet: 50, // €50 per vak
+  },
+};
+
+// SVG componenten voor de visuele vakken
 const GlassVast = ({ x }: { x: number }) => (
   <g transform={`translate(${x}, 0)`}>
     <rect
@@ -95,30 +115,35 @@ const getKozijnData = (slug: string) => {
     {
       slug: "vast-kozijn",
       v: 1,
+      types: ["vast"],
       name: "Vast kozijn",
       components: <GlassVast x={0} />,
     },
     {
       slug: "draai-kiep-kozijn",
       v: 1,
+      types: ["dk"],
       name: "Draai kiep kozijn",
       components: <GlassDK x={0} />,
     },
     {
       slug: "kiep-kozijn",
       v: 1,
+      types: ["kiep"],
       name: "Kiep kozijn",
       components: <GlassKiep x={0} />,
     },
     {
       slug: "draai-kiep-vast-kozijn",
       v: 2,
+      types: ["dk", "vast"],
       name: "Draai kiep - vast",
       components: [<GlassDK key="1" x={0} />, <GlassVast key="2" x={100} />],
     },
     {
       slug: "draai-kiep-draai-stolp-kozijn",
       v: 2,
+      types: ["dk", "dk"],
       name: "Draai kiep - Draai kiep",
       components: [
         <GlassDK key="1" x={0} />,
@@ -128,12 +153,14 @@ const getKozijnData = (slug: string) => {
     {
       slug: "vast-vast-kozijn",
       v: 2,
+      types: ["vast", "vast"],
       name: "Vast - Vast",
       components: [<GlassVast key="1" x={0} />, <GlassVast key="2" x={100} />],
     },
     {
       slug: "draai-kiep-vast-draai-kiep-kozijn",
       v: 3,
+      types: ["dk", "vast", "dk"],
       name: "Draai kiep - vast - Draai kiep",
       components: [
         <GlassDK key="1" x={0} />,
@@ -144,6 +171,7 @@ const getKozijnData = (slug: string) => {
     {
       slug: "vast-vast-vast-kozijn",
       v: 3,
+      types: ["vast", "vast", "vast"],
       name: "Vast - Vast - Vast",
       components: [
         <GlassVast key="1" x={0} />,
@@ -154,6 +182,7 @@ const getKozijnData = (slug: string) => {
     {
       slug: "vast-draai-kiep-vast-kozijn",
       v: 3,
+      types: ["vast", "dk", "vast"],
       name: "Vast - Draai kiep - Vast",
       components: [
         <GlassVast key="1" x={0} />,
@@ -164,6 +193,7 @@ const getKozijnData = (slug: string) => {
     {
       slug: "draai-kiep-vast-vast-draai-kiep-kozijn",
       v: 4,
+      types: ["dk", "vast", "vast", "dk"],
       name: "Draai kiep - Vast - Vast - Draai kiep",
       components: [
         <GlassDK key="1" x={0} />,
@@ -175,6 +205,7 @@ const getKozijnData = (slug: string) => {
     {
       slug: "draai-kiep-draai-kiep-draai-kiep-draai-kiep-kozijn",
       v: 4,
+      types: ["dk", "dk", "dk", "dk"],
       name: "Draai kiep - Draai kiep - Draai kiep - Draai kiep",
       components: [
         <GlassDK key="1" x={0} />,
@@ -191,6 +222,47 @@ export default function ConfiguratorDetail() {
   const { id } = useParams();
   const slug = typeof id === "string" ? id : "vast-kozijn";
   const kozijn = getKozijnData(slug);
+
+  // Formulier start standaard op 1000x1000 mm per vak
+  const [breedte, setBreedte] = useState<number>(1000);
+  const [hoogte, setHoogte] = useState<number>(1000);
+  const [profiel, setProfiel] = useState<string>("verdiept");
+  const [kleur, setKleur] = useState<string>("wit");
+  const [glas, setGlas] = useState<string>("hr-2");
+
+  const berekendePrijs = useMemo(() => {
+    if (!breedte || !hoogte) return 0;
+
+    // Afmetingen gelden per individueel vak
+    const m2PerVak = (breedte / 1000) * (hoogte / 1000);
+    let totaleKozijnPrijs = 0;
+
+    // Bereken de prijs per vak op basis van de exacte multipliers en tarieven
+    kozijn.types.forEach((vakType) => {
+      const multiplier =
+        BASE_RATES.vakMultiplier[
+          vakType as keyof typeof BASE_RATES.vakMultiplier
+        ] || 1.0;
+      const vakMateriaalKosten =
+        m2PerVak * BASE_RATES.materiaal.kunststof * multiplier;
+
+      const glasTarief =
+        BASE_RATES.glasType[glas as keyof typeof BASE_RATES.glasType] || 120;
+      const vakGlasKosten = m2PerVak * glasTarief;
+
+      const kleurToeslag =
+        BASE_RATES.kleur[kleur as keyof typeof BASE_RATES.kleur] || 0;
+
+      totaleKozijnPrijs += vakMateriaalKosten + vakGlasKosten + kleurToeslag;
+    });
+
+    return parseFloat(totaleKozijnPrijs.toFixed(2));
+  }, [breedte, hoogte, kleur, glas, kozijn]);
+
+  const geformatteerdePrijs = berekendePrijs.toLocaleString("nl-NL", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 
   return (
     <div className="w-full min-h-screen bg-white">
@@ -251,7 +323,7 @@ export default function ConfiguratorDetail() {
                     Prijsindicatie
                   </span>
                   <span className="text-3xl text-slate-800 font-light">
-                    € 433,44
+                    € {geformatteerdePrijs}
                   </span>
                 </div>
                 <span className="text-[10px] text-[#1066a3] font-bold uppercase tracking-wider pb-1">
@@ -263,11 +335,12 @@ export default function ConfiguratorDetail() {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <label className="text-[10px] text-slate-400 uppercase font-bold tracking-tight">
-                      Breedte (mm)
+                      Breedte per vak (mm)
                     </label>
                     <input
                       type="number"
-                      defaultValue="1200"
+                      value={breedte}
+                      onChange={(e) => setBreedte(Number(e.target.value))}
                       className="w-full border border-slate-200 p-2.5 rounded-lg focus:border-[#1066a3] outline-none transition-all bg-white text-sm font-medium"
                     />
                   </div>
@@ -277,7 +350,8 @@ export default function ConfiguratorDetail() {
                     </label>
                     <input
                       type="number"
-                      defaultValue="1500"
+                      value={hoogte}
+                      onChange={(e) => setHoogte(Number(e.target.value))}
                       className="w-full border border-slate-200 p-2.5 rounded-lg focus:border-[#1066a3] outline-none transition-all bg-white text-sm font-medium"
                     />
                   </div>
@@ -287,14 +361,29 @@ export default function ConfiguratorDetail() {
                   <label className="text-[10px] text-slate-400 uppercase font-bold tracking-tight">
                     Specificaties
                   </label>
-                  <select className="w-full border border-slate-200 p-3 rounded-lg bg-slate-50/50 outline-none text-xs font-medium appearance-none">
-                    <option>Klassiek Verdiept Profiel (120mm)</option>
+                  <select
+                    value={profiel}
+                    onChange={(e) => setProfiel(e.target.value)}
+                    className="w-full border border-slate-200 p-3 rounded-lg bg-slate-50/50 outline-none text-xs font-medium appearance-none cursor-pointer">
+                    <option value="verdiept">
+                      Klassiek Verdiept Profiel (120mm)
+                    </option>
                   </select>
-                  <select className="w-full border border-slate-200 p-3 rounded-lg bg-slate-50/50 outline-none text-xs font-medium appearance-none">
-                    <option>Kleur: Antraciet structuur</option>
+                  <select
+                    value={kleur}
+                    onChange={(e) => setKleur(e.target.value)}
+                    className="w-full border border-slate-200 p-3 rounded-lg bg-slate-50/50 outline-none text-xs font-medium appearance-none cursor-pointer">
+                    <option value="wit">Kleur: Wit (Standaard)</option>
+                    <option value="antraciet">
+                      Kleur: Antraciet structuur
+                    </option>
                   </select>
-                  <select className="w-full border border-slate-200 p-3 rounded-lg bg-slate-50/50 outline-none text-xs font-medium appearance-none">
-                    <option>Isolatie: HR++ Glas</option>
+                  <select
+                    value={glas}
+                    onChange={(e) => setGlas(e.target.value)}
+                    className="w-full border border-slate-200 p-3 rounded-lg bg-slate-50/50 outline-none text-xs font-medium appearance-none cursor-pointer">
+                    <option value="hr-2">Isolatie: HR++ Glas</option>
+                    <option value="triple">Isolatie: Triple Glas</option>
                   </select>
                 </div>
 
