@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-// 1. Importeer hier je Navbar component
 import Navbar from "./components/Navbar";
+// Importeer de headers functie van Next.js
+import { headers } from "next/headers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -19,18 +20,25 @@ export const metadata: Metadata = {
   description: "Vakmanschap dat het verschil maakt voor jouw woning.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // 1. Haal de huidige host (URL) op vanaf de server headers
+  const headersList = await headers();
+  const host = headersList.get("host") || "";
+
+  // 2. Controleer of de bezoeker op het admin-subdomein zit
+  const isAdminSubdomain = host.startsWith("admin.");
+
   return (
     <html
       lang="nl"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
-        {/* 2. Plaats de Navbar hier, boven de children */}
-        <Navbar />
+        {/* 3. Toon de Navbar ALLEEN als de gebruiker NIET op het admin-subdomein zit */}
+        {!isAdminSubdomain && <Navbar />}
 
         {/* De rest van de pagina (children) komt hieronder */}
         <main className="flex-grow">{children}</main>
