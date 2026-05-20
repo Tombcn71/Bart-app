@@ -2,6 +2,7 @@
 import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { saveOfferte } from "@/app/actions";
 
 const COLORS = {
   primary: "#1066a3",
@@ -387,7 +388,21 @@ export default function ConfiguratorDetail() {
                   </select>
                 </div>
 
-                <button className="w-full bg-[#1066a3] hover:bg-[#0d5486] text-white py-4 px-6 rounded-lg transition-all text-[11px] font-bold uppercase tracking-widest mt-4">
+                <button
+                  onClick={async () => {
+                    const data = {
+                      kozijnNaam: kozijn.name,
+                      breedte,
+                      hoogte,
+                      profiel,
+                      kleur,
+                      glas,
+                      prijs: berekendePrijs,
+                    };
+                    await saveOfferte("kozijn", data);
+                    alert("Offerte opgeslagen!");
+                  }}
+                  className="w-full bg-[#1066a3] hover:bg-[#0d5486] text-white py-4 px-6 rounded-lg transition-all text-[11px] font-bold uppercase tracking-widest mt-4">
                   Voeg toe aan aanvraag
                 </button>
               </div>

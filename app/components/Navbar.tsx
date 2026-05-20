@@ -1,17 +1,21 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [adminLink, setAdminLink] = useState(
+    "https://admin.budgetkozijnenshop.nl",
+  );
 
-  // Bepaal de admin link voor zowel lokaal als live
-  const isLocal =
-    typeof window !== "undefined" &&
-    window.location.hostname.includes("localhost");
-  const adminLink = isLocal
-    ? "http://admin.localhost:3000/"
-    : "https://admin.budgetkozijnenshop.nl";
+  useEffect(() => {
+    // Deze code draait ALLEEN in de browser (client),
+    // waardoor de server hier geen last van heeft en de mismatch stopt.
+    const isLocal = window.location.hostname.includes("localhost");
+    if (isLocal) {
+      setAdminLink("http://admin.localhost:3000/");
+    }
+  }, []);
 
   return (
     <nav className="w-full bg-white border-b border-gray-100 shadow-sm sticky top-0 z-50">

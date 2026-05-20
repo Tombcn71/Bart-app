@@ -2,7 +2,7 @@
 import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-
+import { saveOfferte } from "@/app/actions";
 // --- THEME CONFIGURATION ---
 const COLORS = {
   primary: "#1066a3",
@@ -1126,8 +1126,33 @@ export default function DeurConfiguratorDetail() {
               </div>
 
               <div className="pt-4">
-                <button className="w-full bg-[#1066a3] hover:bg-[#0d5486] text-white py-4 rounded-xl shadow-lg shadow-[#1066a3]/20 transition-all text-xs font-black uppercase tracking-[0.15em] active:scale-[0.99]">
-                  Voeg toe aan offerteaanvraag
+                <button
+                  onClick={async () => {
+                    // We maken een object aan met de exact namen van jouw useState hooks
+                    const payload = {
+                      deurType: slug,
+                      profiel: profiel,
+                      aanslag: aanslag,
+                      onderdorpel: onderdorpel,
+                      breedte: breedte,
+                      hoogte: hoogte,
+                      kleurBinnen: kleurBinnen,
+                      kleurBuitenProfiel: kleurBuitenProfiel,
+                      kleurBuitenVleugel: kleurBuitenVleugel,
+                      glas: glas,
+                      afstandshouder: afstandshouder,
+                      roeden: roeden,
+                      deurkruk: deurkruk,
+                      cilinder: cilinder,
+                      ventilatieRooster: ventilatieRooster,
+                      prijs: berekendePrijs,
+                    };
+
+                    await saveOfferte("deur", payload);
+                    alert("Deur succesvol toegevoegd aan de aanvraag!");
+                  }}
+                  className="w-full bg-[#1066a3] hover:bg-[#0d5486] text-white py-5 rounded-xl transition-all font-black uppercase tracking-widest text-[11px] shadow-lg shadow-[#1066a3]/20">
+                  Voeg toe aan aanvraag
                 </button>
               </div>
 
