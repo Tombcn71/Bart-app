@@ -36,7 +36,7 @@ export default function DummyHomePage() {
               <a
                 href={offerteLink}
                 className="inline-flex items-center gap-3 bg-gradient-to-r from-[#1066a3] to-[#2cb1e1] hover:from-[#0d5282] hover:to-[#1fa1cf] text-white font-bold py-4 px-8 rounded-2xl text-sm md:text-base tracking-tight shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 group">
-                <span>Vraag een vrijblijvende offerte aan</span>
+                <span>Bereken jouw kunststof kozijnen</span>
                 <svg
                   className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1"
                   fill="none"
