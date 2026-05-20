@@ -1,6 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  /* jouw configuratie opties hier */
+  experimental: {
+    turbopack: {
+      root: "/Users/tom/Bart-app",
+    },
+  },
 };
 
 export default nextConfig;
