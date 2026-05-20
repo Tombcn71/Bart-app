@@ -172,7 +172,7 @@ export default function AdminDashboard() {
           <div className="flex items-center gap-4">
             {/* Live site bekijken knop */}
             <a
-              href="http://offerte.localhost:3000/"
+              href="https://budgetkozijnenshop.nl/"
               target="_blank"
               rel="noopener noreferrer"
               className="bg-[#2cb1e1] hover:bg-[#1fa1cf] text-white px-5 py-2.5 rounded-xl font-bold text-sm tracking-tight shadow-sm transition-colors flex items-center gap-2">
