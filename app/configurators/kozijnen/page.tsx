@@ -251,7 +251,7 @@ export default function KozijnConfigurator() {
           .filter((k) => k.v === activeTab)
           .map((item) => (
             <Link
-              href={`/configurator/${item.slug}`}
+              href={`/kozijnconfigurator/${item.slug}`}
               key={item.id}
               className="group">
               <div className="relative h-[280px] bg-white border border-slate-100 rounded-2xl flex items-center justify-center p-8 shadow-sm">
