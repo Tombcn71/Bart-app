@@ -3,7 +3,6 @@ import React, { useState } from "react";
 import Link from "next/link";
 
 export default function AdminDashboard() {
-  // Voorbeeld data voor de tabel (straks live uit Neon!)
   const [offertes] = useState([
     {
       id: "OFF-2026-001",
@@ -41,7 +40,6 @@ export default function AdminDashboard() {
     <div className="flex min-h-screen bg-[#f8fafc]">
       {/* SIDEBAR */}
       <aside className="w-64 bg-gradient-to-b from-[#1066a3] to-[#2cb1e1] text-white flex flex-col shrink-0 shadow-xl">
-        {/* Logo Sectie */}
         <div className="p-6 bg-white border-b border-gray-100 flex justify-center items-center h-24">
           <img
             src="/bartmooi-logo-1.png"
@@ -50,7 +48,6 @@ export default function AdminDashboard() {
           />
         </div>
 
-        {/* Navigatie Links */}
         <nav className="flex-1 p-4 space-y-2 text-sm font-semibold">
           <Link
             href="/"
@@ -69,7 +66,6 @@ export default function AdminDashboard() {
             </svg>
             Dashboard
           </Link>
-
           <Link
             href="/offertes"
             className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10 transition-colors">
@@ -87,8 +83,6 @@ export default function AdminDashboard() {
             </svg>
             Offertes
           </Link>
-
-          {/* Dropdown Menu: Producten / Prijzen */}
           <div>
             <button
               onClick={() => setIsProductenOpen(!isProductenOpen)}
@@ -121,7 +115,6 @@ export default function AdminDashboard() {
                 />
               </svg>
             </button>
-
             {isProductenOpen && (
               <div className="mt-1 ml-6 pl-4 border-l border-white/20 space-y-1">
                 <Link
@@ -143,8 +136,6 @@ export default function AdminDashboard() {
             )}
           </div>
         </nav>
-
-        {/* Bottom User info */}
         <div className="p-4 border-t border-white/10 bg-black/10 text-xs flex items-center gap-3">
           <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center font-bold">
             B
@@ -156,9 +147,7 @@ export default function AdminDashboard() {
         </div>
       </aside>
 
-      {/* MAIN CONTENT AREA */}
       <main className="flex-1 flex flex-col min-w-0">
-        {/* Top Header */}
         <header className="h-24 bg-white border-b border-gray-200 px-8 flex items-center justify-between shrink-0">
           <div>
             <h1 className="text-2xl font-black text-slate-800 tracking-tight">
@@ -168,22 +157,17 @@ export default function AdminDashboard() {
               Welkom terug, Bart. Dit is het live overzicht.
             </p>
           </div>
-
-          <div className="flex items-center gap-4">
-            {/* Live site bekijken knop */}
-            <a
-              href="https://budgetkozijnenshop.nl/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-[#2cb1e1] hover:bg-[#1fa1cf] text-white px-5 py-2.5 rounded-xl font-bold text-sm tracking-tight shadow-sm transition-colors flex items-center gap-2">
-              Bekijk Website ↗
-            </a>
-          </div>
+          <a
+            href="https://offerte.budgetkozijnenshop.nl/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-[#2cb1e1] hover:bg-[#1fa1cf] text-white px-5 py-2.5 rounded-xl font-bold text-sm tracking-tight shadow-sm transition-colors flex items-center gap-2">
+            Bekijk App ↗
+          </a>
         </header>
 
-        {/* Dashboard Grid Content */}
         <div className="flex-1 p-8 overflow-y-auto space-y-8">
-          {/* STATS CARDS GRID */}
+          {/* AANGEPAST: grid-cols-1 md:grid-cols-3 zorgt voor responsiviteit */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
               <div>
@@ -207,7 +191,6 @@ export default function AdminDashboard() {
                 </svg>
               </div>
             </div>
-
             <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
               <div>
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
@@ -230,7 +213,6 @@ export default function AdminDashboard() {
                 </svg>
               </div>
             </div>
-
             <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
               <div>
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
@@ -255,7 +237,6 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          {/* RECENTE OFFERTES TABEL */}
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
             <div className="p-6 border-b border-slate-100 flex justify-between items-center">
               <h2 className="text-lg font-bold text-slate-800">
@@ -265,7 +246,7 @@ export default function AdminDashboard() {
                 Bekijk alle aanvragen →
               </button>
             </div>
-
+            {/* AANGEPAST: overflow-x-auto voor mobiele tabel */}
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
@@ -297,21 +278,9 @@ export default function AdminDashboard() {
                       </td>
                       <td className="py-4 px-6">
                         <span
-                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${
-                            offerte.status === "Nieuw"
-                              ? "bg-blue-50 text-[#1066a3]"
-                              : offerte.status === "In behandeling"
-                                ? "bg-amber-50 text-amber-600"
-                                : "bg-green-50 text-green-600"
-                          }`}>
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${offerte.status === "Nieuw" ? "bg-blue-50 text-[#1066a3]" : offerte.status === "In behandeling" ? "bg-amber-50 text-amber-600" : "bg-green-50 text-green-600"}`}>
                           <span
-                            className={`w-1.5 h-1.5 rounded-full ${
-                              offerte.status === "Nieuw"
-                                ? "bg-[#1066a3]"
-                                : offerte.status === "In behandeling"
-                                  ? "bg-amber-500"
-                                  : "bg-green-500"
-                            }`}
+                            className={`w-1.5 h-1.5 rounded-full ${offerte.status === "Nieuw" ? "bg-[#1066a3]" : offerte.status === "In behandeling" ? "bg-amber-500" : "bg-green-500"}`}
                           />
                           {offerte.status}
                         </span>
