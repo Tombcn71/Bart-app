@@ -1,16 +1,31 @@
-"use client";
-import React, { useState, useMemo } from "react";
-import Link from "next/link";
-import { useParams } from "next/navigation";
-import { saveOfferte } from "@/app/actions";
+"use client"
+
+import { useState, useMemo } from "react"
+import Link from "next/link"
+import { useParams } from "next/navigation"
+import { saveOfferte } from "@/app/actions"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Badge } from "@/components/ui/badge"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { ArrowLeft } from "lucide-react"
+
 // --- STYLING (BartMooi Style) ---
 const COLORS = {
-  primary: "#1066a3",
-  textDark: "#2d3748",
-  textLight: "#666666",
-  frame: "#2d3748",
-  glass: "#cbd5e1",
-};
+  primary: "hsl(var(--primary))",
+  textDark: "hsl(var(--foreground))",
+  textLight: "hsl(var(--muted-foreground))",
+  frame: "hsl(var(--foreground))",
+  glass: "hsl(var(--muted-foreground))",
+}
 
 // --- DYNAMISCHE PRIJS MATRIX ---
 const BASE_RATES = {

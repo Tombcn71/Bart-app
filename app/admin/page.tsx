@@ -1,105 +1,158 @@
-"use client";
-import React, { useState } from "react";
+"use client"
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { FileText, Users, TrendingUp, ExternalLink } from "lucide-react"
+
+const offertes = [
+  {
+    id: "OFF-2026-001",
+    klant: "Jan de Vries",
+    type: "Kozijnen",
+    status: "Nieuw",
+    datum: "20 mei 2026",
+  },
+  {
+    id: "OFF-2026-002",
+    klant: "Pieter Bakker",
+    type: "Schuifpui",
+    status: "In behandeling",
+    datum: "19 mei 2026",
+  },
+  {
+    id: "OFF-2026-003",
+    klant: "Anja Meijer",
+    type: "Deuren",
+    status: "Verzonden",
+    datum: "18 mei 2026",
+  },
+  {
+    id: "OFF-2026-004",
+    klant: "Bart Schouten",
+    type: "Kozijnen",
+    status: "Nieuw",
+    datum: "17 mei 2026",
+  },
+]
+
+const stats = [
+  {
+    title: "Nieuwe Leads",
+    value: "21",
+    icon: Users,
+  },
+  {
+    title: "Totaal Offertes",
+    value: "148",
+    icon: FileText,
+  },
+  {
+    title: "Geconverteerd",
+    value: "64%",
+    icon: TrendingUp,
+  },
+]
+
+function getStatusVariant(status: string) {
+  switch (status) {
+    case "Nieuw":
+      return "default"
+    case "In behandeling":
+      return "secondary"
+    case "Verzonden":
+      return "outline"
+    default:
+      return "secondary"
+  }
+}
 
 export default function AdminDashboard() {
-  const [offertes] = useState([
-    {
-      id: "OFF-2026-001",
-      klant: "Jan de Vries",
-      type: "Kozijnen",
-      status: "Nieuw",
-      datum: "20 mei 2026",
-    },
-    {
-      id: "OFF-2026-002",
-      klant: "Pieter Bakker",
-      type: "Schuifpui",
-      status: "In behandeling",
-      datum: "19 mei 2026",
-    },
-    {
-      id: "OFF-2026-003",
-      klant: "Anja Meijer",
-      type: "Deuren",
-      status: "Verzonden",
-      datum: "18 mei 2026",
-    },
-    {
-      id: "OFF-2026-004",
-      klant: "Bart Schouten",
-      type: "Kozijnen",
-      status: "Nieuw",
-      datum: "17 mei 2026",
-    },
-  ]);
-
   return (
-    <div className="min-h-screen bg-[#f8fafc] p-8">
-      {/* MAIN CONTENT - ZONDER SIDEBAR */}
-      <main className="max-w-7xl mx-auto flex flex-col gap-8">
-        <header className="bg-white border border-gray-200 rounded-2xl px-8 py-6 flex items-center justify-between shadow-sm">
-          <div>
-            <h1 className="text-2xl font-black text-slate-800 tracking-tight">
-              Dashboard
-            </h1>
-          </div>
+    <div className="flex flex-col gap-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
+          <p className="text-sm text-muted-foreground">Welkom terug!</p>
+        </div>
+        <Button asChild>
           <a
             href="https://offerte.budgetkozijnenshop.nl/"
             target="_blank"
-            className="bg-[#2cb1e1] hover:bg-[#1fa1cf] text-white px-5 py-2.5 rounded-xl font-bold text-sm">
-            Bekijk App ↗
+            rel="noopener noreferrer"
+          >
+            <ExternalLink data-icon="inline-start" />
+            Bekijk App
           </a>
-        </header>
+        </Button>
+      </div>
 
-        <div className="space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
-              <div>
-                <p className="text-xs font-bold text-slate-400 uppercase">
-                  Nieuwe Leads
-                </p>
-                <h3 className="text-3xl font-black text-slate-800 mt-1">21</h3>
-              </div>
-            </div>
-            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
-              <div>
-                <p className="text-xs font-bold text-slate-400 uppercase">
-                  Totaal Offertes
-                </p>
-                <h3 className="text-3xl font-black text-slate-800 mt-1">148</h3>
-              </div>
-            </div>
-            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
-              <div>
-                <p className="text-xs font-bold text-slate-400 uppercase">
-                  Geconverteerd
-                </p>
-                <h3 className="text-3xl font-black text-slate-800 mt-1">64%</h3>
-              </div>
-            </div>
-          </div>
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {stats.map((stat) => (
+          <Card key={stat.title}>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                {stat.title}
+              </CardTitle>
+              <stat.icon className="size-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{stat.value}</div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
 
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse min-w-[600px]">
-                <tbody className="text-sm divide-y divide-slate-100 text-slate-600 font-medium">
-                  {offertes.map((offerte) => (
-                    <tr key={offerte.id} className="hover:bg-slate-50/50">
-                      <td className="py-4 px-6 font-bold text-slate-800">
-                        {offerte.id}
-                      </td>
-                      <td className="py-4 px-6">{offerte.klant}</td>
-                      <td className="py-4 px-6">{offerte.type}</td>
-                      <td className="py-4 px-6">{offerte.datum}</td>
-                      <td className="py-4 px-6">{offerte.status}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+      {/* Recent Offertes Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Recente Offertes</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto -mx-6 px-6">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>ID</TableHead>
+                  <TableHead>Klant</TableHead>
+                  <TableHead className="hidden sm:table-cell">Type</TableHead>
+                  <TableHead className="hidden md:table-cell">Datum</TableHead>
+                  <TableHead>Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {offertes.map((offerte) => (
+                  <TableRow key={offerte.id}>
+                    <TableCell className="font-medium">{offerte.id}</TableCell>
+                    <TableCell>{offerte.klant}</TableCell>
+                    <TableCell className="hidden sm:table-cell">
+                      {offerte.type}
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      {offerte.datum}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={getStatusVariant(offerte.status)}>
+                        {offerte.status}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
-        </div>
-      </main>
+        </CardContent>
+      </Card>
     </div>
-  );
+  )
 }
