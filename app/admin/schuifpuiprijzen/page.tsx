@@ -1,5 +1,10 @@
-"use client";
-import React, { useState } from "react";
+"use client"
+
+import { useState } from "react"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Save } from "lucide-react"
 
 export default function SchuifpuiPrijzenPagina() {
   const [puiData, setPuiData] = useState({
@@ -28,87 +33,102 @@ export default function SchuifpuiPrijzenPagina() {
       "Kruk Beide Zijden": 85,
       "Kruk Binnen/Kom Buiten": 115,
     },
-  });
+  })
 
   const Section = ({
     title,
+    description,
     data,
     sectionKey,
   }: {
-    title: string;
-    data: any;
-    sectionKey: string;
+    title: string
+    description: string
+    data: Record<string, number>
+    sectionKey: string
   }) => (
-    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden mb-6">
-      <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
-        <h3 className="font-black text-slate-800 uppercase text-sm">{title}</h3>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
-        {Object.entries(data).map(([key, value]) => (
-          <div
-            key={key}
-            className="flex items-center justify-between px-6 py-3 border-b border-slate-50">
-            <span className="text-sm text-slate-600">{key}</span>
-            <input
-              type="number"
-              step="0.01"
-              value={value as number}
-              onChange={(e) => {
-                const val = parseFloat(e.target.value);
-                setPuiData((prev) => ({
-                  ...prev,
-                  [sectionKey]: {
-                    ...(prev[sectionKey as keyof typeof puiData] as any),
-                    [key]: val,
-                  },
-                }));
-              }}
-              className="border border-slate-200 rounded-lg px-3 py-1 w-24 text-sm text-right font-medium"
-            />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-lg">{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="grid gap-4">
+          {Object.entries(data).map(([key, value]) => (
+            <div
+              key={key}
+              className="flex items-center justify-between gap-4"
+            >
+              <span className="text-sm text-muted-foreground truncate">
+                {key}
+              </span>
+              <Input
+                type="number"
+                step="0.01"
+                value={value}
+                onChange={(e) => {
+                  const val = parseFloat(e.target.value) || 0
+                  setPuiData((prev) => ({
+                    ...prev,
+                    [sectionKey]: {
+                      ...(prev[sectionKey as keyof typeof puiData] as Record<string, number>),
+                      [key]: val,
+                    },
+                  }))
+                }}
+                className="w-24 shrink-0"
+              />
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  )
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="flex flex-col gap-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-slate-800">
+          <h1 className="text-2xl font-bold text-foreground">
             Schuifpui Prijzen
           </h1>
-          <p className="text-slate-500">
-            Beheer de tarieven voor de schuifpui-calculator.
+          <p className="text-sm text-muted-foreground">
+            Beheer de tarieven voor de schuifpui calculator.
           </p>
         </div>
-        <button className="bg-[#1066a3] text-white px-6 py-2 rounded-xl font-bold hover:bg-[#0d5485] transition-all">
-          Prijzen Opslaan
-        </button>
+        <Button>
+          <Save data-icon="inline-start" />
+          Opslaan
+        </Button>
       </div>
 
+      {/* Sections Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Section
-          title="1. Basis & Profiel"
+          title="Basis & Profiel"
+          description="Startprijzen en profielfactoren"
           data={{ ...puiData.basis, ...puiData.profiel }}
           sectionKey="basis"
         />
         <Section
-          title="2. Glas & Opties"
+          title="Glas Opties"
+          description="Prijzen voor glassoorten"
           data={puiData.glas}
           sectionKey="glas"
         />
         <Section
-          title="3. Kleuren (Meerprijs Binnen)"
+          title="Kleuren"
+          description="Meerprijs voor kleuren (binnen)"
           data={puiData.kleur}
           sectionKey="kleur"
         />
         <Section
-          title="4. Beslag & Roeden"
+          title="Beslag & Roeden"
+          description="Extra opties en accessoires"
           data={puiData.beslag}
           sectionKey="beslag"
         />
       </div>
     </div>
-  );
+  )
 }

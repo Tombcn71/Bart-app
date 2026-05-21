@@ -1,5 +1,19 @@
-"use client";
-import React, { useState } from "react";
+"use client"
+
+import { useState } from "react"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { Save } from "lucide-react"
 
 export default function KozijnenPrijzen() {
   const [prijzen, setPrijzen] = useState({
@@ -11,55 +25,81 @@ export default function KozijnenPrijzen() {
     triple: 180,
     wit: 0,
     antraciet: 50,
-  });
+  })
+
+  const labels: Record<string, string> = {
+    kunststof: "Kunststof Basisprijs",
+    vast: "Vast Raam (Factor)",
+    dk: "Draai/Kiep (Factor)",
+    kiep: "Alleen Kiep (Factor)",
+    hr2: "HR++ Glas",
+    triple: "Triple Glas",
+    wit: "Wit (Meerprijs)",
+    antraciet: "Antraciet (Meerprijs)",
+  }
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-black text-slate-800">
-          Kozijn & Glas Prijslijst
-        </h1>
-        <p className="text-slate-500">Beheer de tarieven voor de calculator.</p>
+    <div className="flex flex-col gap-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">
+            Kozijnen Prijzen
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Beheer de tarieven voor de kozijnen calculator.
+          </p>
+        </div>
+        <Button>
+          <Save data-icon="inline-start" />
+          Opslaan
+        </Button>
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-        <table className="w-full text-left">
-          <thead className="bg-slate-50">
-            <tr className="text-xs font-bold text-slate-400 uppercase">
-              <th className="py-4 px-6">Optie</th>
-              <th className="py-4 px-6">Prijs / Factor</th>
-              <th className="py-4 px-6">Actie</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {Object.entries(prijzen).map(([key, value]) => (
-              <tr key={key}>
-                <td className="py-4 px-6 font-bold text-slate-800 capitalize">
-                  {key}
-                </td>
-                <td className="py-4 px-6">
-                  <input
-                    type="number"
-                    value={value}
-                    className="border rounded-lg px-3 py-1 w-24"
-                    onChange={(e) =>
-                      setPrijzen({
-                        ...prijzen,
-                        [key]: parseFloat(e.target.value),
-                      })
-                    }
-                  />
-                </td>
-                <td className="py-4 px-6">
-                  <button className="text-[#1066a3] font-bold text-sm">
-                    Opslaan
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {/* Table Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Prijslijst</CardTitle>
+          <CardDescription>
+            Pas de basis tarieven en factoren aan
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto -mx-6 px-6">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Optie</TableHead>
+                  <TableHead className="w-[150px]">Prijs / Factor</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {Object.entries(prijzen).map(([key, value]) => (
+                  <TableRow key={key}>
+                    <TableCell className="font-medium">
+                      {labels[key] || key}
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={value}
+                        onChange={(e) =>
+                          setPrijzen({
+                            ...prijzen,
+                            [key]: parseFloat(e.target.value) || 0,
+                          })
+                        }
+                        className="w-24"
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
     </div>
-  );
+  )
 }
