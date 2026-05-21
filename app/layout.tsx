@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "./components/Navbar";
+import { TooltipProvider } from "@/components/ui/tooltip";
 // Importeer de headers functie van Next.js
 import { headers } from "next/headers";
 
@@ -35,14 +36,15 @@ export default async function RootLayout({
   return (
     <html
       lang="nl"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased bg-background`}>
       <body className="min-h-full flex flex-col">
-        {/* 3. Toon de Navbar ALLEEN als de gebruiker NIET op het admin-subdomein zit */}
-        {!isAdminSubdomain && <Navbar />}
+        <TooltipProvider>
+          {/* 3. Toon de Navbar ALLEEN als de gebruiker NIET op het admin-subdomein zit */}
+          {!isAdminSubdomain && <Navbar />}
 
-        {/* De rest van de pagina (children) komt hieronder */}
-        <main className="flex-grow">{children}</main>
-
+          {/* De rest van de pagina (children) komt hieronder */}
+          <main className="flex-grow">{children}</main>
+        </TooltipProvider>
         {/* Eventueel hier later een Footer */}
       </body>
     </html>
