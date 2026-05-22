@@ -6,21 +6,34 @@ import { saveOfferte } from "@/app/actions";
 import { getMatrix } from "@/lib/data";
 import { SingleDoorBase, DoubleDoorBase } from "@/lib/deur-svgs";
 
+interface DeurMatrix {
+  basisPrijs: number;
+  m2Tarief: number;
+  montageKosten: number;
+  kleurToeslag: Record<string, number>;
+  typeBeslag: Record<string, number>;
+  paneelToeslag: Record<string, number>;
+}
+
 export default function DeurConfiguratorDetail() {
   const { id } = useParams();
   const slug = typeof id === "string" ? id : "voordeur";
 
-  const [matrix, setMatrix] = useState<any>(null);
+  const [matrix, setMatrix] = useState<DeurMatrix | null>(null);
   const [breedte, setBreedte] = useState(1000);
   const [hoogte, setHoogte] = useState(2100);
-  const [kleur, setKleur] = useState("wit");
-  const [glas, setGlas] = useState("hr-plus-plus");
+  const [kleur, setKleur] = useState("");
+  const [beslag, setBeslag] = useState("");
+  const [paneel, setPaneel] = useState("");
   const [aantal, setAantal] = useState(1);
   const [email, setEmail] = useState("");
-  const [naam, setNaam] = useState(""); // Naam state toegevoegd
+  const [naam, setNaam] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const deurOpties: any = {
+  const deurOpties: Record<
+    string,
+    { v: number; name: string; comp: React.ReactNode }
+  > = {
     voordeur: {
       v: 1,
       name: "Voordeur",
@@ -42,20 +55,40 @@ export default function DeurConfiguratorDetail() {
   const deur = deurOpties[slug] || deurOpties.voordeur;
 
   useEffect(() => {
-    getMatrix("deur_matrix").then(setMatrix);
+    getMatrix("deur_matrix").then((data: any) => {
+      if (data) {
+        setMatrix(data as DeurMatrix);
+        setKleur(Object.keys(data.kleurToeslag || {})[0] || "");
+        setBeslag(Object.keys(data.typeBeslag || {})[0] || "");
+        setPaneel(Object.keys(data.paneelToeslag || {})[0] || "");
+      }
+    });
   }, []);
 
   const berekendePrijs = useMemo(() => {
     if (!matrix) return 0;
     const m2 = (breedte / 1000) * (hoogte / 1000);
-    const basis = Number(matrix.deurTypeBasis?.[slug] || 0);
-    const m2Tarief = Number(matrix.m2Tarief || 0);
-    const kleurToeslag = Number(matrix.kleurToeslag?.[kleur] || 0);
-    const glasToeslag = Number(matrix.glasToeslag?.[glas] || 0);
-    return (basis + m2 * m2Tarief + kleurToeslag + m2 * glasToeslag) * aantal;
-  }, [matrix, slug, breedte, hoogte, aantal, kleur, glas]);
+    const kToeslag = matrix.kleurToeslag?.[kleur] ?? 0;
+    const bToeslag = matrix.typeBeslag?.[beslag] ?? 0;
+    const pToeslag = matrix.paneelToeslag?.[paneel] ?? 0;
 
-  if (!matrix) return <div className="p-10 text-center">Laden...</div>;
+    return (
+      (matrix.basisPrijs +
+        m2 * matrix.m2Tarief +
+        kToeslag +
+        bToeslag +
+        pToeslag +
+        matrix.montageKosten) *
+      aantal
+    );
+  }, [matrix, breedte, hoogte, aantal, kleur, beslag, paneel]);
+
+  if (!matrix)
+    return (
+      <div className="p-10 text-center text-slate-400">
+        Configuratie laden...
+      </div>
+    );
 
   return (
     <div className="w-full min-h-screen bg-white">
@@ -74,68 +107,146 @@ export default function DeurConfiguratorDetail() {
               </svg>
             </div>
           </div>
+
           <div className="lg:col-span-5">
-            <div className="bg-white border rounded-xl p-6 space-y-6">
-              <div className="text-3xl font-light">
-                €{" "}
-                {berekendePrijs.toLocaleString("nl-NL", {
-                  minimumFractionDigits: 2,
-                })}
+            <div className="bg-white border rounded-xl p-6 space-y-4">
+              <div>
+                <span className="text-[10px] text-slate-400 uppercase tracking-widest">
+                  Prijsindicatie
+                </span>
+                <div className="text-3xl font-light">
+                  €{" "}
+                  {berekendePrijs.toLocaleString("nl-NL", {
+                    minimumFractionDigits: 2,
+                  })}
+                </div>
               </div>
 
-              {/* SUBSIDIE BLOK */}
-              <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase">
+                    Breedte (mm)
+                  </label>
+                  <input
+                    type="number"
+                    value={breedte}
+                    onChange={(e) => setBreedte(Number(e.target.value))}
+                    className="w-full border p-2.5 rounded-lg text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase">
+                    Hoogte (mm)
+                  </label>
+                  <input
+                    type="number"
+                    value={hoogte}
+                    onChange={(e) => setHoogte(Number(e.target.value))}
+                    className="w-full border p-2.5 rounded-lg text-sm"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-[10px] font-bold text-slate-500 uppercase">
+                  Kleur
+                </label>
+                <select
+                  value={kleur}
+                  onChange={(e) => setKleur(e.target.value)}
+                  className="w-full border p-2.5 rounded-lg text-sm capitalize">
+                  {Object.keys(matrix.kleurToeslag || {}).map((k) => (
+                    <option key={k} value={k}>
+                      {k.replace(/-/g, " ")}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-[10px] font-bold text-slate-500 uppercase">
+                  Beslag
+                </label>
+                <select
+                  value={beslag}
+                  onChange={(e) => setBeslag(e.target.value)}
+                  className="w-full border p-2.5 rounded-lg text-sm capitalize">
+                  {Object.keys(matrix.typeBeslag || {}).map((k) => (
+                    <option key={k} value={k}>
+                      {k.replace(/-/g, " ")}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-[10px] font-bold text-slate-500 uppercase">
+                  Paneel
+                </label>
+                <select
+                  value={paneel}
+                  onChange={(e) => setPaneel(e.target.value)}
+                  className="w-full border p-2.5 rounded-lg text-sm capitalize">
+                  {Object.keys(matrix.paneelToeslag || {}).map((k) => (
+                    <option key={k} value={k}>
+                      {k.replace(/-/g, " ")}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Subsidie Blok */}
+              <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl mt-4">
                 <h3 className="text-sm font-bold text-slate-800">
                   Check uw subsidie
                 </h3>
+                <label className="block text-[10px] mt-2 font-bold text-slate-500 uppercase">
+                  Naam
+                </label>
                 <input
                   type="text"
                   placeholder="Uw naam"
                   value={naam}
                   onChange={(e) => setNaam(e.target.value)}
-                  className="w-full mt-2 p-2 rounded-lg border text-sm"
+                  className="w-full p-2 rounded-lg border text-sm"
                 />
+                <label className="block text-[10px] mt-2 font-bold text-slate-500 uppercase">
+                  E-mailadres
+                </label>
                 <input
                   type="email"
                   placeholder="Uw e-mailadres"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full mt-2 p-2 rounded-lg border text-sm"
+                  className="w-full p-2 rounded-lg border text-sm"
                 />
               </div>
 
-              <div className="pt-4 border-t">
-                <button
-                  onClick={async () => {
-                    if (!email || !naam) {
-                      alert("Vul naam en e-mail in!");
-                      return;
-                    }
-                    setIsSubmitting(true);
-                    const result = await saveOfferte(email, {
-                      naam,
-                      deurNaam: deur.name,
-                      slug,
-                      breedte,
-                      hoogte,
-                      kleur,
-                      glas,
-                      aantal,
-                      prijs: berekendePrijs,
-                    });
-                    alert(
-                      result.success
-                        ? "Offerte verstuurd!"
-                        : "Er ging iets mis.",
-                    );
-                    setIsSubmitting(false);
-                  }}
-                  className="w-full bg-[#1066a3] text-white py-4 rounded-lg font-bold uppercase text-[11px] tracking-widest hover:bg-[#0d5485] transition-colors">
-                  {isSubmitting
-                    ? "Bezig..."
-                    : "Bereken subsidie & Vraag offerte aan"}
-                </button>
-              </div>
+              <button
+                disabled={isSubmitting}
+                onClick={async () => {
+                  if (!email || !naam) return alert("Vul gegevens in!");
+                  setIsSubmitting(true);
+                  await saveOfferte(email, {
+                    naam,
+                    deurNaam: deur.name,
+                    slug,
+                    breedte,
+                    hoogte,
+                    kleur,
+                    beslag,
+                    paneel,
+                    aantal,
+                    prijs: berekendePrijs,
+                  });
+                  alert("Offerte verstuurd!");
+                  setIsSubmitting(false);
+                }}
+                className="w-full bg-[#1066a3] text-white py-4 rounded-lg font-bold uppercase text-[11px] tracking-widest">
+                {isSubmitting
+                  ? "Bezig..."
+                  : "Bereken subsidie & Vraag offerte aan"}
+              </button>
             </div>
           </div>
         </div>

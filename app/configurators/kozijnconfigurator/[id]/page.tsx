@@ -13,6 +13,7 @@ const COLORS = {
   frame: "#2d3748",
 };
 
+// ... (getKozijnData blijft ongewijzigd)
 const getKozijnData = (slug: string) => {
   const data = [
     {
@@ -131,11 +132,7 @@ export default function ConfiguratorDetail() {
   const [hoogte, setHoogte] = useState<number>(1000);
   const [kleur, setKleur] = useState<string>("wit");
   const [glas, setGlas] = useState<string>("hr-plus-plus");
-  const [afstandshouder, setAfstandshouder] = useState("aluminium");
   const [profiel, setProfiel] = useState("vlak-82");
-  const [aanslag, setAanslag] = useState(true);
-  const [ventilatieRooster, setVentilatieRooster] = useState("nee");
-  const [voorboren, setVoorboren] = useState("niet");
   const [aantal, setAantal] = useState(1);
   const [email, setEmail] = useState("");
   const [naam, setNaam] = useState("");
@@ -148,43 +145,17 @@ export default function ConfiguratorDetail() {
   const berekendePrijs = useMemo(() => {
     if (!matrix) return 0;
     const m2PerVak = (breedte / 1000) * (hoogte / 1000);
-    let totaleKozijnPrijs = 0;
-    kozijn.types.forEach((vakType: string) => {
-      const multiplier = matrix[vakType] ?? 1.0;
-      const materiaalPrijs = matrix.kunststof ?? 0;
-      const glasToeslag = matrix.glasToeslag?.[glas] ?? 0;
-      const afstandshouderToeslag =
-        afstandshouder === "zwart"
-          ? (matrix.afstandshouder?.["zwart-warm-edge"] ?? 15)
-          : 0;
-      const kleurToeslag = matrix.kleurToeslag?.[kleur] ?? 0;
-      const profielToeslag = matrix.profielToeslag?.[profiel] ?? 0;
-      const aanslagToeslag = aanslag ? (matrix.aanslagKosten ?? 0) : 0;
-      const roosterToeslag =
-        ventilatieRooster === "ja" ? (matrix.ventilatieRooster ?? 50) : 0;
+    const m2Tarief = matrix.m2Tarief ?? 150;
+    let totaleKozijnPrijs = matrix.basisPrijs ?? 200;
+    kozijn.types.forEach(() => {
       totaleKozijnPrijs +=
-        m2PerVak * materiaalPrijs * multiplier +
-        m2PerVak * glasToeslag +
-        afstandshouderToeslag +
-        kleurToeslag +
-        profielToeslag +
-        aanslagToeslag +
-        roosterToeslag;
+        m2PerVak * m2Tarief +
+        m2PerVak * (matrix.glasToeslag?.[glas] ?? 0) +
+        (matrix.kleurToeslag?.[kleur] ?? 0) +
+        (matrix.profielToeslag?.[profiel] ?? 0);
     });
     return parseFloat((totaleKozijnPrijs * aantal).toFixed(2));
-  }, [
-    breedte,
-    hoogte,
-    kleur,
-    glas,
-    afstandshouder,
-    profiel,
-    aanslag,
-    ventilatieRooster,
-    aantal,
-    kozijn,
-    matrix,
-  ]);
+  }, [breedte, hoogte, kleur, glas, profiel, aantal, matrix, kozijn]);
 
   if (!matrix)
     return (
@@ -233,8 +204,8 @@ export default function ConfiguratorDetail() {
             </div>
           </div>
           <div className="lg:col-span-5">
-            <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
-              <div className="mb-6 border-b pb-6">
+            <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm space-y-6">
+              <div>
                 <span className="text-[10px] text-slate-400 uppercase tracking-widest">
                   Prijsindicatie
                 </span>
@@ -245,62 +216,110 @@ export default function ConfiguratorDetail() {
                   })}
                 </div>
               </div>
+
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
-                  <input
-                    type="number"
-                    value={breedte}
-                    onChange={(e) => setBreedte(Number(e.target.value))}
-                    className="border p-2.5 rounded-lg text-sm"
-                    placeholder="Breedte"
-                  />
-                  <input
-                    type="number"
-                    value={hoogte}
-                    onChange={(e) => setHoogte(Number(e.target.value))}
-                    className="border p-2.5 rounded-lg text-sm"
-                    placeholder="Hoogte"
-                  />
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-500 uppercase">
+                      Breedte (mm)
+                    </label>
+                    <input
+                      type="number"
+                      value={breedte}
+                      onChange={(e) => setBreedte(Number(e.target.value))}
+                      className="w-full border p-2.5 rounded-lg text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-500 uppercase">
+                      Hoogte (mm)
+                    </label>
+                    <input
+                      type="number"
+                      value={hoogte}
+                      onChange={(e) => setHoogte(Number(e.target.value))}
+                      className="w-full border p-2.5 rounded-lg text-sm"
+                    />
+                  </div>
                 </div>
-                <select
-                  value={glas}
-                  onChange={(e) => setGlas(e.target.value)}
-                  className="w-full border p-2.5 rounded-lg text-sm">
-                  <option value="hr-plus-plus">HR++ Glas</option>
-                  <option value="triple">Triple Glas</option>
-                </select>
-                <select
-                  value={kleur}
-                  onChange={(e) => setKleur(e.target.value)}
-                  className="w-full border p-2.5 rounded-lg text-sm">
-                  <option value="wit">Wit (RAL 9016)</option>
-                  <option value="antraciet">Antraciet (RAL 7016)</option>
-                </select>
+
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase">
+                    Glassoort
+                  </label>
+                  <select
+                    value={glas}
+                    onChange={(e) => setGlas(e.target.value)}
+                    className="w-full border p-2.5 rounded-lg text-sm capitalize">
+                    {Object.keys(matrix.glasToeslag || {}).map((k) => (
+                      <option key={k} value={k}>
+                        {k.replace(/-/g, " ")}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase">
+                    Kleur kozijn
+                  </label>
+                  <select
+                    value={kleur}
+                    onChange={(e) => setKleur(e.target.value)}
+                    className="w-full border p-2.5 rounded-lg text-sm capitalize">
+                    {Object.keys(matrix.kleurToeslag || {}).map((k) => (
+                      <option key={k} value={k}>
+                        {k.replace(/-/g, " ")}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase">
+                    Profieltype
+                  </label>
+                  <select
+                    value={profiel}
+                    onChange={(e) => setProfiel(e.target.value)}
+                    className="w-full border p-2.5 rounded-lg text-sm capitalize">
+                    {Object.keys(matrix.profielToeslag || {}).map((k) => (
+                      <option key={k} value={k}>
+                        {k.replace(/-/g, " ")}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
                 <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl mt-4">
                   <h3 className="text-sm font-bold text-slate-800">
                     Check uw subsidie
                   </h3>
+                  <label className="block text-[10px] mt-2 font-bold text-slate-500 uppercase">
+                    Naam
+                  </label>
                   <input
                     type="text"
                     placeholder="Uw naam"
                     value={naam}
                     onChange={(e) => setNaam(e.target.value)}
-                    className="w-full mt-2 p-2 rounded-lg border text-sm"
+                    className="w-full p-2 rounded-lg border text-sm"
                   />
+                  <label className="block text-[10px] mt-2 font-bold text-slate-500 uppercase">
+                    E-mailadres
+                  </label>
                   <input
                     type="email"
                     placeholder="Uw e-mailadres"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full mt-2 p-2 rounded-lg border text-sm"
+                    className="w-full p-2 rounded-lg border text-sm"
                   />
                 </div>
+
                 <button
                   onClick={async () => {
-                    if (!email || !naam) {
-                      alert("Vul naam en e-mail in!");
-                      return;
-                    }
+                    if (!email || !naam) return alert("Vul naam en e-mail in!");
                     setIsSubmitting(true);
                     await saveOfferte(email, {
                       naam,
@@ -310,11 +329,7 @@ export default function ConfiguratorDetail() {
                       hoogte,
                       kleur,
                       glas,
-                      afstandshouder,
                       profiel,
-                      aanslag,
-                      ventilatieRooster,
-                      voorboren,
                       aantal,
                       prijs: berekendePrijs,
                     });
