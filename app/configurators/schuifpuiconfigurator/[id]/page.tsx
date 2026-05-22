@@ -34,11 +34,18 @@ export default function SchuifpuiDetailPage() {
   const [aantal, setAantal] = useState(1);
 
   useEffect(() => {
-    getMatrix("schuifpui_matrix").then((data) => {
-      if (data) {
-        setMatrix(data as PrijzenMatrix);
-        setKleur(Object.keys(data.kleurToeslag || {})[0] || "");
-        setGlas(Object.keys(data.glasTypeM2 || {})[0] || "");
+    getMatrix("schuifpui_matrix").then((rawData) => {
+      if (rawData) {
+        const data = rawData as PrijzenMatrix;
+        setMatrix(data);
+
+        // Veilige initialisatie
+        if (data.kleurToeslag && typeof data.kleurToeslag === "object") {
+          setKleur(Object.keys(data.kleurToeslag)[0] || "");
+        }
+        if (data.glasTypeM2 && typeof data.glasTypeM2 === "object") {
+          setGlas(Object.keys(data.glasTypeM2)[0] || "");
+        }
       }
     });
   }, []);
@@ -150,19 +157,6 @@ export default function SchuifpuiDetailPage() {
                 </select>
               </div>
 
-              <div>
-                <label className="text-[10px] text-slate-400 uppercase font-bold">
-                  Aantal
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  value={aantal}
-                  onChange={(e) => setAantal(Number(e.target.value))}
-                  className="w-full border p-2.5 rounded-lg text-sm"
-                />
-              </div>
-
               <button
                 onClick={async () => {
                   const result = await saveOfferte("klant@voorbeeld.nl", {
@@ -174,11 +168,11 @@ export default function SchuifpuiDetailPage() {
                     aantal,
                     prijs: berekendePrijs,
                   });
-                  if (result.success) {
-                    alert("Offerte succesvol opgeslagen!");
-                  } else {
-                    alert("Er ging iets mis bij het opslaan.");
-                  }
+                  alert(
+                    result.success
+                      ? "Offerte succesvol opgeslagen!"
+                      : "Er ging iets mis bij het opslaan.",
+                  );
                 }}
                 className="w-full bg-[#1066a3] text-white py-4 rounded-lg font-bold uppercase text-[11px] tracking-widest">
                 Voeg toe aan aanvraag
