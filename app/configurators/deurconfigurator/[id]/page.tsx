@@ -16,8 +16,10 @@ export default function DeurConfiguratorDetail() {
   const [kleur, setKleur] = useState("wit");
   const [glas, setGlas] = useState("hr-plus-plus");
   const [aantal, setAantal] = useState(1);
+  const [email, setEmail] = useState("");
+  const [naam, setNaam] = useState(""); // Naam state toegevoegd
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Configuratie direct gekoppeld
   const deurOpties: any = {
     voordeur: {
       v: 1,
@@ -46,12 +48,10 @@ export default function DeurConfiguratorDetail() {
   const berekendePrijs = useMemo(() => {
     if (!matrix) return 0;
     const m2 = (breedte / 1000) * (hoogte / 1000);
-    // Gebruik || 0 om te voorkomen dat er ongewenste getallen worden opgeteld
     const basis = Number(matrix.deurTypeBasis?.[slug] || 0);
     const m2Tarief = Number(matrix.m2Tarief || 0);
     const kleurToeslag = Number(matrix.kleurToeslag?.[kleur] || 0);
     const glasToeslag = Number(matrix.glasToeslag?.[glas] || 0);
-
     return (basis + m2 * m2Tarief + kleurToeslag + m2 * glasToeslag) * aantal;
   }, [matrix, slug, breedte, hoogte, aantal, kleur, glas]);
 
@@ -82,24 +82,60 @@ export default function DeurConfiguratorDetail() {
                   minimumFractionDigits: 2,
                 })}
               </div>
-              {/* ... Rest van je input velden blijven hetzelfde ... */}
-              <button
-                onClick={async () => {
-                  await saveOfferte("klant@voorbeeld.nl", {
-                    deurNaam: deur.name,
-                    slug,
-                    breedte,
-                    hoogte,
-                    kleur,
-                    glas,
-                    aantal,
-                    prijs: berekendePrijs,
-                  });
-                  alert("Offerte opgeslagen!");
-                }}
-                className="w-full bg-[#1066a3] text-white py-4 rounded-lg font-bold uppercase text-[11px] tracking-widest">
-                Voeg toe aan aanvraag
-              </button>
+
+              {/* SUBSIDIE BLOK */}
+              <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl">
+                <h3 className="text-sm font-bold text-slate-800">
+                  Check uw subsidie
+                </h3>
+                <input
+                  type="text"
+                  placeholder="Uw naam"
+                  value={naam}
+                  onChange={(e) => setNaam(e.target.value)}
+                  className="w-full mt-2 p-2 rounded-lg border text-sm"
+                />
+                <input
+                  type="email"
+                  placeholder="Uw e-mailadres"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full mt-2 p-2 rounded-lg border text-sm"
+                />
+              </div>
+
+              <div className="pt-4 border-t">
+                <button
+                  onClick={async () => {
+                    if (!email || !naam) {
+                      alert("Vul naam en e-mail in!");
+                      return;
+                    }
+                    setIsSubmitting(true);
+                    const result = await saveOfferte(email, {
+                      naam,
+                      deurNaam: deur.name,
+                      slug,
+                      breedte,
+                      hoogte,
+                      kleur,
+                      glas,
+                      aantal,
+                      prijs: berekendePrijs,
+                    });
+                    alert(
+                      result.success
+                        ? "Offerte verstuurd!"
+                        : "Er ging iets mis.",
+                    );
+                    setIsSubmitting(false);
+                  }}
+                  className="w-full bg-[#1066a3] text-white py-4 rounded-lg font-bold uppercase text-[11px] tracking-widest hover:bg-[#0d5485] transition-colors">
+                  {isSubmitting
+                    ? "Bezig..."
+                    : "Bereken subsidie & Vraag offerte aan"}
+                </button>
+              </div>
             </div>
           </div>
         </div>

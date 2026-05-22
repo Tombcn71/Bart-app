@@ -1,33 +1,22 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { getOffertes } from "@/app/actions";
+import Link from "next/link"; // Belangrijk: Link moet geïmporteerd worden
 
 export default function OffertesPagina() {
-  const [offertes] = useState([
-    {
-      id: "OFF-2026-001",
-      klant: "Jan de Vries",
-      type: "Kozijnen",
-      status: "Nieuw",
-      datum: "20 mei 2026",
-      bedrag: "€ 2.450",
-    },
-    {
-      id: "OFF-2026-002",
-      klant: "Pieter Bakker",
-      type: "Schuifpui",
-      status: "In behandeling",
-      datum: "19 mei 2026",
-      bedrag: "€ 4.100",
-    },
-    {
-      id: "OFF-2026-003",
-      klant: "Anja Meijer",
-      type: "Deuren",
-      status: "Verzonden",
-      datum: "18 mei 2026",
-      bedrag: "€ 1.850",
-    },
-  ]);
+  const [offertes, setOffertes] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      const res = await getOffertes();
+      if (res.success) {
+        setOffertes(res.data);
+      }
+      setLoading(false);
+    }
+    load();
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -44,38 +33,53 @@ export default function OffertesPagina() {
       </div>
 
       <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-        <table className="w-full text-left">
-          <thead>
-            <tr className="bg-slate-50 border-b border-slate-100 text-xs font-bold text-slate-400 uppercase">
-              <th className="py-4 px-6">ID</th>
-              <th className="py-4 px-6">Klant</th>
-              <th className="py-4 px-6">Type</th>
-              <th className="py-4 px-6">Bedrag</th>
-              <th className="py-4 px-6">Status</th>
-              <th className="py-4 px-6">Acties</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {offertes.map((offerte) => (
-              <tr key={offerte.id} className="hover:bg-slate-50/50">
-                <td className="py-4 px-6 font-bold text-slate-800">
-                  {offerte.id}
-                </td>
-                <td className="py-4 px-6">{offerte.klant}</td>
-                <td className="py-4 px-6">{offerte.type}</td>
-                <td className="py-4 px-6">{offerte.bedrag}</td>
-                <td className="py-4 px-6">
-                  <span className="px-2 py-1 bg-slate-100 rounded-full text-xs font-bold text-slate-600">
-                    {offerte.status}
-                  </span>
-                </td>
-                <td className="py-4 px-6 text-[#1066a3] font-bold cursor-pointer hover:underline">
-                  Bewerken
-                </td>
+        {loading ? (
+          <div className="p-10 text-center text-slate-400">Laden...</div>
+        ) : (
+          <table className="w-full text-left">
+            <thead>
+              <tr className="bg-slate-50 border-b border-slate-100 text-xs font-bold text-slate-400 uppercase">
+                <th className="py-4 px-6">ID</th>
+                <th className="py-4 px-6">Klant</th>
+                <th className="py-4 px-6">Product</th>
+                <th className="py-4 px-6">Bedrag</th>
+                <th className="py-4 px-6">Datum</th>
+                <th className="py-4 px-6">Acties</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {offertes.map((offerte) => (
+                <tr key={offerte.id} className="hover:bg-slate-50/50">
+                  <td className="py-4 px-6 font-bold text-slate-800">
+                    {offerte.id.slice(0, 8)}...
+                  </td>
+                  <td className="py-4 px-6">{offerte.email}</td>
+                  <td className="py-4 px-6">
+                    {offerte.data.product ||
+                      offerte.data.kozijnNaam ||
+                      "Product"}
+                  </td>
+                  <td className="py-4 px-6">
+                    € {offerte.data.prijs || "0,00"}
+                  </td>
+                  <td className="py-4 px-6 text-xs text-slate-500">
+                    {offerte.createdAt
+                      ? new Date(offerte.createdAt).toLocaleDateString()
+                      : "-"}
+                  </td>
+                  {/* Hier is de Link die zorgt dat je naar de detailpagina gaat */}
+                  <td className="py-4 px-6">
+                    <Link
+                      href={`/admin/offertes/${offerte.id}`}
+                      className="text-[#1066a3] font-bold hover:underline">
+                      Bekijken
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   );

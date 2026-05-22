@@ -4,10 +4,25 @@ import { db } from "@/db";
 import { instellingen, offertes } from "@/db/schema";
 import { revalidatePath } from "next/cache";
 import { Resend } from "resend";
+import { desc } from "drizzle-orm";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-// 1. Functie voor admin beheer (die je admin-pagina's nodig hebben)
+// 1. Functie om offertes op te halen voor het Admin Dashboard
+export async function getOffertes() {
+  try {
+    const data = await db
+      .select()
+      .from(offertes)
+      .orderBy(desc(offertes.createdAt));
+    return { success: true, data };
+  } catch (error) {
+    console.error("Fout bij ophalen offertes:", error);
+    return { success: false, data: [] };
+  }
+}
+
+// 2. Functie voor admin beheer (prijzen instellen)
 export async function saveMatrix(key: string, data: any) {
   try {
     await db
@@ -26,24 +41,43 @@ export async function saveMatrix(key: string, data: any) {
   }
 }
 
-// 2. Functie voor offerte aanvragen
+// 3. Functie voor offerte aanvragen
 export async function saveOfferte(email: string, data: any) {
   try {
-    // Opslaan in database
+    // 1. BEREKEN SUBSIDIE
+    // m2 berekening * aantal stuks
+    const m2 = (data.breedte / 1000) * (data.hoogte / 1000) * data.aantal;
+    // Triple glas = 111 per m2, HR++ / overig = 25 per m2
+    const subsidiePerM2 = data.glas === "triple" ? 111 : 25;
+    const totaalSubsidie = Math.round(m2 * subsidiePerM2);
+
+    // Voeg subsidie toe aan data object
+    const dataMetSubsidie = { ...data, subsidieIndicatie: totaalSubsidie };
+
+    // 2. Opslaan in database
     await db.insert(offertes).values({
       email: email,
-      data: data,
+      data: dataMetSubsidie,
     });
 
-    // E-mail verzenden
+    // 3. E-mail verzenden
     const { data: emailData, error } = await resend.emails.send({
       from: "Bart Mooi <offerte@offerte.budgetkozijnenshop.nl>",
       to: [email],
-      subject: `Offerte aanvraag: ${data.product}`,
+      subject: `Offerte aanvraag: ${data.product || data.kozijnNaam}`,
       html: `
-        <div style="font-family: Arial, sans-serif;">
-          <h1>Bedankt voor uw aanvraag!</h1>
-          <p>We hebben uw aanvraag voor de <strong>${data.product}</strong> ontvangen.</p>
+        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+          <h1 style="color: #1066a3;">Bedankt voor uw aanvraag, ${data.naam || ""}!</h1>
+          <p>We hebben uw aanvraag voor de <strong>${data.product || data.kozijnNaam}</strong> ontvangen.</p>
+          
+          <!-- SUBSIDIE BLOK -->
+          <div style="background: #e0f2fe; border: 2px solid #1066a3; padding: 20px; border-radius: 10px; margin: 20px 0;">
+            <h2 style="color: #1066a3; margin-top: 0;">Goed nieuws: Subsidiekans!</h2>
+            <p>Op basis van uw configuratie komt u mogelijk in aanmerking voor een landelijke ISDE-subsidie van ongeveer:</p>
+            <p style="font-size: 28px; font-weight: bold; color: #1066a3; margin: 10px 0;">€ ${totaalSubsidie.toLocaleString("nl-NL")}</p>
+            <p style="font-size: 13px;"><em>Dit is een indicatie op basis van de huidige ISDE-regeling (bij 2+ isolatiemaatregelen).</em></p>
+          </div>
+
           <div style="background: #f4f4f4; padding: 15px; border-radius: 8px;">
             <p><strong>Configuratie:</strong></p>
             <ul>
@@ -53,7 +87,7 @@ export async function saveOfferte(email: string, data: any) {
               <li>Glas: ${data.glas}</li>
               <li>Aantal: ${data.aantal}</li>
             </ul>
-            <p style="font-size: 18px;"><strong>Prijs: € ${data.prijs}</strong></p>
+            <p style="font-size: 18px;"><strong>Prijs: € ${data.prijs.toLocaleString("nl-NL", { minimumFractionDigits: 2 })}</strong></p>
           </div>
           <p>Wij nemen zo spoedig mogelijk contact met u op.</p>
         </div>
@@ -65,6 +99,7 @@ export async function saveOfferte(email: string, data: any) {
       return { success: false, error: "E-mail kon niet worden verzonden." };
     }
 
+    revalidatePath("/admin/offertes");
     return { success: true, data: emailData };
   } catch (error) {
     console.error("Server Action error:", error);

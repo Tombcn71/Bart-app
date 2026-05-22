@@ -32,20 +32,18 @@ export default function SchuifpuiDetailPage() {
   const [kleur, setKleur] = useState("");
   const [glas, setGlas] = useState("");
   const [aantal, setAantal] = useState(1);
-  const [email, setEmail] = useState(""); // Nieuwe state voor email
+  const [email, setEmail] = useState("");
+  const [naam, setNaam] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     getMatrix("schuifpui_matrix").then((rawData) => {
       if (rawData) {
         const data = rawData as PrijzenMatrix;
         setMatrix(data);
-
-        if (data.kleurToeslag && typeof data.kleurToeslag === "object") {
+        if (data.kleurToeslag)
           setKleur(Object.keys(data.kleurToeslag)[0] || "");
-        }
-        if (data.glasTypeM2 && typeof data.glasTypeM2 === "object") {
-          setGlas(Object.keys(data.glasTypeM2)[0] || "");
-        }
+        if (data.glasTypeM2) setGlas(Object.keys(data.glasTypeM2)[0] || "");
       }
     });
   }, []);
@@ -53,12 +51,10 @@ export default function SchuifpuiDetailPage() {
   const berekendePrijs = useMemo(() => {
     if (!matrix) return 0;
     const m2 = (breedte / 1000) * (hoogte / 1000);
-
     const basis = Number(matrix.basisPui?.[pui.sections.toString()] || 0);
     const m2Tarief = Number(matrix.m2Tarief || 0);
     const kleurToeslag = Number(matrix.kleurToeslag?.[kleur] || 0);
     const glasToeslag = Number(matrix.glasTypeM2?.[glas] || 0);
-
     return parseFloat(
       (
         (basis + m2 * m2Tarief + kleurToeslag + m2 * glasToeslag) *
@@ -82,7 +78,6 @@ export default function SchuifpuiDetailPage() {
           className="text-[11px] uppercase tracking-wider text-slate-400 hover:text-[#1066a3]">
           ← Overzicht
         </Link>
-
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 mt-6">
           <div className="lg:col-span-7">
             <h1 className="text-2xl font-semibold mb-6">{pui.name}</h1>
@@ -90,7 +85,6 @@ export default function SchuifpuiDetailPage() {
               <SlidingDoorDetailSVG sections={pui.sections} />
             </div>
           </div>
-
           <div className="lg:col-span-5">
             <div className="bg-white border rounded-xl p-8 shadow-sm space-y-6">
               <div className="text-3xl font-light">
@@ -100,7 +94,6 @@ export default function SchuifpuiDetailPage() {
                 })}
               </div>
 
-              {/* Input velden... */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-[10px] text-slate-400 uppercase font-bold">
@@ -126,77 +119,53 @@ export default function SchuifpuiDetailPage() {
                 </div>
               </div>
 
-              {/* Kleur & Glas... */}
-              <div>
-                <label className="text-[10px] text-slate-400 uppercase font-bold">
-                  Kleur
-                </label>
-                <select
-                  value={kleur}
-                  onChange={(e) => setKleur(e.target.value)}
-                  className="w-full border p-2.5 rounded-lg text-sm">
-                  {Object.keys(matrix.kleurToeslag || {}).map((k) => (
-                    <option key={k} value={k}>
-                      {k}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="text-[10px] text-slate-400 uppercase font-bold">
-                  Glas Type
-                </label>
-                <select
-                  value={glas}
-                  onChange={(e) => setGlas(e.target.value)}
-                  className="w-full border p-2.5 rounded-lg text-sm">
-                  {Object.keys(matrix.glasTypeM2 || {}).map((k) => (
-                    <option key={k} value={k}>
-                      {k}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* E-mail invoerveld */}
-              <div className="pt-4 border-t">
-                <label className="text-[10px] text-slate-400 uppercase font-bold block mb-2">
-                  E-mailadres voor offerte
-                </label>
+              {/* SUBSIDIE BLOK */}
+              <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl">
+                <h3 className="text-sm font-bold text-slate-800">
+                  Check uw subsidie
+                </h3>
+                <input
+                  type="text"
+                  placeholder="Uw naam"
+                  value={naam}
+                  onChange={(e) => setNaam(e.target.value)}
+                  className="w-full mt-2 p-2 rounded-lg border text-sm"
+                />
                 <input
                   type="email"
-                  placeholder="naam@voorbeeld.nl"
+                  placeholder="Uw e-mailadres"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full border p-2.5 rounded-lg text-sm mb-4"
+                  className="w-full mt-2 p-2 rounded-lg border text-sm"
                 />
-
-                <button
-                  onClick={async () => {
-                    if (!email) {
-                      alert("Vul eerst je e-mailadres in!");
-                      return;
-                    }
-                    const result = await saveOfferte(email, {
-                      product: pui.name,
-                      breedte,
-                      hoogte,
-                      kleur,
-                      glas,
-                      aantal,
-                      prijs: berekendePrijs,
-                    });
-                    alert(
-                      result.success
-                        ? "Offerte verstuurd naar " + email
-                        : "Er ging iets mis bij het versturen.",
-                    );
-                  }}
-                  className="w-full bg-[#1066a3] text-white py-4 rounded-lg font-bold uppercase text-[11px] tracking-widest">
-                  Vraag offerte aan
-                </button>
               </div>
+
+              <button
+                onClick={async () => {
+                  if (!email || !naam) {
+                    alert("Vul naam en e-mail in!");
+                    return;
+                  }
+                  setIsSubmitting(true);
+                  await saveOfferte(email, {
+                    naam,
+                    product: pui.name,
+                    slug,
+                    breedte,
+                    hoogte,
+                    kleur,
+                    glas,
+                    aantal,
+                    prijs: berekendePrijs,
+                  });
+                  alert("Offerte verstuurd!");
+                  setIsSubmitting(false);
+                }}
+                className="w-full bg-[#1066a3] text-white py-4 rounded-lg font-bold uppercase text-[11px] tracking-widest">
+                {isSubmitting
+                  ? "Bezig..."
+                  : "Bereken subsidie & Vraag offerte aan"}
+              </button>
             </div>
           </div>
         </div>

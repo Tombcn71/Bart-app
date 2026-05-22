@@ -126,6 +126,7 @@ export default function ConfiguratorDetail() {
   const slug = typeof id === "string" ? id : "vast-kozijn";
   const kozijn = getKozijnData(slug);
   const [matrix, setMatrix] = useState<any>(null);
+
   const [breedte, setBreedte] = useState<number>(1000);
   const [hoogte, setHoogte] = useState<number>(1000);
   const [kleur, setKleur] = useState<string>("wit");
@@ -136,6 +137,9 @@ export default function ConfiguratorDetail() {
   const [ventilatieRooster, setVentilatieRooster] = useState("nee");
   const [voorboren, setVoorboren] = useState("niet");
   const [aantal, setAantal] = useState(1);
+  const [email, setEmail] = useState("");
+  const [naam, setNaam] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     getMatrix("kozijn_matrix").then((data) => setMatrix(data));
@@ -145,7 +149,6 @@ export default function ConfiguratorDetail() {
     if (!matrix) return 0;
     const m2PerVak = (breedte / 1000) * (hoogte / 1000);
     let totaleKozijnPrijs = 0;
-
     kozijn.types.forEach((vakType: string) => {
       const multiplier = matrix[vakType] ?? 1.0;
       const materiaalPrijs = matrix.kunststof ?? 0;
@@ -159,7 +162,6 @@ export default function ConfiguratorDetail() {
       const aanslagToeslag = aanslag ? (matrix.aanslagKosten ?? 0) : 0;
       const roosterToeslag =
         ventilatieRooster === "ja" ? (matrix.ventilatieRooster ?? 50) : 0;
-
       totaleKozijnPrijs +=
         m2PerVak * materiaalPrijs * multiplier +
         m2PerVak * glasToeslag +
@@ -169,7 +171,6 @@ export default function ConfiguratorDetail() {
         aanslagToeslag +
         roosterToeslag;
     });
-
     return parseFloat((totaleKozijnPrijs * aantal).toFixed(2));
   }, [
     breedte,
@@ -192,23 +193,21 @@ export default function ConfiguratorDetail() {
 
   return (
     <div className="w-full min-h-screen bg-white">
-      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-6 md:py-10 font-sans text-slate-600">
+      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-6 md:py-10">
         <Link
           href="/"
-          className="inline-flex items-center text-[11px] font-medium text-slate-400 mb-6 hover:text-[#1066a3] transition-colors uppercase tracking-wider">
+          className="text-slate-400 text-[11px] uppercase tracking-wider mb-6 hover:text-[#1066a3]">
           ← Overzicht
         </Link>
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12 items-start">
-          <div className="lg:col-span-7 flex flex-col w-full order-1">
-            <h1 className="text-xl md:text-2xl font-semibold uppercase text-slate-800 mb-6 tracking-tight">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+          <div className="lg:col-span-7">
+            <h1 className="text-2xl font-semibold uppercase text-slate-800 mb-6">
               {kozijn.name}
             </h1>
-            <div className="w-full bg-slate-50/50 rounded-xl border border-slate-100 p-4 md:p-10 flex items-center justify-center min-h-[300px]">
+            <div className="bg-slate-50 rounded-xl p-10 flex items-center justify-center">
               <svg
                 viewBox={`0 0 ${kozijn.v * 100} 100`}
-                className="w-full h-auto"
-                style={{ maxHeight: "400px" }}
-                preserveAspectRatio="xMidYMid meet">
+                className="w-full max-h-[400px]">
                 <rect
                   x="0.4"
                   y="0.4"
@@ -233,163 +232,99 @@ export default function ConfiguratorDetail() {
               </svg>
             </div>
           </div>
-          <div className="lg:col-span-5 w-full order-2">
-            {/* Formulier gedeelte blijft volledig intact */}
+          <div className="lg:col-span-5">
             <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
-              <div className="flex justify-between items-end mb-8 border-b border-slate-50 pb-6">
-                <div>
-                  <span className="block text-[10px] text-slate-400 uppercase tracking-widest mb-1">
-                    Prijsindicatie
-                  </span>
-                  <span className="text-3xl text-slate-800 font-light">
-                    €{" "}
-                    {berekendePrijs.toLocaleString("nl-NL", {
-                      minimumFractionDigits: 2,
-                    })}
-                  </span>
+              <div className="mb-6 border-b pb-6">
+                <span className="text-[10px] text-slate-400 uppercase tracking-widest">
+                  Prijsindicatie
+                </span>
+                <div className="text-3xl text-slate-800">
+                  €{" "}
+                  {berekendePrijs.toLocaleString("nl-NL", {
+                    minimumFractionDigits: 2,
+                  })}
                 </div>
               </div>
-              <div className="space-y-6">
+              <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] text-slate-400 uppercase font-bold tracking-tight">
-                      Breedte (mm)
-                    </label>
-                    <input
-                      type="number"
-                      value={breedte}
-                      onChange={(e) => setBreedte(Number(e.target.value))}
-                      className="w-full border border-slate-200 p-2.5 rounded-lg text-sm"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] text-slate-400 uppercase font-bold tracking-tight">
-                      Hoogte (mm)
-                    </label>
-                    <input
-                      type="number"
-                      value={hoogte}
-                      onChange={(e) => setHoogte(Number(e.target.value))}
-                      className="w-full border border-slate-200 p-2.5 rounded-lg text-sm"
-                    />
-                  </div>
+                  <input
+                    type="number"
+                    value={breedte}
+                    onChange={(e) => setBreedte(Number(e.target.value))}
+                    className="border p-2.5 rounded-lg text-sm"
+                    placeholder="Breedte"
+                  />
+                  <input
+                    type="number"
+                    value={hoogte}
+                    onChange={(e) => setHoogte(Number(e.target.value))}
+                    className="border p-2.5 rounded-lg text-sm"
+                    placeholder="Hoogte"
+                  />
                 </div>
-                <div className="space-y-4 pt-4 border-t border-slate-50">
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] text-slate-400 uppercase font-bold tracking-tight">
-                      Type Beglazing
-                    </label>
-                    <select
-                      value={glas}
-                      onChange={(e) => setGlas(e.target.value)}
-                      className="w-full border border-slate-200 p-2.5 rounded-lg text-sm bg-white">
-                      <option value="hr-plus-plus">
-                        HR++ Glas (Standaard)
-                      </option>
-                      <option value="triple">Triple Glas</option>
-                      <option value="mat">Matglas</option>
-                    </select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] text-slate-400 uppercase font-bold tracking-tight">
-                      Afstandshouder
-                    </label>
-                    <select
-                      value={afstandshouder}
-                      onChange={(e) => setAfstandshouder(e.target.value)}
-                      className="w-full border border-slate-200 p-2.5 rounded-lg text-sm bg-white">
-                      <option value="aluminium">Aluminium (Standaard)</option>
-                      <option value="zwart">Zwart (Warm-edge)</option>
-                    </select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] text-slate-400 uppercase font-bold tracking-tight">
-                      Profiel
-                    </label>
-                    <select
-                      value={profiel}
-                      onChange={(e) => setProfiel(e.target.value)}
-                      className="w-full border border-slate-200 p-2.5 rounded-lg text-sm bg-white">
-                      <option value="vlak-82">Vlak profiel 82</option>
-                      <option value="verdiept-120">Verdiept profiel 120</option>
-                      <option value="verdiept-120-hvl">Verdiept 120 HVL</option>
-                    </select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] text-slate-400 uppercase font-bold tracking-tight">
-                      Kleur
-                    </label>
-                    <select
-                      value={kleur}
-                      onChange={(e) => setKleur(e.target.value)}
-                      className="w-full border border-slate-200 p-2.5 rounded-lg text-sm bg-white">
-                      <option value="wit">Wit (RAL 9016)</option>
-                      <option value="creme-wit">Crème wit (RAL 9001)</option>
-                      <option value="antraciet">Antraciet (Houtmotief)</option>
-                    </select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] text-slate-400 uppercase font-bold tracking-tight">
-                      Ventilatie rooster
-                    </label>
-                    <select
-                      value={ventilatieRooster}
-                      onChange={(e) => setVentilatieRooster(e.target.value)}
-                      className="w-full border border-slate-200 p-2.5 rounded-lg text-sm bg-white">
-                      <option value="nee">Nee</option>
-                      <option value="ja">Ja</option>
-                    </select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] text-slate-400 uppercase font-bold tracking-tight">
-                      Voorboren
-                    </label>
-                    <select
-                      value={voorboren}
-                      onChange={(e) => setVoorboren(e.target.value)}
-                      className="w-full border border-slate-200 p-2.5 rounded-lg text-sm bg-white">
-                      <option value="niet">Niet voorboren</option>
-                      <option value="links-boven-rechts">
-                        Kozijn voorboren 6 mm links / boven / rechts
-                      </option>
-                      <option value="rondom">
-                        Kozijn voorboren 6 mm links / boven / rechts / onder
-                      </option>
-                    </select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] text-slate-400 uppercase font-bold tracking-tight">
-                      Aantal
-                    </label>
-                    <input
-                      type="number"
-                      min="1"
-                      value={aantal}
-                      onChange={(e) => setAantal(Number(e.target.value))}
-                      className="w-full border border-slate-200 p-2.5 rounded-lg text-sm"
-                    />
-                  </div>
+                <select
+                  value={glas}
+                  onChange={(e) => setGlas(e.target.value)}
+                  className="w-full border p-2.5 rounded-lg text-sm">
+                  <option value="hr-plus-plus">HR++ Glas</option>
+                  <option value="triple">Triple Glas</option>
+                </select>
+                <select
+                  value={kleur}
+                  onChange={(e) => setKleur(e.target.value)}
+                  className="w-full border p-2.5 rounded-lg text-sm">
+                  <option value="wit">Wit (RAL 9016)</option>
+                  <option value="antraciet">Antraciet (RAL 7016)</option>
+                </select>
+                <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl mt-4">
+                  <h3 className="text-sm font-bold text-slate-800">
+                    Check uw subsidie
+                  </h3>
+                  <input
+                    type="text"
+                    placeholder="Uw naam"
+                    value={naam}
+                    onChange={(e) => setNaam(e.target.value)}
+                    className="w-full mt-2 p-2 rounded-lg border text-sm"
+                  />
+                  <input
+                    type="email"
+                    placeholder="Uw e-mailadres"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full mt-2 p-2 rounded-lg border text-sm"
+                  />
                 </div>
                 <button
                   onClick={async () => {
-                    await saveOfferte("klant@voorbeeld.nl", {
+                    if (!email || !naam) {
+                      alert("Vul naam en e-mail in!");
+                      return;
+                    }
+                    setIsSubmitting(true);
+                    await saveOfferte(email, {
+                      naam,
                       kozijnNaam: kozijn.name,
+                      slug,
                       breedte,
                       hoogte,
-                      profiel,
-                      aanslag,
                       kleur,
                       glas,
                       afstandshouder,
+                      profiel,
+                      aanslag,
                       ventilatieRooster,
                       voorboren,
                       aantal,
                       prijs: berekendePrijs,
                     });
-                    alert("Offerte opgeslagen!");
+                    alert("Offerte verstuurd!");
+                    setIsSubmitting(false);
                   }}
-                  className="w-full bg-[#1066a3] text-white py-4 px-6 rounded-lg font-bold uppercase text-[11px] tracking-widest">
-                  Voeg toe aan aanvraag
+                  className="w-full bg-[#1066a3] text-white py-4 rounded-lg font-bold uppercase text-[11px] tracking-widest">
+                  {isSubmitting
+                    ? "Bezig..."
+                    : "Bereken subsidie & Vraag offerte aan"}
                 </button>
               </div>
             </div>
