@@ -1,115 +1,138 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { saveMatrix } from "@/app/actions";
+import { getMatrix } from "@/lib/data";
 
-export default function DeurenPrijzenPagina() {
-  // We groeperen de matrix in secties voor betere leesbaarheid
-  const [deurData, setDeurData] = useState({
-    basis: {
-      voordeur: 950,
-      achterdeur: 880,
-      dubbel: 1650,
-      zijlichten: 2100,
-      borstwering: 1750,
-    },
-    profiel: { vlak82: 1.0, verdiept120: 1.12, verdiept120hvl: 1.25 },
-    dorpels: { alu: 0, kader: -30, dts: 95 },
-    m2Tarief: 185,
-  });
+export default function DeurenPrijzen() {
+  const [prijzen, setPrijzen] = useState<any>(null);
+  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const Section = ({
-    title,
-    data,
-    sectionKey,
-  }: {
-    title: string;
-    data: any;
-    sectionKey: string;
-  }) => (
-    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden mb-6">
-      <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
-        <h3 className="font-black text-slate-800 uppercase text-sm tracking-wide">
-          {title}
-        </h3>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
-        {Object.entries(data).map(([key, value]) => (
-          <div
-            key={key}
-            className="flex items-center justify-between px-6 py-3 border-b border-slate-50 last:border-0">
-            <span className="text-sm text-slate-600 capitalize">
-              {key.replace(/([A-Z])/g, " $1")}
-            </span>
-            <input
-              type="number"
-              step="0.01"
-              value={value as number}
-              onChange={(e) => {
-                const val = parseFloat(e.target.value);
-                setDeurData((prev) => ({
-                  ...prev,
-                  [sectionKey]: {
-                    ...(prev[sectionKey as keyof typeof deurData] as any),
-                    [key]: val,
-                  },
-                }));
-              }}
-              className="border border-slate-200 rounded-lg px-3 py-1 w-28 text-sm text-right font-medium"
-            />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+  // 1. Data ophalen uit de database
+  useEffect(() => {
+    async function loadData() {
+      const data = await getMatrix("deur_matrix");
+      // Als er data is, gebruik die. Zo niet, start met een basis-structuur.
+      setPrijzen(
+        data || {
+          deurTypeBasis: { voordeur: 0, achterdeur: 0, "dubbele-deur": 0 },
+          m2Tarief: 0,
+          kleurToeslag: { wit: 0, antraciet: 0 },
+          glasToeslag: { "hr-plus-plus": 0, triple: 0 },
+        },
+      );
+      setLoading(false);
+    }
+    loadData();
+  }, []);
+
+  const handleSave = async () => {
+    if (!prijzen) return;
+    setSaving(true);
+    const result = await saveMatrix("deur_matrix", prijzen);
+    setSaving(false);
+    if (result.success) alert("Prijzen succesvol opgeslagen!");
+    else alert("Fout bij opslaan.");
+  };
+
+  const handleChange = (key: string, value: any, subKey?: string) => {
+    if (subKey) {
+      setPrijzen((prev: any) => ({
+        ...prev,
+        [key]: {
+          ...prev[key],
+          [subKey]: parseFloat(value) || 0,
+        },
+      }));
+    } else {
+      setPrijzen({ ...prijzen, [key]: parseFloat(value) || 0 });
+    }
+  };
+
+  if (loading) return <div className="p-6">Prijzen ophalen...</div>;
+  if (!prijzen) return <div className="p-6">Geen prijsgegevens gevonden.</div>;
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-black text-slate-800">Deuren Prijzen</h1>
-          <p className="text-slate-500">
-            Beheer de tarieven voor alle deurtypen en opties.
-          </p>
+          <h1 className="text-2xl font-black text-slate-800">
+            Deuren Prijslijst
+          </h1>
+          <p className="text-slate-500">Beheer hier de deurmatrix prijzen.</p>
         </div>
-        <button className="bg-[#2cb1e1] text-white px-6 py-2 rounded-xl font-bold hover:bg-[#1fa1cf] transition-all shadow-sm">
-          Alle prijzen opslaan
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="bg-[#1066a3] text-white px-6 py-2 rounded-xl font-bold hover:bg-[#0d5486] transition-all">
+          {saving ? "Opslaan..." : "Alles Opslaan"}
         </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Section
-          title="1. Basis Deurtypen"
-          data={deurData.basis}
-          sectionKey="basis"
-        />
-        <Section
-          title="2. Profiel Multipliers"
-          data={deurData.profiel}
-          sectionKey="profiel"
-        />
-        <Section
-          title="3. Dorpels & Extra's"
-          data={deurData.dorpels}
-          sectionKey="dorpels"
-        />
+      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+        <table className="w-full text-left">
+          <thead className="bg-slate-50">
+            <tr className="text-xs font-bold text-slate-400 uppercase">
+              <th className="py-4 px-6">Optie</th>
+              <th className="py-4 px-6 w-40">Prijs / Factor</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {Object.entries(prijzen).map(([key, value]: [string, any]) => {
+              const label = key.replace(/([A-Z])/g, " $1");
 
-        {/* Losse input voor m2 tarief */}
-        <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
-          <h3 className="font-black text-slate-800 mb-2">Grootte Toeslag</h3>
-          <p className="text-sm text-slate-500 mb-4">
-            Standaard m² tarief voor de berekening.
-          </p>
-          <input
-            type="number"
-            value={deurData.m2Tarief}
-            onChange={(e) =>
-              setDeurData((prev) => ({
-                ...prev,
-                m2Tarief: parseFloat(e.target.value),
-              }))
-            }
-            className="border border-slate-200 rounded-lg px-4 py-2 w-full font-bold text-lg text-slate-800 focus:ring-2 focus:ring-[#1066a3] outline-none"
-          />
-        </div>
+              if (typeof value === "object") {
+                return (
+                  <React.Fragment key={key}>
+                    <tr className="bg-slate-50/50">
+                      <td
+                        colSpan={2}
+                        className="py-2 px-6 font-bold text-slate-700 capitalize text-sm">
+                        {label}
+                      </td>
+                    </tr>
+                    {Object.entries(value).map(
+                      ([subKey, subValue]: [string, any]) => (
+                        <tr key={`${key}-${subKey}`}>
+                          <td className="py-2 px-6 text-slate-600 capitalize pl-10 text-sm">
+                            - {subKey.replace(/-/g, " ")}
+                          </td>
+                          <td className="py-2 px-6">
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={subValue}
+                              className="border border-slate-200 rounded-lg px-3 py-1 w-28 text-sm"
+                              onChange={(e) =>
+                                handleChange(key, e.target.value, subKey)
+                              }
+                            />
+                          </td>
+                        </tr>
+                      ),
+                    )}
+                  </React.Fragment>
+                );
+              }
+              return (
+                <tr key={key}>
+                  <td className="py-4 px-6 font-bold text-slate-800 capitalize text-sm">
+                    {label}
+                  </td>
+                  <td className="py-4 px-6">
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={value}
+                      className="border border-slate-200 rounded-lg px-3 py-1 w-28 text-sm"
+                      onChange={(e) => handleChange(key, e.target.value)}
+                    />
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
     </div>
   );
