@@ -1,20 +1,41 @@
 "use server";
 
 import { db } from "@/db";
-import { offertes } from "@/db/schema";
+import { instellingen, offertes } from "@/db/schema";
+import { revalidatePath } from "next/cache";
 import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+// 1. Functie voor admin beheer (die je admin-pagina's nodig hebben)
+export async function saveMatrix(key: string, data: any) {
+  try {
+    await db
+      .insert(instellingen)
+      .values({ key, value: data })
+      .onConflictDoUpdate({
+        target: instellingen.key,
+        set: { value: data, updatedAt: new Date() },
+      });
+
+    revalidatePath("/admin/prijzen");
+    return { success: true };
+  } catch (error) {
+    console.error("Fout bij opslaan matrix:", error);
+    return { success: false, error: "Kon niet opslaan" };
+  }
+}
+
+// 2. Functie voor offerte aanvragen
 export async function saveOfferte(email: string, data: any) {
   try {
-    // 1. Opslaan in de database
+    // Opslaan in database
     await db.insert(offertes).values({
       email: email,
       data: data,
     });
 
-    // 2. E-mail verzenden volgens officiële Resend-standaard
+    // E-mail verzenden
     const { data: emailData, error } = await resend.emails.send({
       from: "JouwBedrijf <jouw-geverifieerde-email@jouwdomein.nl>",
       to: [email],
