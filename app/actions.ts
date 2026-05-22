@@ -37,7 +37,7 @@ export async function saveOfferte(email: string, data: any) {
 
     // E-mail verzenden
     const { data: emailData, error } = await resend.emails.send({
-      from: "Bart Mooi <offerte@budgetkozijnenshop.nl>",
+      from: "Bart Mooi <offerte@offerte.budgetkozijnenshop.nl>",
       to: [email],
       subject: `Offerte aanvraag: ${data.product}`,
       html: `
