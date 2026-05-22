@@ -32,6 +32,7 @@ export default function SchuifpuiDetailPage() {
   const [kleur, setKleur] = useState("");
   const [glas, setGlas] = useState("");
   const [aantal, setAantal] = useState(1);
+  const [email, setEmail] = useState(""); // Nieuwe state voor email
 
   useEffect(() => {
     getMatrix("schuifpui_matrix").then((rawData) => {
@@ -39,7 +40,6 @@ export default function SchuifpuiDetailPage() {
         const data = rawData as PrijzenMatrix;
         setMatrix(data);
 
-        // Veilige initialisatie
         if (data.kleurToeslag && typeof data.kleurToeslag === "object") {
           setKleur(Object.keys(data.kleurToeslag)[0] || "");
         }
@@ -100,6 +100,7 @@ export default function SchuifpuiDetailPage() {
                 })}
               </div>
 
+              {/* Input velden... */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-[10px] text-slate-400 uppercase font-bold">
@@ -125,6 +126,7 @@ export default function SchuifpuiDetailPage() {
                 </div>
               </div>
 
+              {/* Kleur & Glas... */}
               <div>
                 <label className="text-[10px] text-slate-400 uppercase font-bold">
                   Kleur
@@ -157,26 +159,44 @@ export default function SchuifpuiDetailPage() {
                 </select>
               </div>
 
-              <button
-                onClick={async () => {
-                  const result = await saveOfferte("klant@voorbeeld.nl", {
-                    product: pui.name,
-                    breedte,
-                    hoogte,
-                    kleur,
-                    glas,
-                    aantal,
-                    prijs: berekendePrijs,
-                  });
-                  alert(
-                    result.success
-                      ? "Offerte succesvol opgeslagen!"
-                      : "Er ging iets mis bij het opslaan.",
-                  );
-                }}
-                className="w-full bg-[#1066a3] text-white py-4 rounded-lg font-bold uppercase text-[11px] tracking-widest">
-                Voeg toe aan aanvraag
-              </button>
+              {/* E-mail invoerveld */}
+              <div className="pt-4 border-t">
+                <label className="text-[10px] text-slate-400 uppercase font-bold block mb-2">
+                  E-mailadres voor offerte
+                </label>
+                <input
+                  type="email"
+                  placeholder="naam@voorbeeld.nl"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full border p-2.5 rounded-lg text-sm mb-4"
+                />
+
+                <button
+                  onClick={async () => {
+                    if (!email) {
+                      alert("Vul eerst je e-mailadres in!");
+                      return;
+                    }
+                    const result = await saveOfferte(email, {
+                      product: pui.name,
+                      breedte,
+                      hoogte,
+                      kleur,
+                      glas,
+                      aantal,
+                      prijs: berekendePrijs,
+                    });
+                    alert(
+                      result.success
+                        ? "Offerte verstuurd naar " + email
+                        : "Er ging iets mis bij het versturen.",
+                    );
+                  }}
+                  className="w-full bg-[#1066a3] text-white py-4 rounded-lg font-bold uppercase text-[11px] tracking-widest">
+                  Vraag offerte aan
+                </button>
+              </div>
             </div>
           </div>
         </div>
