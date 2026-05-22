@@ -1,29 +1,10 @@
 "use server";
 
 import { db } from "@/db";
-import { instellingen, offertes } from "@/db/schema";
-import { revalidatePath } from "next/cache";
+import { offertes } from "@/db/schema";
 import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-
-export async function saveMatrix(key: string, data: any) {
-  try {
-    await db
-      .insert(instellingen)
-      .values({ key, value: data })
-      .onConflictDoUpdate({
-        target: instellingen.key,
-        set: { value: data, updatedAt: new Date() },
-      });
-
-    revalidatePath("/admin/prijzen");
-    return { success: true };
-  } catch (error) {
-    console.error("Fout bij opslaan matrix:", error);
-    return { success: false, error: "Kon niet opslaan" };
-  }
-}
 
 export async function saveOfferte(email: string, data: any) {
   try {
@@ -33,24 +14,39 @@ export async function saveOfferte(email: string, data: any) {
       data: data,
     });
 
-    // 2. E-mail sturen naar de klant
-    await resend.emails.send({
-      from: "offertes@jouwdomein.nl", // Pas dit aan naar je eigen e-mailadres
-      to: email,
-      subject: "Uw offerte aanvraag",
+    // 2. E-mail verzenden volgens officiële Resend-standaard
+    const { data: emailData, error } = await resend.emails.send({
+      from: "JouwBedrijf <jouw-geverifieerde-email@jouwdomein.nl>",
+      to: [email],
+      subject: `Offerte aanvraag: ${data.product}`,
       html: `
-        <h1>Bedankt voor uw aanvraag!</h1>
-        <p>Wij hebben uw offerte succesvol ontvangen.</p>
-        <p>We nemen zo spoedig mogelijk contact met u op.</p>
-        <hr />
-        <p><strong>Configuratie details:</strong></p>
-        <pre>${JSON.stringify(data, null, 2)}</pre>
+        <div style="font-family: Arial, sans-serif;">
+          <h1>Bedankt voor uw aanvraag!</h1>
+          <p>We hebben uw aanvraag voor de <strong>${data.product}</strong> ontvangen.</p>
+          <div style="background: #f4f4f4; padding: 15px; border-radius: 8px;">
+            <p><strong>Configuratie:</strong></p>
+            <ul>
+              <li>Breedte: ${data.breedte} mm</li>
+              <li>Hoogte: ${data.hoogte} mm</li>
+              <li>Kleur: ${data.kleur}</li>
+              <li>Glas: ${data.glas}</li>
+              <li>Aantal: ${data.aantal}</li>
+            </ul>
+            <p style="font-size: 18px;"><strong>Prijs: € ${data.prijs}</strong></p>
+          </div>
+          <p>Wij nemen zo spoedig mogelijk contact met u op.</p>
+        </div>
       `,
     });
 
-    return { success: true };
+    if (error) {
+      console.error("Resend error:", error);
+      return { success: false, error: "E-mail kon niet worden verzonden." };
+    }
+
+    return { success: true, data: emailData };
   } catch (error) {
-    console.error("Fout bij opslaan offerte of versturen e-mail:", error);
+    console.error("Server Action error:", error);
     return { success: false, error: "Kon offerte niet verwerken" };
   }
 }
