@@ -49,6 +49,11 @@ const Navbar = () => {
               Deuren
             </Link>
             <Link
+              href="/harmonicadeur"
+              className="hover:text-[#1066a3] transition-colors">
+              Harmonicadeur
+            </Link>
+            <Link
               href="/schuifpui"
               className="hover:text-[#1066a3] transition-colors">
               Schuifpui

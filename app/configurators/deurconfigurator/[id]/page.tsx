@@ -4,7 +4,24 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { saveOfferte } from "@/app/actions";
 import { getMatrix } from "@/lib/data";
-import { SingleDoorBase, DoubleDoorBase } from "@/lib/deur-svgs";
+import {
+  SingleDoorBase,
+  DoubleDoorBase,
+  AchterdeurBovenlicht,
+  VoordeurBovenlicht,
+  AchterdeurBorstwering,
+  AchterdeurBorstweringBovenlicht,
+  DeurZijlicht,
+  VoordeurZijlicht,
+  DeurZijlichtBovenlicht,
+  VoordeurZijlichtBovenlicht,
+  DeurZijlichtBorstwering,
+  DeurZijlichten,
+  DubbeleDeurBovenlicht,
+  DubbeleDeurZijlicht,
+  DubbeleDeurZijlichtenBovenlichten,
+  DubbeleDeurBorstweringBovenlicht,
+} from "@/lib/deur-svgs";
 
 interface DeurMatrix {
   basisPrijs: number;
@@ -34,22 +51,27 @@ export default function DeurConfiguratorDetail() {
     string,
     { v: number; name: string; comp: React.ReactNode }
   > = {
-    voordeur: {
-      v: 1,
-      name: "Voordeur",
-      comp: <SingleDoorBase type="voordeur" />,
-    },
-    achterdeur: {
-      v: 1,
-      name: "Achterdeur",
-      comp: <SingleDoorBase type="achterdeur" />,
-    },
-    "dubbele-deur": { v: 1, name: "Dubbele deur", comp: <DoubleDoorBase /> },
-    "dubbele-deur-zijlichten": {
-      v: 1.8,
-      name: "Dubbele deur met zijlichten",
-      comp: <DoubleDoorBase hasSideLights />,
-    },
+    // ── Enkele deur ──────────────────────────────────────────────────────────
+    voordeur:                      { v: 1,   name: "Voordeur",                                   comp: <SingleDoorBase type="voordeur" /> },
+    achterdeur:                    { v: 1,   name: "Achterdeur",                                  comp: <SingleDoorBase type="achterdeur" /> },
+    "voordeur-bovenlicht":         { v: 1,   name: "Voordeur met bovenlicht",                     comp: <VoordeurBovenlicht /> },
+    "achterdeur-bovenlicht":       { v: 1,   name: "Achterdeur met bovenlicht",                   comp: <AchterdeurBovenlicht /> },
+    "achterdeur-borstwering":      { v: 1,   name: "Achterdeur met borstwering",                  comp: <AchterdeurBorstwering /> },
+    "achterdeur-borstwering-bovenlicht": { v: 1, name: "Achterdeur met borstwering en bovenlicht", comp: <AchterdeurBorstweringBovenlicht /> },
+    "deur-zijlicht":               { v: 1.5, name: "Deur met zijlicht",                          comp: <DeurZijlicht /> },
+    "voordeur-zijlicht":           { v: 1.5, name: "Voordeur met zijlicht",                      comp: <VoordeurZijlicht /> },
+    "deur-zijlicht-bovenlicht":    { v: 1.5, name: "Deur met zijlicht en bovenlicht",            comp: <DeurZijlichtBovenlicht /> },
+    "voordeur-zijlicht-bovenlicht":{ v: 1.5, name: "Voordeur met zijlicht en bovenlicht",        comp: <VoordeurZijlichtBovenlicht /> },
+    "deur-zijlicht-borstwering":   { v: 1.5, name: "Deur met zijlicht en borstwering",           comp: <DeurZijlichtBorstwering /> },
+    "deur-zijlichten":             { v: 1.8, name: "Deur met twee zijlichten",                   comp: <DeurZijlichten /> },
+    // ── Dubbele deur ─────────────────────────────────────────────────────────
+    "dubbele-deur":                         { v: 1,   name: "Dubbele deur",                                comp: <DoubleDoorBase /> },
+    "dubbele-deur-zijlichten":              { v: 1.8, name: "Dubbele deur met zijlichten",                comp: <DoubleDoorBase hasSideLights /> },
+    "dubbele-deur-borstwering":             { v: 1,   name: "Dubbele deur met borstwering",               comp: <DoubleDoorBase hasPlinth /> },
+    "dubbele-deur-bovenlicht":              { v: 1,   name: "Dubbele deur met bovenlicht",                comp: <DubbeleDeurBovenlicht /> },
+    "dubbele-deur-zijlicht":               { v: 1.5, name: "Dubbele deur met zijlicht",                  comp: <DubbeleDeurZijlicht /> },
+    "dubbele-deur-zijlichten-bovenlichten": { v: 1.8, name: "Dubbele deur met zijlichten en bovenlichten", comp: <DubbeleDeurZijlichtenBovenlichten /> },
+    "dubbele-deur-borstwering-bovenlicht":  { v: 1,   name: "Dubbele deur met borstwering en bovenlicht", comp: <DubbeleDeurBorstweringBovenlicht /> },
   };
 
   const deur = deurOpties[slug] || deurOpties.voordeur;
@@ -102,7 +124,7 @@ export default function DeurConfiguratorDetail() {
           <div className="lg:col-span-7">
             <h1 className="text-2xl font-semibold mb-6">{deur.name}</h1>
             <div className="bg-slate-50 p-10 rounded-xl border">
-              <svg viewBox={`0 0 ${deur.v * 100} 100`} className="w-full">
+              <svg viewBox={`0 0 ${deur.v * 100} 160`} className="w-full h-auto">
                 {deur.comp}
               </svg>
             </div>
