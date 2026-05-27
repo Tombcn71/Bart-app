@@ -20,7 +20,7 @@ const DEFAULT_MATRIX = {
   profielToeslag: { "creon-120": 0, "creon-120-hvl": 0 },
   onderdorpelToeslag: { "doorlopend-kader": 0, "dts": 0 },
   draairichtingToeslag: { "buiten-links": 0, "buiten-rechts": 0, "binnen-links": 0, "binnen-rechts": 0 },
-  kleurBuitenkantToeslag: { wit: 0, "creme-wit": 0, antraciet: 0, "basalt-grijs": 0, "kwarts-grijs": 0, "zwart": 0 },
+  kleurBuitenkantToeslag: { wit: 0, "creme-wit": 0, antraciet: 0, "basalt-grijs": 0, "kwarts-grijs": 0, zwart: 0 },
   afstandshouderToeslag: { aluminium: 0, zwart: 0 },
   roedenToeslag: { geen: 0, "6-vaks-18mm": 0, "8-vaks-18mm": 0, "6-vaks-26mm": 0, "8-vaks-26mm": 0 },
 };
@@ -47,10 +47,10 @@ const deurOpties: Record<string, { v: number; name: string; comp: React.ReactNod
   "dubbele-deur-borstwering-bovenlicht":  { v: 1,   name: "Dubbele deur met borstwering en bovenlicht",   comp: <DubbeleDeurBorstweringBovenlicht /> },
 };
 
-export default function DeurConfiguratorDetail() {
+export default function AluDeurConfiguratorDetail() {
   const { id } = useParams();
   const slug = typeof id === "string" ? id : "voordeur";
-  const deur = deurOpties[slug] || deurOpties.voordeur;
+  const deur = deurOpties[slug] ?? deurOpties.voordeur;
 
   const [matrix, setMatrix] = useState<any>(null);
   const [breedte, setBreedte] = useState(1000);
@@ -70,7 +70,7 @@ export default function DeurConfiguratorDetail() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    getMatrix("deur_matrix").then((data: any) => {
+    getMatrix("alu_deur_matrix").then((data: any) => {
       const m = { ...DEFAULT_MATRIX, ...(data && Object.keys(data).length ? data : {}) };
       setMatrix(m);
       setKleur(Object.keys(m.kleurToeslag || {})[0] || "");
@@ -118,12 +118,12 @@ export default function DeurConfiguratorDetail() {
   return (
     <div className="w-full min-h-screen bg-white">
       <div className="max-w-[1200px] mx-auto px-6 py-10">
-        <Link href="/deuren" className="text-[11px] uppercase tracking-wider text-slate-400 hover:text-[#1066a3]">
+        <Link href="/aluminium/deuren" className="text-[11px] uppercase tracking-wider text-slate-400 hover:text-[#1066a3]">
           ← Overzicht
         </Link>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 mt-6">
           <div className="lg:col-span-7">
-            <h1 className="text-2xl font-semibold mb-6">{deur.name}</h1>
+            <h1 className="text-2xl font-semibold mb-2">Aluminium — {deur.name}</h1>
             <div className="bg-slate-50 p-10 rounded-xl border">
               <svg viewBox={`0 0 ${deur.v * 100} 160`} className="w-full h-auto">{deur.comp}</svg>
             </div>
@@ -154,7 +154,7 @@ export default function DeurConfiguratorDetail() {
               {selectField("Kleur buitenkant", kleurBuitenkant, setKleurBuitenkant, matrix.kleurBuitenkantToeslag || {})}
               {selectField("Paneel", paneel, setPaneel, matrix.paneelToeslag || {})}
               {selectField("Beslag", beslag, setBeslag, matrix.typeBeslag || {})}
-              {selectField("Type glas / afstandshouder", afstandshouder, setAfstandshouder, matrix.afstandshouderToeslag || {})}
+              {selectField("Afstandshouder", afstandshouder, setAfstandshouder, matrix.afstandshouderToeslag || {})}
               {selectField("Roeden", roeden, setRoeden, matrix.roedenToeslag || {})}
 
               <div>
@@ -162,7 +162,7 @@ export default function DeurConfiguratorDetail() {
                 <input type="number" min={1} value={aantal} onChange={(e) => setAantal(Number(e.target.value))} className="w-full border p-2.5 rounded-lg text-sm" />
               </div>
 
-              <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl mt-4">
+              <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl">
                 <h3 className="text-sm font-bold text-slate-800">Check uw subsidie</h3>
                 <label className="block text-[10px] mt-2 font-bold text-slate-500 uppercase">Naam</label>
                 <input type="text" placeholder="Uw naam" value={naam} onChange={(e) => setNaam(e.target.value)} className="w-full p-2 rounded-lg border text-sm" />
@@ -173,10 +173,10 @@ export default function DeurConfiguratorDetail() {
               <button
                 disabled={isSubmitting}
                 onClick={async () => {
-                  if (!email || !naam) return alert("Vul gegevens in!");
+                  if (!email || !naam) return alert("Vul naam en e-mail in!");
                   setIsSubmitting(true);
                   await saveOfferte(email, {
-                    naam, deurNaam: deur.name, slug, breedte, hoogte,
+                    naam, deurNaam: `Aluminium ${deur.name}`, slug, breedte, hoogte,
                     kleur, kleurBuitenkant, beslag, paneel, profiel,
                     onderdorpel, draairichting, afstandshouder, roeden,
                     aantal, prijs: berekendePrijs,

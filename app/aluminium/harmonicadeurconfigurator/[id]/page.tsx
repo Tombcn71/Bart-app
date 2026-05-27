@@ -25,7 +25,7 @@ const opties: Record<string, { sections: 3 | 4 | 5; name: string }> = {
   vijfdelig: { sections: 5, name: "Vijfdelige harmonicadeur" },
 };
 
-export default function HarmonicadeurConfiguratorDetail() {
+export default function AluHarmonicadeurConfiguratorDetail() {
   const { id } = useParams();
   const slug = typeof id === "string" ? id : "driedelig";
   const deur = opties[slug] ?? opties.driedelig;
@@ -48,7 +48,7 @@ export default function HarmonicadeurConfiguratorDetail() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    getMatrix("harmonicadeur_matrix").then((data: any) => {
+    getMatrix("alu_harmonicadeur_matrix").then((data: any) => {
       const m = { ...DEFAULT_MATRIX, ...(data && Object.keys(data).length ? data : {}) };
       setMatrix(m);
       setProfiel(Object.keys(m.profielToeslag || {})[0] || "");
@@ -63,7 +63,6 @@ export default function HarmonicadeurConfiguratorDetail() {
     });
   }, []);
 
-  // Harmonicadeur: 40mm offset (20mm per zijde)
   const binnenwerksBreedte = Math.max(0, breedte - 40);
   const binnenwerkseHoogte = Math.max(0, hoogte - 40);
 
@@ -101,12 +100,12 @@ export default function HarmonicadeurConfiguratorDetail() {
   return (
     <div className="w-full min-h-screen bg-white">
       <div className="max-w-[1200px] mx-auto px-6 py-10">
-        <Link href="/harmonicadeur" className="text-[11px] uppercase tracking-wider text-slate-400 hover:text-[#1066a3]">
+        <Link href="/aluminium/harmonicadeur" className="text-[11px] uppercase tracking-wider text-slate-400 hover:text-[#1066a3]">
           ← Overzicht
         </Link>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 mt-6">
           <div className="lg:col-span-7">
-            <h1 className="text-2xl font-semibold uppercase text-slate-800 mb-6">{deur.name}</h1>
+            <h1 className="text-2xl font-semibold uppercase text-slate-800 mb-2">Aluminium — {deur.name}</h1>
             <div className="bg-slate-50 p-10 rounded-xl border flex items-center justify-center">
               <HarmonicadeurSVG sections={deur.sections} />
             </div>
@@ -167,7 +166,7 @@ export default function HarmonicadeurConfiguratorDetail() {
                   if (!email || !naam) return alert("Vul naam en e-mail in!");
                   setIsSubmitting(true);
                   await saveOfferte(email, {
-                    naam, deurNaam: deur.name, slug, breedte, hoogte,
+                    naam, deurNaam: `Aluminium ${deur.name}`, slug, breedte, hoogte,
                     binnenwerksBreedte, binnenwerkseHoogte,
                     profiel, aanslag, typeLak, kleurBuiten, kleurBinnen,
                     glas, draairichting, volgorde, voorboren,

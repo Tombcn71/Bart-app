@@ -19,7 +19,7 @@ const DEFAULT_MATRIX = {
   roedenToeslag: { geen: 0, "6-vaks-18mm": 0, "8-vaks-18mm": 0, "6-vaks-26mm": 0, "8-vaks-26mm": 0 },
   ventilatieRoosterToeslag: { nee: 0, ja: 0 },
   draairichtingToeslag: { "vaste-deel-links": 0, "vaste-deel-rechts": 0 },
-  krukToeslag: { "kruk-binnen-sleutel": 0, "kruk-binnen": 0, "greep": 0 },
+  krukToeslag: { "kruk-binnen-sleutel": 0, "kruk-binnen": 0, greep: 0 },
   voorborenToeslag: { "niet-voorboren": 0, voorboren: 0 },
 };
 
@@ -28,9 +28,9 @@ const puiData = [
   { slug: "schuifpui-4-vaks", sections: 4, name: "Schuifpui 4-vaks" },
 ];
 
-export default function SchuifpuiDetailPage() {
-  const params = useParams();
-  const slug = typeof params?.id === "string" ? params.id : "schuifpui-2-vaks";
+export default function AluSchuifpuiDetailPage() {
+  const { id } = useParams();
+  const slug = typeof id === "string" ? id : "schuifpui-2-vaks";
   const pui = puiData.find((s) => s.slug === slug) || puiData[0];
 
   const [matrix, setMatrix] = useState<any>(null);
@@ -54,7 +54,7 @@ export default function SchuifpuiDetailPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    getMatrix("schuifpui_matrix").then((data: any) => {
+    getMatrix("alu_schuifpui_matrix").then((data: any) => {
       const m = { ...DEFAULT_MATRIX, ...(data && Object.keys(data).length ? data : {}) };
       setMatrix(m);
       setKleur(Object.keys(m.kleurToeslag || {})[0] || "");
@@ -93,7 +93,7 @@ export default function SchuifpuiDetailPage() {
     ).toFixed(2)) * aantal;
   }, [matrix, pui.sections, breedte, hoogte, kleur, kleurBuitenkant, kleurBewegende, glas, profiel, aanslag, afstandshouder, roeden, ventilatieRooster, draairichting, kruk, voorboren, aantal]);
 
-  if (!matrix) return <div className="p-10 text-center">Configuratie laden...</div>;
+  if (!matrix) return <div className="p-10 text-center text-slate-400">Configuratie laden...</div>;
 
   const sel = (label: string, value: string, setter: (v: string) => void, opties: Record<string, number>) => (
     <div>
@@ -107,12 +107,12 @@ export default function SchuifpuiDetailPage() {
   return (
     <div className="w-full min-h-screen bg-white">
       <div className="max-w-[1200px] mx-auto px-6 py-10">
-        <Link href="/schuifpui" className="text-xs uppercase tracking-wider text-slate-400 hover:text-[#1066a3]">
+        <Link href="/aluminium/schuifpui" className="text-xs uppercase tracking-wider text-slate-400 hover:text-[#1066a3]">
           ← Overzicht
         </Link>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 mt-6">
           <div className="lg:col-span-7">
-            <h1 className="text-2xl font-semibold mb-6">{pui.name}</h1>
+            <h1 className="text-2xl font-semibold mb-2">Aluminium — {pui.name}</h1>
             <div className="bg-slate-50 p-10 rounded-xl border flex items-center justify-center">
               <SlidingDoorDetailSVG sections={pui.sections} />
             </div>
@@ -181,7 +181,7 @@ export default function SchuifpuiDetailPage() {
                   if (!email || !naam) return alert("Vul a.u.b. uw gegevens in.");
                   setIsSubmitting(true);
                   await saveOfferte(email, {
-                    naam, product: pui.name, slug, breedte, hoogte,
+                    naam, product: `Aluminium ${pui.name}`, slug, breedte, hoogte,
                     kleur, kleurBuitenkant, kleurBewegende, glas, profiel, aanslag,
                     afstandshouder, roeden, ventilatieRooster, draairichting, kruk, voorboren,
                     aantal, prijs: berekendePrijs,

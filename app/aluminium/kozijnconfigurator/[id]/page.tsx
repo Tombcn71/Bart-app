@@ -39,8 +39,6 @@ const getKozijnData = (slug: string) => {
     { slug: "draai-kiep-vast-kozijn",                  v: 2, types: ["dk","vast"],         name: "Draai kiep - Vast",             components: [<GlassDK key="1" x={0} />, <GlassVast key="2" x={100} />] },
     { slug: "draai-kiep-draai-stolp-kozijn",           v: 2, types: ["dk","dk"],           name: "Draai kiep - Draai kiep",       components: [<GlassDK key="1" x={0} />, <GlassDK key="2" x={100} mirror />] },
     { slug: "vast-vast-kozijn",                        v: 2, types: ["vast","vast"],       name: "Vast - Vast",                   components: [<GlassVast key="1" x={0} />, <GlassVast key="2" x={100} />] },
-    { slug: "dk-dk-gelijk",                            v: 2, types: ["dk","dk"],           name: "Draai kiep - Draai kiep gelijk", components: [<GlassDK key="1" x={0} />, <GlassDK key="2" x={100} mirror />] },
-    { slug: "kiep-vast-liggend",                       v: 2, types: ["kiep","vast"],       name: "Kiep - vast kozijn",            components: [<GlassKiep key="1" x={0} />, <GlassVast key="2" x={100} />] },
     { slug: "kiep-kiep-kozijn",                        v: 2, types: ["kiep","kiep"],       name: "Kiep - kiep kozijn",            components: [<GlassKiepKiep key="1" x={0} />] },
     { slug: "dk-dk-stolp-bovenlicht-vast-2vaks",       v: 2, types: ["dk","dk"],           name: "Draai/kiep - draai stolp bovenlicht", components: [<GlassDkDkStolpBovenlichtVast key="1" x={0} />] },
     { slug: "dk-vast-bovenlichten-vast-2vaks",         v: 2, types: ["dk","vast"],         name: "Draai/kiep - vast bovenlichten",components: [<GlassDkVastBovenlichtenVast key="1" x={0} />] },
@@ -60,7 +58,7 @@ const getKozijnData = (slug: string) => {
   return data.find((k) => k.slug === slug) || null;
 };
 
-export default function ConfiguratorDetail() {
+export default function AluKozijnConfiguratorDetail() {
   const { id } = useParams();
   const slug = typeof id === "string" ? id : "vast-kozijn";
   const kozijn = getKozijnData(slug);
@@ -83,7 +81,7 @@ export default function ConfiguratorDetail() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    getMatrix("kozijn_matrix").then((data: any) => {
+    getMatrix("alu_kozijn_matrix").then((data: any) => {
       const m = { ...DEFAULT_MATRIX, ...(data && Object.keys(data).length ? data : {}) };
       setMatrix(m);
       setKleur(Object.keys(m.kleurToeslag || {})[0] || "");
@@ -98,7 +96,6 @@ export default function ConfiguratorDetail() {
     });
   }, []);
 
-  // Binnenwerkse maten: buitenwerkse - 54mm (27mm aanslag per zijde)
   const binnenwerksBreedte = Math.max(0, breedte - 54);
   const binnenwerkseHoogte = Math.max(0, hoogte - 54);
 
@@ -138,12 +135,12 @@ export default function ConfiguratorDetail() {
   return (
     <div className="w-full min-h-screen bg-white">
       <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-6 md:py-10">
-        <Link href="/kozijnen" className="text-slate-400 text-[11px] uppercase tracking-wider hover:text-[#1066a3]">
+        <Link href="/aluminium/kozijnen" className="text-slate-400 text-[11px] uppercase tracking-wider hover:text-[#1066a3]">
           ← Overzicht
         </Link>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 mt-6">
           <div className="lg:col-span-7">
-            <h1 className="text-2xl font-semibold uppercase text-slate-800 mb-6">{kozijn.name}</h1>
+            <h1 className="text-2xl font-semibold uppercase text-slate-800 mb-2">Aluminium — {kozijn.name}</h1>
             <div className="bg-slate-50 rounded-xl p-10 flex items-center justify-center">
               <svg viewBox={`0 0 ${kozijn.v * 100} 100`} className="w-full max-h-[400px]">
                 <rect x="0.4" y="0.4" width={kozijn.v * 100 - 0.8} height="99.2" fill="white" stroke={FRAME_COLOR} strokeWidth="0.8" />
@@ -162,7 +159,6 @@ export default function ConfiguratorDetail() {
                 <div className="text-3xl text-slate-800">€ {berekendePrijs.toLocaleString("nl-NL", { minimumFractionDigits: 2 })}</div>
               </div>
 
-              {/* Afmetingen */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-[10px] font-bold text-slate-500 uppercase">Buitenwerkse breedte (mm)</label>
@@ -211,7 +207,7 @@ export default function ConfiguratorDetail() {
                   if (!email || !naam) return alert("Vul naam en e-mail in!");
                   setIsSubmitting(true);
                   await saveOfferte(email, {
-                    naam, kozijnNaam: kozijn.name, slug, breedte, hoogte,
+                    naam, kozijnNaam: `Aluminium ${kozijn.name}`, slug, breedte, hoogte,
                     binnenwerksBreedte, binnenwerkseHoogte,
                     kleur, kleurBuitenkant, glas, profiel, aanslag,
                     afstandshouder, roeden, ventilatieRooster, voorboren,

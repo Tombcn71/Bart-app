@@ -1,69 +1,100 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { saveMatrix } from "@/app/actions";
-import { getMatrix } from "@/lib/data"; // Zorg dat deze import klopt
+import { getMatrix } from "@/lib/data";
+
+const BASE_DEFAULTS = {
+  basisPrijs: 0, m2Tarief: 0,
+  kleurToeslag: { wit: 0, "creme-wit": 0, antraciet: 0, "ral-kleur": 0 },
+  kleurBuitenkantToeslag: { wit: 0, "creme-wit": 0, antraciet: 0, "basalt-grijs": 0, "kwarts-grijs": 0, zwart: 0 },
+  glasToeslag: { "dubbel-glas": 0, "triple-glas": 0, "hr-plus-plus": 0 },
+  profielToeslag: { "vlak-82": 0, "creon-82": 0, "creon-verdiept-120": 0, "creon-verdiept-120-hvl": 0 },
+  aanslagToeslag: { ja: 0, nee: 0 },
+  afstandshouderToeslag: { aluminium: 0, zwart: 0 },
+  roedenToeslag: { geen: 0, "6-vaks-18mm": 0, "8-vaks-18mm": 0, "6-vaks-26mm": 0, "8-vaks-26mm": 0 },
+  ventilatieRoosterToeslag: { nee: 0, ja: 0 },
+  voorborenToeslag: { "niet-voorboren": 0, voorboren: 0 },
+};
+
+type Materiaal = "kunststof" | "aluminium";
 
 export default function KozijnenPrijzen() {
-  const [prijzen, setPrijzen] = useState<any>(null);
+  const [materiaal, setMateriaal] = useState<Materiaal>("kunststof");
+  const [prijzen, setPrijzen] = useState<Record<Materiaal, any>>({
+    kunststof: null,
+    aluminium: null,
+  });
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // 1. Data ophalen uit de database bij het laden (de enige waarheid)
   useEffect(() => {
     async function loadData() {
-      const data = await getMatrix("kozijn_matrix");
-      if (data) {
-        setPrijzen(data);
-      }
+      const [kData, aData] = await Promise.all([
+        getMatrix("kozijn_matrix"),
+        getMatrix("alu_kozijn_matrix"),
+      ]);
+      setPrijzen({
+        kunststof: { ...BASE_DEFAULTS, ...(kData && Object.keys(kData).length ? kData : {}) },
+        aluminium: { ...BASE_DEFAULTS, ...(aData && Object.keys(aData).length ? aData : {}) },
+      });
       setLoading(false);
     }
     loadData();
   }, []);
 
   const handleSave = async () => {
-    if (!prijzen) return;
     setSaving(true);
-    const result = await saveMatrix("kozijn_matrix", prijzen);
+    const key = materiaal === "kunststof" ? "kozijn_matrix" : "alu_kozijn_matrix";
+    const result = await saveMatrix(key, prijzen[materiaal]);
     setSaving(false);
-    if (result.success) alert("Prijzen succesvol opgeslagen!");
+    if (result.success) alert(`${materiaal === "kunststof" ? "Kunststof" : "Aluminium"} prijzen opgeslagen!`);
     else alert("Fout bij opslaan.");
   };
 
   const handleChange = (key: string, value: any, subKey?: string) => {
-    if (subKey) {
-      setPrijzen((prev: any) => ({
-        ...prev,
-        [key]: {
-          ...prev[key],
-          [subKey]: parseFloat(value),
-        },
-      }));
-    } else {
-      setPrijzen({ ...prijzen, [key]: parseFloat(value) });
-    }
+    setPrijzen((prev) => {
+      const current = { ...prev[materiaal] };
+      if (subKey) {
+        current[key] = { ...current[key], [subKey]: parseFloat(value) || 0 };
+      } else {
+        current[key] = parseFloat(value) || 0;
+      }
+      return { ...prev, [materiaal]: current };
+    });
   };
 
-  if (loading)
-    return <div className="p-6">Prijzen ophalen uit database...</div>;
-  if (!prijzen) return <div className="p-6">Geen prijsgegevens gevonden.</div>;
+  if (loading) return <div className="p-6">Prijzen ophalen...</div>;
+
+  const huidig = prijzen[materiaal];
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-black text-slate-800">
-            Kozijn & Glas Prijslijst
-          </h1>
-          <p className="text-slate-500">
-            Bart beheert hier de prijzen in de database.
-          </p>
+          <h1 className="text-2xl font-black text-slate-800">Kozijn & Glas Prijslijst</h1>
+          <p className="text-slate-500 text-sm">Beheer hier de kozijnmatrix prijzen.</p>
         </div>
         <button
           onClick={handleSave}
           disabled={saving}
           className="bg-[#1066a3] text-white px-6 py-2 rounded-xl font-bold hover:bg-[#0d5486] transition-all">
-          {saving ? "Opslaan..." : "Alles Opslaan"}
+          {saving ? "Opslaan..." : "Opslaan"}
         </button>
+      </div>
+
+      <div className="flex bg-slate-100 p-1 rounded-xl w-fit">
+        {(["kunststof", "aluminium"] as Materiaal[]).map((m) => (
+          <button
+            key={m}
+            onClick={() => setMateriaal(m)}
+            className={`px-6 py-2 text-sm font-bold rounded-lg transition-colors capitalize ${
+              materiaal === m
+                ? "bg-[#1066a3] text-white shadow-md"
+                : "text-slate-500 hover:text-slate-800"
+            }`}>
+            {m}
+          </button>
+        ))}
       </div>
 
       <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
@@ -75,40 +106,32 @@ export default function KozijnenPrijzen() {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {Object.entries(prijzen).map(([key, value]: [string, any]) => {
-              // Geen vertaallogica. We tonen de key precies zoals deze in de database staat.
+            {huidig && Object.entries(huidig).map(([key, value]: [string, any]) => {
               const label = key.replace(/([A-Z])/g, " $1");
-
               if (typeof value === "object") {
                 return (
                   <React.Fragment key={key}>
                     <tr className="bg-slate-50/50">
-                      <td
-                        colSpan={2}
-                        className="py-2 px-6 font-bold text-slate-700 capitalize text-sm">
+                      <td colSpan={2} className="py-2 px-6 font-bold text-slate-700 capitalize text-sm">
                         {label}
                       </td>
                     </tr>
-                    {Object.entries(value).map(
-                      ([subKey, subValue]: [string, any]) => (
-                        <tr key={`${key}-${subKey}`}>
-                          <td className="py-2 px-6 text-slate-600 capitalize pl-10 text-sm">
-                            - {subKey.replace(/-/g, " ")}
-                          </td>
-                          <td className="py-2 px-6">
-                            <input
-                              type="number"
-                              step="0.01"
-                              value={subValue}
-                              className="border border-slate-200 rounded-lg px-3 py-1 w-28 text-sm"
-                              onChange={(e) =>
-                                handleChange(key, e.target.value, subKey)
-                              }
-                            />
-                          </td>
-                        </tr>
-                      ),
-                    )}
+                    {Object.entries(value).map(([subKey, subValue]: [string, any]) => (
+                      <tr key={`${key}-${subKey}`}>
+                        <td className="py-2 px-6 text-slate-600 capitalize pl-10 text-sm">
+                          - {subKey.replace(/-/g, " ")}
+                        </td>
+                        <td className="py-2 px-6">
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={subValue}
+                            className="border border-slate-200 rounded-lg px-3 py-1 w-28 text-sm"
+                            onChange={(e) => handleChange(key, e.target.value, subKey)}
+                          />
+                        </td>
+                      </tr>
+                    ))}
                   </React.Fragment>
                 );
               }

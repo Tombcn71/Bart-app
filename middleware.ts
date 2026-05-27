@@ -30,6 +30,9 @@ export function middleware(request: NextRequest) {
 
   // 4. Offerte Subdomein (offerte.budgetkozijnenshop.nl)
   if (currentHost.startsWith("offerte.")) {
+    if (pathname.startsWith("/aluminium")) {
+      return NextResponse.next();
+    }
     url.pathname =
       pathname === "/"
         ? "/configurators/kozijnen"
