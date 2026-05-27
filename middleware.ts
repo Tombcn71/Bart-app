@@ -22,9 +22,13 @@ export function middleware(request: NextRequest) {
 
   // 3. Admin Subdomein (admin.budgetkozijnenshop.nl)
   if (currentHost.startsWith("admin.")) {
-    url.pathname = pathname.startsWith("/admin")
-      ? pathname
-      : `/admin${pathname}`;
+    if (pathname !== "/login") {
+      const token = request.cookies.get("admin_token")?.value;
+      if (token !== process.env.ADMIN_TOKEN) {
+        return NextResponse.redirect(new URL("/login", request.url));
+      }
+    }
+    url.pathname = pathname.startsWith("/admin") ? pathname : `/admin${pathname}`;
     return NextResponse.rewrite(url);
   }
 

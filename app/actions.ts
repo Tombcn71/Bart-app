@@ -5,6 +5,24 @@ import { instellingen, offertes } from "@/db/schema";
 import { revalidatePath } from "next/cache";
 import { Resend } from "resend";
 import { desc } from "drizzle-orm";
+import { cookies } from "next/headers";
+
+export async function adminLogin(password: string) {
+  if (password === process.env.ADMIN_PASSWORD) {
+    (await cookies()).set("admin_token", process.env.ADMIN_TOKEN!, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 60 * 60 * 24 * 30,
+      path: "/",
+    });
+    return { success: true };
+  }
+  return { success: false };
+}
+
+export async function adminLogout() {
+  (await cookies()).delete("admin_token");
+}
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 

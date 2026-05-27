@@ -7,7 +7,10 @@ import {
   ChevronRight,
   Menu,
   X,
+  LogOut,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { adminLogout } from "@/app/actions";
 import {
   Sidebar,
   SidebarContent,
@@ -42,6 +45,13 @@ function CustomSidebarTrigger() {
 }
 
 export function AppSidebar() {
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await adminLogout();
+    router.push("/login");
+  };
+
   return (
     <Sidebar
       className="border-none"
@@ -140,14 +150,22 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="p-4 border-t border-white/10 bg-black/10 text-white">
-        <div className="flex items-center gap-3 text-xs">
-          <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center font-bold">
-            B
+        <div className="flex items-center justify-between text-xs">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center font-bold">
+              B
+            </div>
+            <div>
+              <p className="font-bold leading-tight">BartMooi Beheer</p>
+              <p className="opacity-80">Ingelogd als Admin</p>
+            </div>
           </div>
-          <div>
-            <p className="font-bold leading-tight">BartMooi Beheer</p>
-            <p className="opacity-80">Ingelogd als Admin</p>
-          </div>
+          <button
+            onClick={handleLogout}
+            title="Uitloggen"
+            className="p-2 rounded-lg hover:bg-black/20 transition-colors opacity-70 hover:opacity-100">
+            <LogOut size={16} />
+          </button>
         </div>
       </SidebarFooter>
     </Sidebar>

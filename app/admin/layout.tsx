@@ -2,6 +2,7 @@
 import { SidebarProvider, useSidebar } from "@/components/ui/sidebar";
 import { AppSidebar } from "../components/AppSidebar";
 import { Menu, X } from "lucide-react";
+import { usePathname } from "next/navigation";
 
 function CustomSidebarTrigger() {
   const { toggleSidebar, openMobile, isMobile, open } = useSidebar();
@@ -20,6 +21,10 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+
+  if (pathname === "/admin/login" || pathname === "/login") return <>{children}</>;
+
   return (
     <SidebarProvider>
       <AppSidebar />
