@@ -6,6 +6,11 @@ import { revalidatePath } from "next/cache";
 import { Resend } from "resend";
 import { desc } from "drizzle-orm";
 import { cookies } from "next/headers";
+import { renderToBuffer } from "@react-pdf/renderer";
+import { createElement } from "react";
+import { OffertePDF } from "@/app/components/OffertePDF";
+import { readFileSync } from "fs";
+import { join } from "path";
 
 export async function adminLogin(password: string) {
   if (password === process.env.ADMIN_PASSWORD) {
@@ -73,44 +78,44 @@ export async function saveOfferte(email: string, data: any) {
     const dataMetSubsidie = { ...data, subsidieIndicatie: totaalSubsidie };
 
     // 2. Opslaan in database
-    const [inserted] = await db
-      .insert(offertes)
-      .values({
-        email: email,
-        data: dataMetSubsidie,
-      })
-      .returning({ id: offertes.id });
+    await db.insert(offertes).values({ email, data: dataMetSubsidie });
 
+    // 3. Genereer PDF (geen SVG)
+    const offerteNummer = `OF/${new Date().getFullYear()}/${Date.now().toString().slice(-6)}`;
+    const datum = new Date().toLocaleDateString("nl-NL", { day: "2-digit", month: "2-digit", year: "numeric" });
+    const logoBuffer = readFileSync(join(process.cwd(), "public", "bartmooi-logo-1.png"));
+    const logoBase64 = logoBuffer.toString("base64");
+    const pdfBuffer = await renderToBuffer(
+      createElement(OffertePDF, { data: dataMetSubsidie, email, offerteNummer, datum, subsidie: totaalSubsidie, logoBase64 }) as any
+    );
 
-    // 4. PDF download link
-    const baseUrl =
-      process.env.NEXT_PUBLIC_BASE_URL || "https://offerte-bartmooi.nl";
-    const pdfUrl = `${baseUrl}/api/offerte/${inserted.id}/pdf`;
-
-    // 5. E-mail verzenden — simpele HTML, geen bijlage
+    // 4. E-mail met PDF bijlage
     const { data: emailData, error } = await resend.emails.send({
       from: "BartMooi <info@offerte-bartmooi.nl>",
       to: [email],
       subject: `Offerte aanvraag: ${data.product || data.kozijnNaam}`,
-      html: `<div style="font-family: Arial, sans-serif; color: #333; max-width: 560px; margin: 0 auto;">
-<h2 style="color: #1066a3;">Bedankt voor uw aanvraag, ${data.naam || ""}!</h2>
-<p>We hebben uw aanvraag voor de <strong>${data.product || data.kozijnNaam}</strong> ontvangen.</p>
-<p><strong>Uw offerte:</strong> <a href="${pdfUrl}">${pdfUrl}</a></p>
-<p><strong>Configuratie:</strong></p>
-<ul>
-<li>Breedte: ${data.breedte} mm</li>
-<li>Hoogte: ${data.hoogte} mm</li>
-<li>Kleur: ${data.kleur || "-"}</li>
-<li>Glas: ${data.glas || "-"}</li>
-<li>Aantal: ${data.aantal}</li>
-<li>Prijs: € ${data.prijs.toLocaleString("nl-NL", { minimumFractionDigits: 2 })}</li>
-</ul>
-<p>Subsidie indicatie (ISDE): € ${totaalSubsidie.toLocaleString("nl-NL")}</p>
-<p>Wij nemen zo spoedig mogelijk contact met u op.</p>
-<p>Met vriendelijke groet,<br>Team BartMooi</p>
-<p style="color: #999; font-size: 11px;">BartMooi B.V. - Burgemeester Hovylaan 157 - 2552 XB Den Haag</p>
-</div>`,
-      j,
+      html: `
+        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+          <h1 style="color: #1066a3;">Bedankt voor uw aanvraag, ${data.naam || ""}!</h1>
+          <p>We hebben uw aanvraag voor de <strong>${data.product || data.kozijnNaam}</strong> ontvangen. Uw offerte vindt u als bijlage.</p>
+          <div style="background: #e0f2fe; border: 2px solid #1066a3; padding: 20px; border-radius: 10px; margin: 20px 0;">
+            <h2 style="color: #1066a3; margin-top: 0;">Subsidiekans!</h2>
+            <p style="font-size: 28px; font-weight: bold; color: #1066a3; margin: 10px 0;">€ ${totaalSubsidie.toLocaleString("nl-NL")}</p>
+            <p style="font-size: 13px;"><em>Indicatie op basis van de ISDE-regeling.</em></p>
+          </div>
+          <div style="background: #f4f4f4; padding: 15px; border-radius: 8px;">
+            <ul>
+              <li>Breedte: ${data.breedte} mm</li>
+              <li>Hoogte: ${data.hoogte} mm</li>
+              <li>Kleur: ${data.kleur || "-"}</li>
+              <li>Glas: ${data.glas || "-"}</li>
+              <li>Aantal: ${data.aantal}</li>
+            </ul>
+            <p style="font-size: 18px;"><strong>Prijs: € ${data.prijs.toLocaleString("nl-NL", { minimumFractionDigits: 2 })}</strong></p>
+          </div>
+          <p>Wij nemen zo spoedig mogelijk contact met u op.</p>
+        </div>`,
+      attachments: [{ filename: `Offerte-${offerteNummer.replace(/\//g, "-")}.pdf`, content: pdfBuffer }],
     });
 
     if (error) {
