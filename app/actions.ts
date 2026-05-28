@@ -9,6 +9,8 @@ import { cookies } from "next/headers";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { createElement } from "react";
 import { OffertePDF } from "@/app/components/OffertePDF";
+import { readFileSync } from "fs";
+import { join } from "path";
 
 export async function adminLogin(password: string) {
   if (password === process.env.ADMIN_PASSWORD) {
@@ -86,6 +88,9 @@ export async function saveOfferte(email: string, data: any) {
     const datum = new Date().toLocaleDateString("nl-NL", { day: "2-digit", month: "2-digit", year: "numeric" });
 
     // 4. Genereer PDF
+    const logoBuffer = readFileSync(join(process.cwd(), "public", "bartmooi-logo-1.png"));
+    const logoBase64 = logoBuffer.toString("base64");
+
     const pdfBuffer = await renderToBuffer(
       createElement(OffertePDF, {
         data: dataMetSubsidie,
@@ -93,12 +98,13 @@ export async function saveOfferte(email: string, data: any) {
         offerteNummer,
         datum,
         subsidie: totaalSubsidie,
+        logoBase64,
       }) as any
     );
 
     // 5. E-mail verzenden met PDF bijlage
     const { data: emailData, error } = await resend.emails.send({
-      from: "Bart Mooi <offerte@offerte.budgetkozijnenshop.nl>",
+      from: "BartMooi <offerte@offerte-bartmooi.nl>",
       to: [email],
       subject: `Uw offerte ${offerteNummer} — ${data.product || data.kozijnNaam}`,
       html: `
