@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { Resend } from "resend";
 import { desc } from "drizzle-orm";
 import { cookies } from "next/headers";
+import { generateOffertePdf } from "@/app/lib/generate-offerte-pdf";
 
 export async function adminLogin(password: string) {
   if (password === process.env.ADMIN_PASSWORD) {
@@ -75,44 +76,46 @@ export async function saveOfferte(email: string, data: any) {
     // 2. Opslaan in database
     await db.insert(offertes).values({ email, data: dataMetSubsidie });
 
-    // 3. E-mail verzenden
+    // 3. PDF genereren
+    const pdfBuffer = await generateOffertePdf(email, dataMetSubsidie);
+
+    // 4. E-mail verzenden
     const { data: emailData, error } = await resend.emails.send({
-      // GEWIJZIGD: Verzenden vanaf het geverifieerde hoofddomein
       from: "Bart Mooi <info@offerte-bartmooi.nl>",
       to: [email],
-      // GEWIJZIGD: Reply-to toegevoegd zodat iCloud een geldige inbox ziet
       replyTo: "info@offerte-bartmooi.nl",
-      subject: `Offerte aanvraag: ${data.product || data.kozijnNaam}`,
-      // OPLOSSING 1: Platte tekst voor spamfilters (behouden)
-      text: `Bedankt voor uw aanvraag, ${data.naam || ""}!\n\nWe hebben uw aanvraag voor de ${data.product || data.kozijnNaam} ontvangen.\n\nSubsidiekans: € ${totaalSubsidie.toLocaleString("nl-NL")} (Indicatie op basis van de ISDE-regeling).\n\nSpecificaties:\n- Breedte: ${data.breedte} mm\n- Hoogte: ${data.hoogte} mm\n- Kleur: ${data.kleur || "-"}\n- Glas: ${data.glas || "-"}\n- Aantal: ${data.aantal}\n\nPrijs: € ${data.prijs.toLocaleString("nl-NL", { minimumFractionDigits: 2 })}\n\nWij nemen zo spoedig mogelijk contact met u op.`,
-      // OPLOSSING 2: Subtielere HTML-opmaak (behouden)
+      subject: `Uw offerte aanvraag — ${data.product || data.kozijnNaam}`,
+      text: `Geachte ${data.naam || ""},\n\nBedankt voor uw aanvraag. In de bijlage vindt u uw offerte met alle specificaties en voorwaarden.\n\nWij nemen zo spoedig mogelijk contact met u op.\n\nMet vriendelijke groet,\nBart Mooi Kozijnen`,
       html: `
-        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #1066a3; font-size: 22px;">Bedankt voor uw aanvraag, ${data.naam || ""}!</h1>
-          <p>We hebben uw aanvraag voor de <strong>${data.product || data.kozijnNaam}</strong> in goede orde ontvangen.</p>
-          
-          <div style="background-color: #f8fafc; border-left: 4px solid #1066a3; padding: 15px; margin: 20px 0;">
-            <p style="margin: 0; font-weight: bold; color: #1066a3;">Indicatie subsidiekans:</p>
-            <p style="font-size: 24px; font-weight: bold; color: #1066a3; margin: 5px 0;">€ ${totaalSubsidie.toLocaleString("nl-NL")}</p>
-            <p style="font-size: 12px; color: #666; margin: 0;"><em>Dit betreft een indicatie op basis van de huidige ISDE-regeling.</em></p>
+        <div style="font-family: Arial, sans-serif; line-height: 1.7; color: #333; max-width: 600px; margin: 0 auto;">
+          <div style="border-bottom: 3px solid #1066a3; padding-bottom: 16px; margin-bottom: 24px;">
+            <h1 style="color: #1066a3; font-size: 20px; margin: 0;">Uw offerte aanvraag</h1>
           </div>
 
-          <div style="background: #f4f4f4; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-            <h3 style="margin-top: 0; color: #333;">Uw specificaties:</h3>
-            <ul style="padding-left: 20px; margin: 10px 0;">
-              <li>Breedte: ${data.breedte} mm</li>
-              <li>Hoogte: ${data.hoogte} mm</li>
-              <li>Kleur: ${data.kleur || "-"}</li>
-              <li>Glas: ${data.glas || "-"}</li>
-              <li>Aantal: ${data.aantal}</li>
-            </ul>
-            <p style="font-size: 16px; margin-bottom: 0;"><strong>Prijsindicatie: € ${data.prijs.toLocaleString("nl-NL", { minimumFractionDigits: 2 })}</strong></p>
+          <p>Geachte ${data.naam || ""},</p>
+          <p>Hartelijk dank voor uw interesse in onze kozijnen en deuren. Wij hebben uw aanvraag in goede orde ontvangen.</p>
+          <p>In de <strong>bijlage</strong> vindt u uw offerte met alle specificaties, wat er in de prijs inbegrepen is, de betalingsvoorwaarden en onze garanties.</p>
+
+          <div style="background-color: #f0f7ff; border-left: 4px solid #1066a3; padding: 14px 18px; margin: 24px 0; border-radius: 0 6px 6px 0;">
+            <p style="margin: 0 0 4px; font-weight: bold; color: #1066a3;">Indicatie subsidiekans (ISDE-regeling)</p>
+            <p style="font-size: 22px; font-weight: bold; color: #1066a3; margin: 0;">€ ${totaalSubsidie.toLocaleString("nl-NL")}</p>
+            <p style="font-size: 11px; color: #666; margin: 6px 0 0;"><em>Dit is een indicatie. Het exacte bedrag hangt af van uw situatie.</em></p>
           </div>
-          
+
           <p>Wij nemen zo spoedig mogelijk contact met u op om de offerte door te nemen.</p>
-          <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
-          <p style="font-size: 12px; color: #999;">Deze e-mail is verzonden door Bart Mooi Kozijnen.</p>
+
+          <p style="margin-top: 32px;">Met vriendelijke groet,<br/><strong>Bart Mooi Kozijnen</strong><br/>
+          <span style="color: #999; font-size: 12px;">info@offerte-bartmooi.nl</span></p>
+
+          <hr style="border: 0; border-top: 1px solid #eee; margin: 28px 0;" />
+          <p style="font-size: 11px; color: #aaa;">BARTMOOI B.V. · Burgemeester Hovylaan 157 · 2552 XB Den Haag</p>
         </div>`,
+      attachments: [
+        {
+          filename: `Offerte-BartMooi-${data.naam?.replace(/\s+/g, "-") || "aanvraag"}.pdf`,
+          content: pdfBuffer,
+        },
+      ],
     });
 
     if (error) {
