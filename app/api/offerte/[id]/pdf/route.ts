@@ -10,7 +10,7 @@ import { readFileSync } from "fs";
 import { join } from "path";
 
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
@@ -46,7 +46,7 @@ export async function GET(
     }) as any
   );
 
-  return new NextResponse(pdfBuffer, {
+  return new NextResponse(new Uint8Array(pdfBuffer), {
     headers: {
       "Content-Type": "application/pdf",
       "Content-Disposition": `attachment; filename="Offerte-${offerteNummer.replace(/\//g, "-")}.pdf"`,
