@@ -77,12 +77,15 @@ export async function saveOfferte(email: string, data: any) {
 
     // 3. E-mail verzenden
     const { data: emailData, error } = await resend.emails.send({
-      from: "Bart Mooi <info@send.offerte-bartmooi.nl>",
+      // GEWIJZIGD: Verzenden vanaf het geverifieerde hoofddomein
+      from: "Bart Mooi <info@offerte-bartmooi.nl>",
       to: [email],
+      // GEWIJZIGD: Reply-to toegevoegd zodat iCloud een geldige inbox ziet
+      replyTo: "info@offerte-bartmooi.nl",
       subject: `Offerte aanvraag: ${data.product || data.kozijnNaam}`,
-      // OPLOSSING 1: Voeg platte tekst toe voor spamfilters
+      // OPLOSSING 1: Platte tekst voor spamfilters (behouden)
       text: `Bedankt voor uw aanvraag, ${data.naam || ""}!\n\nWe hebben uw aanvraag voor de ${data.product || data.kozijnNaam} ontvangen.\n\nSubsidiekans: € ${totaalSubsidie.toLocaleString("nl-NL")} (Indicatie op basis van de ISDE-regeling).\n\nSpecificaties:\n- Breedte: ${data.breedte} mm\n- Hoogte: ${data.hoogte} mm\n- Kleur: ${data.kleur || "-"}\n- Glas: ${data.glas || "-"}\n- Aantal: ${data.aantal}\n\nPrijs: € ${data.prijs.toLocaleString("nl-NL", { minimumFractionDigits: 2 })}\n\nWij nemen zo spoedig mogelijk contact met u op.`,
-      // OPLOSSING 2: Subtielere HTML-opmaak
+      // OPLOSSING 2: Subtielere HTML-opmaak (behouden)
       html: `
         <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto;">
           <h1 style="color: #1066a3; font-size: 22px;">Bedankt voor uw aanvraag, ${data.naam || ""}!</h1>
