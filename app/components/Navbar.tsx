@@ -83,9 +83,8 @@ const Navbar = () => {
     const hostname = window.location.hostname;
     if (hostname.includes("localhost")) {
       setAdminLink("http://admin.localhost:3000/");
-      setIsOfferte(true);
     }
-    if (hostname.startsWith("offerte.")) setIsOfferte(true);
+    setIsOfferte(true);
   }, []);
 
   return (
