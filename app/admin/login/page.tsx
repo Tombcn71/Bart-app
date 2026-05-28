@@ -15,7 +15,7 @@ export default function AdminLoginPage() {
     setError("");
     const result = await adminLogin(password);
     if (result.success) {
-      router.push("/");
+      router.push("/admin");
     } else {
       setError("Ongeldig wachtwoord");
       setLoading(false);
