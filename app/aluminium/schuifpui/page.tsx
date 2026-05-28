@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import { InmeetServiceCard } from "@/app/components/InmeetServiceCard";
 
 const COLORS = { primary: "#1066a3", textDark: "#2d3748" };
 
@@ -94,6 +95,8 @@ export default function AluSchuifpuiOverzicht() {
             </div>
           </Link>
         ))}
+        <div className="col-span-full border-t border-slate-100 mt-4" />
+        <InmeetServiceCard />
       </div>
     </div>
   );

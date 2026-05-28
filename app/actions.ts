@@ -6,6 +6,9 @@ import { revalidatePath } from "next/cache";
 import { Resend } from "resend";
 import { desc } from "drizzle-orm";
 import { cookies } from "next/headers";
+import { renderToBuffer } from "@react-pdf/renderer";
+import { createElement } from "react";
+import { OffertePDF } from "@/app/components/OffertePDF";
 
 export async function adminLogin(password: string) {
   if (password === process.env.ADMIN_PASSWORD) {
@@ -73,43 +76,66 @@ export async function saveOfferte(email: string, data: any) {
     const dataMetSubsidie = { ...data, subsidieIndicatie: totaalSubsidie };
 
     // 2. Opslaan in database
-    await db.insert(offertes).values({
+    const [inserted] = await db.insert(offertes).values({
       email: email,
       data: dataMetSubsidie,
-    });
+    }).returning({ id: offertes.id });
 
-    // 3. E-mail verzenden
+    // 3. Genereer offerte nummer en datum
+    const offerteNummer = `OF/${new Date().getFullYear()}/${inserted.id.slice(-8).toUpperCase()}`;
+    const datum = new Date().toLocaleDateString("nl-NL", { day: "2-digit", month: "2-digit", year: "numeric" });
+
+    // 4. Genereer PDF
+    const pdfBuffer = await renderToBuffer(
+      createElement(OffertePDF, {
+        data: dataMetSubsidie,
+        email,
+        offerteNummer,
+        datum,
+        subsidie: totaalSubsidie,
+      }) as any
+    );
+
+    // 5. E-mail verzenden met PDF bijlage
     const { data: emailData, error } = await resend.emails.send({
       from: "Bart Mooi <offerte@offerte.budgetkozijnenshop.nl>",
       to: [email],
-      subject: `Offerte aanvraag: ${data.product || data.kozijnNaam}`,
+      subject: `Uw offerte ${offerteNummer} — ${data.product || data.kozijnNaam}`,
       html: `
-        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-          <h1 style="color: #1066a3;">Bedankt voor uw aanvraag, ${data.naam || ""}!</h1>
-          <p>We hebben uw aanvraag voor de <strong>${data.product || data.kozijnNaam}</strong> ontvangen.</p>
-          
-          <!-- SUBSIDIE BLOK -->
-          <div style="background: #e0f2fe; border: 2px solid #1066a3; padding: 20px; border-radius: 10px; margin: 20px 0;">
-            <h2 style="color: #1066a3; margin-top: 0;">Goed nieuws: Subsidiekans!</h2>
-            <p>Op basis van uw configuratie komt u mogelijk in aanmerking voor een landelijke ISDE-subsidie van ongeveer:</p>
-            <p style="font-size: 28px; font-weight: bold; color: #1066a3; margin: 10px 0;">€ ${totaalSubsidie.toLocaleString("nl-NL")}</p>
-            <p style="font-size: 13px;"><em>Dit is een indicatie op basis van de huidige ISDE-regeling (bij 2+ isolatiemaatregelen).</em></p>
+        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px;">
+          <div style="background: #1066a3; padding: 24px 32px; border-radius: 8px 8px 0 0;">
+            <h1 style="color: #ffffff; margin: 0; font-size: 22px;">BartMooi B.V.</h1>
+            <p style="color: #cce5f7; margin: 4px 0 0; font-size: 13px;">deuren · kozijnen · vliesgevel</p>
           </div>
+          <div style="border: 1px solid #e2e8f0; border-top: none; padding: 32px; border-radius: 0 0 8px 8px;">
+            <h2 style="color: #1a1a1a; margin-top: 0;">Bedankt voor uw aanvraag, ${data.naam || ""}!</h2>
+            <p style="color: #555;">Uw offerte voor de <strong>${data.product || data.kozijnNaam}</strong> vindt u als PDF bijlage bij deze e-mail.</p>
 
-          <div style="background: #f4f4f4; padding: 15px; border-radius: 8px;">
-            <p><strong>Configuratie:</strong></p>
-            <ul>
-              <li>Breedte: ${data.breedte} mm</li>
-              <li>Hoogte: ${data.hoogte} mm</li>
-              <li>Kleur: ${data.kleur}</li>
-              <li>Glas: ${data.glas}</li>
-              <li>Aantal: ${data.aantal}</li>
-            </ul>
-            <p style="font-size: 18px;"><strong>Prijs: € ${data.prijs.toLocaleString("nl-NL", { minimumFractionDigits: 2 })}</strong></p>
+            <div style="background: #e0f2fe; border: 2px solid #1066a3; padding: 16px 20px; border-radius: 8px; margin: 24px 0;">
+              <p style="font-weight: bold; color: #1066a3; margin: 0 0 6px;">Subsidiekans — ISDE Regeling</p>
+              <p style="font-size: 28px; font-weight: bold; color: #1066a3; margin: 0;">€ ${totaalSubsidie.toLocaleString("nl-NL")}</p>
+              <p style="font-size: 12px; color: #555; margin: 6px 0 0;"><em>Indicatie op basis van de ISDE-regeling (bij 2+ isolatiemaatregelen).</em></p>
+            </div>
+
+            <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+              <tr style="background: #f8fafc;"><td style="padding: 8px 12px; color: #666; width: 40%;">Product</td><td style="padding: 8px 12px; font-weight: bold;">${data.product || data.kozijnNaam}</td></tr>
+              <tr><td style="padding: 8px 12px; color: #666;">Afmetingen</td><td style="padding: 8px 12px; font-weight: bold;">${data.breedte} × ${data.hoogte} mm</td></tr>
+              <tr style="background: #f8fafc;"><td style="padding: 8px 12px; color: #666;">Aantal</td><td style="padding: 8px 12px; font-weight: bold;">${data.aantal} stuks</td></tr>
+              <tr><td style="padding: 8px 12px; color: #666; font-size: 15px; font-weight: bold;">Totaalprijs</td><td style="padding: 8px 12px; font-size: 18px; font-weight: bold; color: #1066a3;">€ ${data.prijs.toLocaleString("nl-NL", { minimumFractionDigits: 2 })}</td></tr>
+            </table>
+
+            <p style="margin-top: 24px; color: #555; font-size: 13px;">Wij nemen zo spoedig mogelijk contact met u op om de offerte te bespreken.</p>
+            <p style="color: #555; font-size: 13px;">Met vriendelijke groet,<br/><strong>Team BartMooi</strong></p>
           </div>
-          <p>Wij nemen zo spoedig mogelijk contact met u op.</p>
+          <p style="font-size: 11px; color: #aaa; text-align: center; margin-top: 16px;">BartMooi B.V. · Burgemeester Hovylaan 157 · 2552 XB 's-Gravenhage</p>
         </div>
       `,
+      attachments: [
+        {
+          filename: `Offerte-${offerteNummer.replace(/\//g, "-")}.pdf`,
+          content: pdfBuffer,
+        },
+      ],
     });
 
     if (error) {

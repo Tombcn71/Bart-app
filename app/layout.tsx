@@ -25,20 +25,16 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // 1. Haal de huidige host (URL) op vanaf de server headers
   const headersList = await headers();
-  const host = headersList.get("host") || "";
-
-  // 2. Controleer of de bezoeker op het admin-subdomein zit
-  const isAdminSubdomain = host.startsWith("admin.");
+  const pathname = headersList.get("x-pathname") || "";
+  const isAdmin = pathname.startsWith("/admin");
 
   return (
     <html
       lang="nl"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
-        {/* 3. Toon de Navbar ALLEEN als de gebruiker NIET op het admin-subdomein zit */}
-        {!isAdminSubdomain && <Navbar />}
+        {!isAdmin && <Navbar />}
 
         {/* De rest van de pagina (children) komt hieronder */}
         <main className="flex-grow">{children}</main>

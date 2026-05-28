@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { InmeetServiceCard } from "@/app/components/InmeetServiceCard";
 import { HarmonicadeurDriedelig, HarmonicadeurVierdelig, HarmonicadeurVijfdelig } from "@/lib/harmonicadeur-svgs";
 
 const deuren = [
@@ -31,6 +32,8 @@ export default function AluHarmonicadeurOverzicht() {
             </div>
           </Link>
         ))}
+        <div className="col-span-full border-t border-slate-100 mt-4" />
+        <InmeetServiceCard />
       </div>
     </div>
   );

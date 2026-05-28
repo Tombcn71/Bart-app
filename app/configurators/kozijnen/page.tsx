@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import Link from "next/link";
+import { InmeetServiceCard } from "@/app/components/InmeetServiceCard";
 // 🛠️ Alle benodigde SVG componenten centraal importeren uit je lib:
 import {
   GlassVast,
@@ -442,6 +443,8 @@ export default function KozijnConfigurator() {
               </div>
             </Link>
           ))}
+        <div className="col-span-full border-t border-slate-100 mt-4" />
+        <InmeetServiceCard />
       </div>
     </div>
   );

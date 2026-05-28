@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import Link from "next/link";
+import { InmeetServiceCard } from "@/app/components/InmeetServiceCard";
 
 // --- STYLING ---
 const COLORS = {
@@ -264,6 +265,8 @@ export default function SchuifpuiOverview() {
               </div>
             </Link>
           ))}
+        <div className="col-span-full border-t border-slate-100 mt-4" />
+        <InmeetServiceCard />
       </div>
     </div>
   );

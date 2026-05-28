@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
+function withPathname(response: NextResponse, pathname: string) {
+  response.headers.set("x-pathname", pathname);
+  return response;
+}
+
 export function middleware(request: NextRequest) {
   const url = request.nextUrl.clone();
   const { pathname } = url;
@@ -13,18 +18,18 @@ export function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL("/admin/login", request.url));
       }
     }
-    return NextResponse.next();
+    return withPathname(NextResponse.next(), pathname);
   }
 
   // 2. Aluminium configurators — direct
   if (pathname.startsWith("/aluminium")) {
-    return NextResponse.next();
+    return withPathname(NextResponse.next(), pathname);
   }
 
   // 3. Alle overige routes → configurators
   url.pathname =
     pathname === "/" ? "/configurators/kozijnen" : `/configurators${pathname}`;
-  return NextResponse.rewrite(url);
+  return withPathname(NextResponse.rewrite(url), pathname);
 }
 
 export const config = {

@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import { InmeetServiceCard } from "@/app/components/InmeetServiceCard";
 import {
   SingleDoorBase, DoubleDoorBase, AchterdeurBovenlicht, VoordeurBovenlicht,
   AchterdeurBorstwering, AchterdeurBorstweringBovenlicht, DeurZijlicht,
@@ -91,6 +92,8 @@ export default function AluDeurenOverzicht() {
             </div>
           </Link>
         ))}
+        <div className="col-span-full border-t border-slate-100 mt-4" />
+        <InmeetServiceCard />
       </div>
     </div>
   );
