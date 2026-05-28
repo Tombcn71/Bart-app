@@ -78,17 +78,26 @@ export async function saveOfferte(email: string, data: any) {
     const dataMetSubsidie = { ...data, subsidieIndicatie: totaalSubsidie };
 
     // 2. Opslaan in database
-    const [inserted] = await db.insert(offertes).values({
-      email: email,
-      data: dataMetSubsidie,
-    }).returning({ id: offertes.id });
+    const [inserted] = await db
+      .insert(offertes)
+      .values({
+        email: email,
+        data: dataMetSubsidie,
+      })
+      .returning({ id: offertes.id });
 
     // 3. Genereer offerte nummer en datum
     const offerteNummer = `OF/${new Date().getFullYear()}/${inserted.id.slice(-8).toUpperCase()}`;
-    const datum = new Date().toLocaleDateString("nl-NL", { day: "2-digit", month: "2-digit", year: "numeric" });
+    const datum = new Date().toLocaleDateString("nl-NL", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
 
     // 4. Genereer PDF (zonder SVG)
-    const logoBuffer = readFileSync(join(process.cwd(), "public", "bartmooi-logo-1.png"));
+    const logoBuffer = readFileSync(
+      join(process.cwd(), "public", "bartmooi-logo-1.png"),
+    );
     const logoBase64 = logoBuffer.toString("base64");
     const pdfBuffer = await renderToBuffer(
       createElement(OffertePDF, {
@@ -98,12 +107,12 @@ export async function saveOfferte(email: string, data: any) {
         datum,
         subsidie: totaalSubsidie,
         logoBase64,
-      }) as any
+      }) as any,
     );
 
     // 5. E-mail verzenden met PDF bijlage
     const { data: emailData, error } = await resend.emails.send({
-      from: "BartMooi <offerte@offerte-bartmooi.nl>",
+      from: "BartMooi <info@offerte-bartmooi.nl>",
       to: [email],
       subject: `Offerte aanvraag: ${data.product || data.kozijnNaam}`,
       html: `
