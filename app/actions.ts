@@ -6,11 +6,6 @@ import { revalidatePath } from "next/cache";
 import { Resend } from "resend";
 import { desc } from "drizzle-orm";
 import { cookies } from "next/headers";
-import { renderToBuffer } from "@react-pdf/renderer";
-import { createElement } from "react";
-import { OffertePDF } from "@/app/components/OffertePDF";
-import { readFileSync } from "fs";
-import { join } from "path";
 
 export async function adminLogin(password: string) {
   if (password === process.env.ADMIN_PASSWORD) {
@@ -85,26 +80,12 @@ export async function saveOfferte(email: string, data: any) {
 
     // 3. Genereer offerte nummer en datum
     const offerteNummer = `OF/${new Date().getFullYear()}/${inserted.id.slice(-8).toUpperCase()}`;
-    const datum = new Date().toLocaleDateString("nl-NL", { day: "2-digit", month: "2-digit", year: "numeric" });
 
-    // 4. Genereer PDF
-    const logoBuffer = readFileSync(join(process.cwd(), "public", "bartmooi-logo-1.png"));
-    const logoBase64 = logoBuffer.toString("base64");
-    const svgDataUri = undefined; // tijdelijk uitgeschakeld — grote SVG triggert spamfilter
+    // 4. Download link — PDF wordt gegenereerd via API route
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://offerte-bartmooi.nl";
+    const pdfUrl = `${baseUrl}/api/offerte/${inserted.id}/pdf`;
 
-    const pdfBuffer = await renderToBuffer(
-      createElement(OffertePDF, {
-        data: dataMetSubsidie,
-        email,
-        offerteNummer,
-        datum,
-        subsidie: totaalSubsidie,
-        logoBase64,
-        svgDataUri,
-      }) as any
-    );
-
-    // 5. E-mail verzenden met PDF bijlage
+    // 5. E-mail verzenden met downloadlink
     const { data: emailData, error } = await resend.emails.send({
       from: "BartMooi <offerte@offerte-bartmooi.nl>",
       to: [email],
@@ -117,7 +98,14 @@ export async function saveOfferte(email: string, data: any) {
           </div>
           <div style="border: 1px solid #e2e8f0; border-top: none; padding: 32px; border-radius: 0 0 8px 8px;">
             <h2 style="color: #1a1a1a; margin-top: 0;">Bedankt voor uw aanvraag, ${data.naam || ""}!</h2>
-            <p style="color: #555;">Uw offerte voor de <strong>${data.product || data.kozijnNaam}</strong> vindt u als PDF bijlage bij deze e-mail.</p>
+            <p style="color: #555;">Uw offerte voor de <strong>${data.product || data.kozijnNaam}</strong> staat klaar.</p>
+
+            <div style="text-align: center; margin: 28px 0;">
+              <a href="${pdfUrl}" style="background: #1066a3; color: #ffffff; padding: 14px 32px; border-radius: 8px; font-weight: bold; font-size: 15px; text-decoration: none; display: inline-block;">
+                📄 Download uw offerte (PDF)
+              </a>
+              <p style="font-size: 11px; color: #aaa; margin-top: 8px;">Offerte ${offerteNummer}</p>
+            </div>
 
             <div style="background: #e0f2fe; border: 2px solid #1066a3; padding: 16px 20px; border-radius: 8px; margin: 24px 0;">
               <p style="font-weight: bold; color: #1066a3; margin: 0 0 6px;">Subsidiekans — ISDE Regeling</p>
@@ -138,12 +126,6 @@ export async function saveOfferte(email: string, data: any) {
           <p style="font-size: 11px; color: #aaa; text-align: center; margin-top: 16px;">BartMooi B.V. · Burgemeester Hovylaan 157 · 2552 XB 's-Gravenhage</p>
         </div>
       `,
-      attachments: [
-        {
-          filename: `Offerte-${offerteNummer.replace(/\//g, "-")}.pdf`,
-          content: pdfBuffer,
-        },
-      ],
     });
 
     if (error) {
