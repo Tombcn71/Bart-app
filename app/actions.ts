@@ -77,29 +77,38 @@ export async function saveOfferte(email: string, data: any) {
 
     // 3. E-mail verzenden
     const { data: emailData, error } = await resend.emails.send({
-      from: "Bart Mooi <offerte@send.offerte-bartmooi.nl>",
+      from: "Bart Mooi <info@send.offerte-bartmooi.nl>",
       to: [email],
       subject: `Offerte aanvraag: ${data.product || data.kozijnNaam}`,
+      // OPLOSSING 1: Voeg platte tekst toe voor spamfilters
+      text: `Bedankt voor uw aanvraag, ${data.naam || ""}!\n\nWe hebben uw aanvraag voor de ${data.product || data.kozijnNaam} ontvangen.\n\nSubsidiekans: € ${totaalSubsidie.toLocaleString("nl-NL")} (Indicatie op basis van de ISDE-regeling).\n\nSpecificaties:\n- Breedte: ${data.breedte} mm\n- Hoogte: ${data.hoogte} mm\n- Kleur: ${data.kleur || "-"}\n- Glas: ${data.glas || "-"}\n- Aantal: ${data.aantal}\n\nPrijs: € ${data.prijs.toLocaleString("nl-NL", { minimumFractionDigits: 2 })}\n\nWij nemen zo spoedig mogelijk contact met u op.`,
+      // OPLOSSING 2: Subtielere HTML-opmaak
       html: `
-        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-          <h1 style="color: #1066a3;">Bedankt voor uw aanvraag, ${data.naam || ""}!</h1>
-          <p>We hebben uw aanvraag voor de <strong>${data.product || data.kozijnNaam}</strong> ontvangen.</p>
-          <div style="background: #e0f2fe; border: 2px solid #1066a3; padding: 20px; border-radius: 10px; margin: 20px 0;">
-            <h2 style="color: #1066a3; margin-top: 0;">Subsidiekans!</h2>
-            <p style="font-size: 28px; font-weight: bold; color: #1066a3; margin: 10px 0;">€ ${totaalSubsidie.toLocaleString("nl-NL")}</p>
-            <p style="font-size: 13px;"><em>Indicatie op basis van de ISDE-regeling.</em></p>
+        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto;">
+          <h1 style="color: #1066a3; font-size: 22px;">Bedankt voor uw aanvraag, ${data.naam || ""}!</h1>
+          <p>We hebben uw aanvraag voor de <strong>${data.product || data.kozijnNaam}</strong> in goede orde ontvangen.</p>
+          
+          <div style="background-color: #f8fafc; border-left: 4px solid #1066a3; padding: 15px; margin: 20px 0;">
+            <p style="margin: 0; font-weight: bold; color: #1066a3;">Indicatie subsidiekans:</p>
+            <p style="font-size: 24px; font-weight: bold; color: #1066a3; margin: 5px 0;">€ ${totaalSubsidie.toLocaleString("nl-NL")}</p>
+            <p style="font-size: 12px; color: #666; margin: 0;"><em>Dit betreft een indicatie op basis van de huidige ISDE-regeling.</em></p>
           </div>
-          <div style="background: #f4f4f4; padding: 15px; border-radius: 8px;">
-            <ul>
+
+          <div style="background: #f4f4f4; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+            <h3 style="margin-top: 0; color: #333;">Uw specificaties:</h3>
+            <ul style="padding-left: 20px; margin: 10px 0;">
               <li>Breedte: ${data.breedte} mm</li>
               <li>Hoogte: ${data.hoogte} mm</li>
               <li>Kleur: ${data.kleur || "-"}</li>
               <li>Glas: ${data.glas || "-"}</li>
               <li>Aantal: ${data.aantal}</li>
             </ul>
-            <p style="font-size: 18px;"><strong>Prijs: € ${data.prijs.toLocaleString("nl-NL", { minimumFractionDigits: 2 })}</strong></p>
+            <p style="font-size: 16px; margin-bottom: 0;"><strong>Prijsindicatie: € ${data.prijs.toLocaleString("nl-NL", { minimumFractionDigits: 2 })}</strong></p>
           </div>
-          <p>Wij nemen zo spoedig mogelijk contact met u op.</p>
+          
+          <p>Wij nemen zo spoedig mogelijk contact met u op om de offerte door te nemen.</p>
+          <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
+          <p style="font-size: 12px; color: #999;">Deze e-mail is verzonden door Bart Mooi Kozijnen.</p>
         </div>`,
     });
 
