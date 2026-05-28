@@ -6,11 +6,6 @@ import { revalidatePath } from "next/cache";
 import { Resend } from "resend";
 import { desc } from "drizzle-orm";
 import { cookies } from "next/headers";
-import { renderToBuffer } from "@react-pdf/renderer";
-import { createElement } from "react";
-import { OffertePDF } from "@/app/components/OffertePDF";
-import { readFileSync } from "fs";
-import { join } from "path";
 
 export async function adminLogin(password: string) {
   if (password === process.env.ADMIN_PASSWORD) {
@@ -80,16 +75,7 @@ export async function saveOfferte(email: string, data: any) {
     // 2. Opslaan in database
     await db.insert(offertes).values({ email, data: dataMetSubsidie });
 
-    // 3. Genereer PDF (geen SVG)
-    const offerteNummer = `OF/${new Date().getFullYear()}/${Date.now().toString().slice(-6)}`;
-    const datum = new Date().toLocaleDateString("nl-NL", { day: "2-digit", month: "2-digit", year: "numeric" });
-    const logoBuffer = readFileSync(join(process.cwd(), "public", "bartmooi-logo-1.png"));
-    const logoBase64 = logoBuffer.toString("base64");
-    const pdfBuffer = await renderToBuffer(
-      createElement(OffertePDF, { data: dataMetSubsidie, email, offerteNummer, datum, subsidie: totaalSubsidie, logoBase64 }) as any
-    );
-
-    // 4. E-mail met PDF bijlage
+    // 3. E-mail verzenden
     const { data: emailData, error } = await resend.emails.send({
       from: "Bart Mooi <offerte@send.offerte-bartmooi.nl>",
       to: [email],
@@ -97,7 +83,7 @@ export async function saveOfferte(email: string, data: any) {
       html: `
         <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
           <h1 style="color: #1066a3;">Bedankt voor uw aanvraag, ${data.naam || ""}!</h1>
-          <p>We hebben uw aanvraag voor de <strong>${data.product || data.kozijnNaam}</strong> ontvangen. Uw offerte vindt u als bijlage.</p>
+          <p>We hebben uw aanvraag voor de <strong>${data.product || data.kozijnNaam}</strong> ontvangen.</p>
           <div style="background: #e0f2fe; border: 2px solid #1066a3; padding: 20px; border-radius: 10px; margin: 20px 0;">
             <h2 style="color: #1066a3; margin-top: 0;">Subsidiekans!</h2>
             <p style="font-size: 28px; font-weight: bold; color: #1066a3; margin: 10px 0;">€ ${totaalSubsidie.toLocaleString("nl-NL")}</p>
@@ -115,7 +101,6 @@ export async function saveOfferte(email: string, data: any) {
           </div>
           <p>Wij nemen zo spoedig mogelijk contact met u op.</p>
         </div>`,
-      attachments: [{ filename: `Offerte-${offerteNummer.replace(/\//g, "-")}.pdf`, content: pdfBuffer }],
     });
 
     if (error) {
