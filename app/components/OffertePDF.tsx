@@ -66,9 +66,10 @@ interface Props {
   datum: string;
   subsidie: number;
   logoBase64: string;
+  svgDataUri?: string;
 }
 
-export function OffertePDF({ data, email, offerteNummer, datum, subsidie, logoBase64 }: Props) {
+export function OffertePDF({ data, email, offerteNummer, datum, subsidie, logoBase64, svgDataUri }: Props) {
   const product = data.product || data.kozijnNaam || "Product";
 
   const specs: { label: string; value: string }[] = [
@@ -120,10 +121,18 @@ export function OffertePDF({ data, email, offerteNummer, datum, subsidie, logoBa
           </Text>
         </View>
 
-        {/* PRODUCT TITEL */}
-        <Text style={[styles.sectionTitle, { marginBottom: 10 }]}>
-          Product — {product}
-        </Text>
+        {/* PRODUCT TITEL + SVG */}
+        <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 16, marginBottom: 16 }}>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.sectionTitle, { marginBottom: 6 }]}>Product — {product}</Text>
+            {svgDataUri && (
+              <Image
+                src={svgDataUri}
+                style={{ maxWidth: 200, maxHeight: 100, objectFit: "contain", marginTop: 4 }}
+              />
+            )}
+          </View>
+        </View>
 
         {/* SPECIFICATIES */}
         <Text style={styles.sectionTitle}>Configuratie specificaties</Text>
