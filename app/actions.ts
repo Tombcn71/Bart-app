@@ -11,7 +11,6 @@ import { createElement } from "react";
 import { OffertePDF } from "@/app/components/OffertePDF";
 import { readFileSync } from "fs";
 import { join } from "path";
-import { renderSvgForPdf } from "@/lib/renderSvgForPdf";
 
 export async function adminLogin(password: string) {
   if (password === process.env.ADMIN_PASSWORD) {
@@ -91,7 +90,7 @@ export async function saveOfferte(email: string, data: any) {
     // 4. Genereer PDF
     const logoBuffer = readFileSync(join(process.cwd(), "public", "bartmooi-logo-1.png"));
     const logoBase64 = logoBuffer.toString("base64");
-    const svgDataUri = renderSvgForPdf(data.slug || "") || undefined;
+    const svgDataUri = undefined; // tijdelijk uitgeschakeld — grote SVG triggert spamfilter
 
     const pdfBuffer = await renderToBuffer(
       createElement(OffertePDF, {
