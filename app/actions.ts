@@ -91,7 +91,7 @@ export async function saveOfferte(email: string, data: any) {
 
     // 4. E-mail met PDF bijlage
     const { data: emailData, error } = await resend.emails.send({
-      from: "BartMooi <info@offerte-bartmooi.nl>",
+      from: "Bart Mooi <offerte@offerte.budgetkozijnenshop.nl>",
       to: [email],
       subject: `Offerte aanvraag: ${data.product || data.kozijnNaam}`,
       html: `
