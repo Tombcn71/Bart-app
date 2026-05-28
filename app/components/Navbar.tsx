@@ -103,12 +103,6 @@ const Navbar = () => {
         )}
 
         <div className="flex items-center gap-2 md:gap-4">
-          <a
-            href="/admin"
-            className="bg-[#1066a3] hover:bg-[#0d5282] text-white font-bold p-2.5 md:py-3 md:px-6 rounded-xl flex items-center gap-3 transition-all">
-            <span className="text-sm tracking-tight">ADMIN</span>
-          </a>
-
           {isOfferte && (
             <button
               onClick={() => setIsOpen(!isOpen)}
