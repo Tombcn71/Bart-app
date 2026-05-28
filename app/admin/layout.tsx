@@ -23,7 +23,7 @@ export default function AdminLayout({
 }) {
   const pathname = usePathname();
 
-  if (pathname === "/admin/login" || pathname === "/login") return <>{children}</>;
+  if (pathname === "/admin/login") return <>{children}</>;
 
   return (
     <SidebarProvider>
@@ -37,7 +37,7 @@ export default function AdminLayout({
             </div>
           </div>
           <a
-            href="https://offerte.budgetkozijnenshop.nl/"
+            href="https://offerte-bartmooi.nl/"
             target="_blank"
             className="bg-[#2cb1e1] hover:bg-[#1fa1cf] text-white px-5 py-2.5 rounded-xl font-bold text-sm">
             Bekijk App ↗

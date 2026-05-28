@@ -49,7 +49,7 @@ export function AppSidebar() {
 
   const handleLogout = async () => {
     await adminLogout();
-    router.push("/login");
+    router.push("/admin/login");
   };
 
   return (

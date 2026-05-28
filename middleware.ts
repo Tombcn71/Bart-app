@@ -4,47 +4,27 @@ import type { NextRequest } from "next/server";
 export function middleware(request: NextRequest) {
   const url = request.nextUrl.clone();
   const { pathname } = url;
-  const hostname = request.headers.get("host") || "";
-  const currentHost = hostname.replace(/:.*$/, "");
 
-  // 1. Static bestanden
-  if (/\.(png|jpg|jpeg|svg|ico)$/.test(pathname)) return NextResponse.next();
-
-  // 2. Vercel Test Routes
-  if (pathname.startsWith("/offerte-test")) {
-    url.pathname = pathname.replace("/offerte-test", "/configurators/kozijnen");
-    return NextResponse.rewrite(url);
-  }
-  if (pathname.startsWith("/admin-test")) {
-    url.pathname = "/admin";
-    return NextResponse.rewrite(url);
-  }
-
-  // 3. Admin Subdomein (admin.budgetkozijnenshop.nl)
-  if (currentHost.startsWith("admin.")) {
-    if (pathname !== "/login") {
+  // 1. Admin routes — auth check
+  if (pathname.startsWith("/admin")) {
+    if (pathname !== "/admin/login") {
       const token = request.cookies.get("admin_token")?.value;
       if (token !== process.env.ADMIN_TOKEN) {
-        return NextResponse.redirect(new URL("/login", request.url));
+        return NextResponse.redirect(new URL("/admin/login", request.url));
       }
     }
-    url.pathname = pathname.startsWith("/admin") ? pathname : `/admin${pathname}`;
-    return NextResponse.rewrite(url);
+    return NextResponse.next();
   }
 
-  // 4. Offerte Subdomein (offerte.budgetkozijnenshop.nl)
-  if (currentHost.startsWith("offerte.")) {
-    if (pathname.startsWith("/aluminium")) {
-      return NextResponse.next();
-    }
-    url.pathname =
-      pathname === "/"
-        ? "/configurators/kozijnen"
-        : `/configurators${pathname}`;
-    return NextResponse.rewrite(url);
+  // 2. Aluminium configurators — direct
+  if (pathname.startsWith("/aluminium")) {
+    return NextResponse.next();
   }
 
-  return NextResponse.next();
+  // 3. Alle overige routes → configurators
+  url.pathname =
+    pathname === "/" ? "/configurators/kozijnen" : `/configurators${pathname}`;
+  return NextResponse.rewrite(url);
 }
 
 export const config = {
