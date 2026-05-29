@@ -38,13 +38,13 @@ const deurOpties: Record<string, { v: number; name: string; comp: React.ReactNod
   "voordeur-zijlicht-bovenlicht":     { v: 1.5, name: "Voordeur met zijlicht en bovenlicht",              comp: <VoordeurZijlichtBovenlicht /> },
   "deur-zijlicht-borstwering":        { v: 1.5, name: "Deur met zijlicht en borstwering",                 comp: <DeurZijlichtBorstwering /> },
   "deur-zijlichten":                  { v: 1.8, name: "Deur met twee zijlichten",                         comp: <DeurZijlichten /> },
-  "dubbele-deur":                     { v: 1,   name: "Dubbele deur",                                     comp: <DoubleDoorBase /> },
+  "dubbele-deur":                     { v: 1.5, name: "Dubbele deur",                                     comp: <DoubleDoorBase /> },
   "dubbele-deur-zijlichten":          { v: 1.8, name: "Dubbele deur met zijlichten",                      comp: <DoubleDoorBase hasSideLights /> },
-  "dubbele-deur-borstwering":         { v: 1,   name: "Dubbele deur met borstwering",                     comp: <DoubleDoorBase hasPlinth /> },
-  "dubbele-deur-bovenlicht":          { v: 1,   name: "Dubbele deur met bovenlicht",                      comp: <DubbeleDeurBovenlicht /> },
-  "dubbele-deur-zijlicht":            { v: 1.5, name: "Dubbele deur met zijlicht",                        comp: <DubbeleDeurZijlicht /> },
+  "dubbele-deur-borstwering":         { v: 1.5, name: "Dubbele deur met borstwering",                     comp: <DoubleDoorBase hasPlinth /> },
+  "dubbele-deur-bovenlicht":          { v: 1.5, name: "Dubbele deur met bovenlicht",                      comp: <DubbeleDeurBovenlicht /> },
+  "dubbele-deur-zijlicht":            { v: 1.8, name: "Dubbele deur met zijlicht",                        comp: <DubbeleDeurZijlicht /> },
   "dubbele-deur-zijlichten-bovenlichten": { v: 1.8, name: "Dubbele deur met zijlichten en bovenlichten",  comp: <DubbeleDeurZijlichtenBovenlichten /> },
-  "dubbele-deur-borstwering-bovenlicht":  { v: 1,   name: "Dubbele deur met borstwering en bovenlicht",   comp: <DubbeleDeurBorstweringBovenlicht /> },
+  "dubbele-deur-borstwering-bovenlicht":  { v: 1.5, name: "Dubbele deur met borstwering en bovenlicht",   comp: <DubbeleDeurBorstweringBovenlicht /> },
 };
 
 export default function DeurConfiguratorDetail() {

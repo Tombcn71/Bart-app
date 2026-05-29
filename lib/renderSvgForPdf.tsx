@@ -1,3 +1,5 @@
+import { buildDeurSvgString } from "./deur-svg-strings";
+
 // ─── Kleuren ─────────────────────────────────────────────────────────────────
 const FRAME_FILL   = "#d4d8de";   // kozijnprofiel grijs
 const FRAME_STROKE = "#2d3748";   // buitenlijn kozijn
@@ -256,13 +258,12 @@ function dimLines(CW:number,CH:number,breedte:number,hoogte:number):string {
 
 // ─── Exports ──────────────────────────────────────────────────────────────────
 
-export function getSvgString(slug:string, breedte=1000, hoogte=1200):string|null {
+export function getSvgString(slug:string, breedte=1000, hoogte=1200, glas?:string):string|null {
   if(!slug) return null;
   if(slug.includes("schuifpui")) return buildSchuifpuiSvg(slug,breedte,hoogte);
   if(slug.includes("harmonica")) return buildHarmonicaSvg(slug,breedte,hoogte);
   if(slug.includes("deur") && !slug.includes("kozijn")) {
-    const { getDeurSvg } = require("./deur-svg-technical");
-    return getDeurSvg(slug, { breedte, hoogte, showDims: true });
+    return buildDeurSvgString(slug, breedte, hoogte, glas);
   }
   return buildKozijnSvg(slug,breedte,hoogte);
 }

@@ -29,13 +29,13 @@ export default function BartMooiDeurenConfigurator() {
     { id: 10, category: "Enkele deur",  slug: "voordeur-zijlicht-bovenlicht",        name: "Voordeur met zijlicht en bovenlicht",         best: false, v: 1.5, comp: <VoordeurZijlichtBovenlicht /> },
     { id: 11, category: "Enkele deur",  slug: "deur-zijlicht-borstwering",           name: "Deur met zijlicht en borstwering",            best: false, v: 1.5, comp: <DeurZijlichtBorstwering /> },
     { id: 12, category: "Enkele deur",  slug: "deur-zijlichten",                     name: "Deur met twee zijlichten",                    best: false, v: 1.8, comp: <DeurZijlichten /> },
-    { id: 13, category: "Dubbele deur", slug: "dubbele-deur",                        name: "Dubbele deur",                                best: true,  v: 1,   comp: <DoubleDoorBase /> },
+    { id: 13, category: "Dubbele deur", slug: "dubbele-deur",                        name: "Dubbele deur",                                best: true,  v: 1.5, comp: <DoubleDoorBase /> },
     { id: 14, category: "Dubbele deur", slug: "dubbele-deur-zijlichten",             name: "Dubbele deur met zijlichten",                 best: true,  v: 1.8, comp: <DoubleDoorBase hasSideLights /> },
-    { id: 15, category: "Dubbele deur", slug: "dubbele-deur-borstwering",            name: "Dubbele deur met borstwering",                best: true,  v: 1,   comp: <DoubleDoorBase hasPlinth /> },
-    { id: 16, category: "Dubbele deur", slug: "dubbele-deur-bovenlicht",             name: "Dubbele deur met bovenlicht",                 best: true,  v: 1,   comp: <DubbeleDeurBovenlicht /> },
-    { id: 17, category: "Dubbele deur", slug: "dubbele-deur-zijlicht",               name: "Dubbele deur met zijlicht",                   best: false, v: 1.5, comp: <DubbeleDeurZijlicht /> },
+    { id: 15, category: "Dubbele deur", slug: "dubbele-deur-borstwering",            name: "Dubbele deur met borstwering",                best: true,  v: 1.5, comp: <DoubleDoorBase hasPlinth /> },
+    { id: 16, category: "Dubbele deur", slug: "dubbele-deur-bovenlicht",             name: "Dubbele deur met bovenlicht",                 best: true,  v: 1.5, comp: <DubbeleDeurBovenlicht /> },
+    { id: 17, category: "Dubbele deur", slug: "dubbele-deur-zijlicht",               name: "Dubbele deur met zijlicht",                   best: false, v: 1.8, comp: <DubbeleDeurZijlicht /> },
     { id: 18, category: "Dubbele deur", slug: "dubbele-deur-zijlichten-bovenlichten",name: "Dubbele deur met zijlichten en bovenlichten", best: false, v: 1.8, comp: <DubbeleDeurZijlichtenBovenlichten /> },
-    { id: 19, category: "Dubbele deur", slug: "dubbele-deur-borstwering-bovenlicht", name: "Dubbele deur met borstwering en bovenlicht",  best: false, v: 1,   comp: <DubbeleDeurBorstweringBovenlicht /> },
+    { id: 19, category: "Dubbele deur", slug: "dubbele-deur-borstwering-bovenlicht", name: "Dubbele deur met borstwering en bovenlicht",  best: false, v: 1.5, comp: <DubbeleDeurBorstweringBovenlicht /> },
   ];
 
   return (
