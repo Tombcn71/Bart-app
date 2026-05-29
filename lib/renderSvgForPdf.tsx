@@ -236,27 +236,56 @@ function buildHarmonicaSvg(slug:string,breedte:number,hoogte:number):string {
 
 // ─── Deur ─────────────────────────────────────────────────────────────────────
 
+function drawDeurPanel(x:number,y:number,w:number,h:number,mirror=false):string {
+  let s="";
+  // glas
+  s+=rect(x,y,w,h,GLASS_FILL,"none",0);
+  s+=line(x,y,x+w,y+h,GLASS_LINE,0.9);
+  s+=line(x+w,y,x,y+h,GLASS_LINE,0.9);
+  // vleugel binnenprofiel
+  const vx=x+VT,vy=y+VT,vw=w-VT*2,vh=h-VT*2;
+  s+=rect(vx,vy,vw,vh,"none",VLEUGEL,2.5);
+  // openingsindicator: rechte stippellijnen zoals dk
+  const ax = mirror ? vx+vw : vx;
+  const bx = mirror ? vx : vx+vw;
+  const mx = vx+vw/2;
+  s+=line(ax,vy, mx,vy+vh, OPEN_LINE,1.3,"7,4");
+  s+=line(mx,vy+vh, bx,vy, OPEN_LINE,1.3,"7,4");
+  s+=line(ax,vy, bx,vy, OPEN_LINE,1.3,"7,4");
+  // greep (midden hoogte, tegenkant scharnier)
+  const hx = mirror ? vx+vw-10 : vx+4;
+  s+=`<rect x="${r(hx)}" y="${r(vy+vh/2-20)}" width="6" height="40" rx="3" fill="${HINGE_FILL}" stroke="${VLEUGEL}" stroke-width="0.8"/>`;
+  // scharnieren (3 stuks, scharnierkant)
+  const sx = mirror ? vx : vx+vw-6;
+  for(const sy of [0.18,0.5,0.82]){
+    s+=`<rect x="${r(sx)}" y="${r(vy+vh*sy-10)}" width="6" height="20" rx="2" fill="${HINGE_FILL}" stroke="${VLEUGEL}" stroke-width="0.8"/>`;
+  }
+  return s;
+}
+
 function buildDeurSvg(breedte:number,hoogte:number):string {
-  const CW=380, ratio=breedte/hoogte;
+  const dubbel = breedte >= 1400;
+  const CW = dubbel ? 460 : 360;
+  const ratio=breedte/hoogte;
   const CH=Math.max(280,Math.min(Math.round(CW/ratio),520));
-  const gx=FT,gy=FT,gw=CW-FT*2,gh=CH-FT*2;
   let s="";
   s+=rect(0,0,CW,CH,FRAME_FILL,FRAME_STROKE,2.5,"rx='2'");
-  s+=rect(gx,gy,gw,gh,GLASS_FILL,"none",0);
-  s+=line(gx,gy,gx+gw,gy+gh,GLASS_LINE,0.9);
-  s+=line(gx+gw,gy,gx,gy+gh,GLASS_LINE,0.9);
-  // vleugel
-  const vx=gx+VT,vy=gy+VT,vw=gw-VT*2,vh=gh-VT*2;
-  s+=rect(vx,vy,vw,vh,"none",VLEUGEL,2.5);
-  // openingsboog
-  s+=`<path d="M ${r(vx)} ${r(vy+vh)} Q ${r(vx+vw)} ${r(vy+vh)} ${r(vx+vw)} ${r(vy)}" fill="none" stroke="${OPEN_LINE}" stroke-width="1.2" stroke-dasharray="8,4"/>`;
-  // greep
-  s+=`<rect x="${r(vx+12)}" y="${r(vy+vh/2-18)}" width="6" height="36" rx="3" fill="${HINGE_FILL}" stroke="${VLEUGEL}" stroke-width="0.8"/>`;
-  // scharnieren
-  for(const sy of [0.22,0.5,0.78]){
-    s+=`<rect x="${r(vx+vw-8)}" y="${r(vy+vh*sy-8)}" width="8" height="16" rx="2" fill="${HINGE_FILL}" stroke="${VLEUGEL}" stroke-width="0.8"/>`;
+
+  if(dubbel){
+    const gw=CW-FT*2, gh=CH-FT*2;
+    const vakW=(gw-DIV)/2;
+    s+=rect(FT,FT,gw,gh,GLASS_FILL,"none",0);
+    // tussenstijl
+    s+=rect(FT+vakW,0,DIV,CH,FRAME_FILL,FRAME_STROKE,1);
+    s+=drawDeurPanel(FT, FT, vakW, gh, false);
+    s+=drawDeurPanel(FT+vakW+DIV, FT, vakW, gh, true);
+  } else {
+    const gw=CW-FT*2, gh=CH-FT*2;
+    s+=rect(FT,FT,gw,gh,GLASS_FILL,"none",0);
+    s+=drawDeurPanel(FT, FT, gw, gh, false);
   }
-  s+=rect(FT-4,FT-4,gw+8,gh+8,"none",FRAME_STROKE,1.5);
+
+  s+=rect(FT-4,FT-4,CW-FT*2+8,CH-FT*2+8,"none",FRAME_STROKE,1.5);
   s+=dimLines(CW,CH,breedte,hoogte);
   const totalW=CW+DIM_R+4, totalH=CH+DIM_H+8;
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${totalW} ${totalH}" width="${totalW}" height="${totalH}">
