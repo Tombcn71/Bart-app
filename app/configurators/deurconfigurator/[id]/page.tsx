@@ -11,6 +11,7 @@ import {
   DeurZijlichten, DubbeleDeurBovenlicht, DubbeleDeurZijlicht,
   DubbeleDeurZijlichtenBovenlichten, DubbeleDeurBorstweringBovenlicht,
 } from "@/lib/deur-svgs";
+import { getDeurSvg } from "@/lib/deur-svg-technical";
 
 const DEFAULT_MATRIX = {
   basisPrijs: 0, m2Tarief: 0, montageKosten: 0,
@@ -125,7 +126,7 @@ export default function DeurConfiguratorDetail() {
           <div className="lg:col-span-7">
             <h1 className="text-2xl font-semibold mb-6">{deur.name}</h1>
             <div className="bg-slate-50 p-10 rounded-xl border">
-              <svg viewBox={`0 0 ${deur.v * 100} 160`} className="w-full h-auto">{deur.comp}</svg>
+              <div className="w-full h-auto" dangerouslySetInnerHTML={{ __html: getDeurSvg(slug, { breedte, hoogte, profiel, showDims: true }) }} />
             </div>
           </div>
 
