@@ -1,7 +1,7 @@
 // Professionele technische SVG voor deur types
 // Gebruikt voor website (preview) en PDF (offerte)
 
-const FONT  = "'Arial', Helvetica, sans-serif";
+const FONT  = "Arial, Helvetica, sans-serif";
 const LINE  = "#1a1a1a";
 const DIM   = "#444";
 const GLASS = "#aaaaaa";
@@ -11,6 +11,7 @@ const DASH  = "9,5";
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function r(n: number) { return +n.toFixed(1); }
+function x(s: string) { return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
 
 function hdim(x1: number, x2: number, y: number, label: string, offset = 0): string {
   const mx = (x1 + x2) / 2;
@@ -42,8 +43,8 @@ function label(x: number, y: number, lines: string[], fontSize = 10): string {
   ).join('');
 }
 
-function sideLabel(x: number, y: number, txt: string): string {
-  return `<text x="${r(x)}" y="${r(y)}" text-anchor="start" font-family="${FONT}" font-size="10" fill="${DIM}">${txt}</text>`;
+function sideLabel(lx: number, ly: number, txt: string): string {
+  return `<text x="${r(lx)}" y="${r(ly)}" text-anchor="start" font-family="${FONT}" font-size="10" fill="${DIM}">${x(txt)}</text>`;
 }
 
 function arrowLine(x1: number, y1: number, x2: number, y2: number): string {
@@ -271,7 +272,6 @@ export function getDeurSvg(slug: string, opts: DeurSvgOptions = {}): string {
     // Per-vak breedte (voor 2-vaks layouts)
     if (slug.includes("zijlicht") && !slug.includes("zijlichten")) {
       const deurW = r(DW * 0.6);
-      const zijW  = r(DW * 0.4);
       s += hdim(ML, ML + deurW, MT + DH + 14, `${r(B * 0.6)}mm`);
       s += hdim(ML + deurW, ML + DW, MT + DH + 14, `${r(B * 0.4)}mm`);
     } else if (slug.includes("dubbele") || slug === "dubbele-deur-borstwering") {
@@ -281,7 +281,7 @@ export function getDeurSvg(slug: string, opts: DeurSvgOptions = {}): string {
     }
   }
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${TW} ${TH}" width="${TW}" height="${TH}">
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${TW} ${TH}" style="width:100%;height:auto;max-width:${TW}px">
   ${s}
 </svg>`;
 }
