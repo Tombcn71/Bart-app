@@ -2,50 +2,33 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { InmeetServiceCard } from "@/app/components/InmeetServiceCard";
-import {
-  SingleDoorBase,
-  DoubleDoorBase,
-  AchterdeurBovenlicht,
-  VoordeurBovenlicht,
-  AchterdeurBorstwering,
-  AchterdeurBorstweringBovenlicht,
-  DeurZijlicht,
-  VoordeurZijlicht,
-  DeurZijlichtBovenlicht,
-  VoordeurZijlichtBovenlicht,
-  DeurZijlichtBorstwering,
-  DeurZijlichten,
-  DubbeleDeurBovenlicht,
-  DubbeleDeurZijlicht,
-  DubbeleDeurZijlichtenBovenlichten,
-  DubbeleDeurBorstweringBovenlicht,
-} from "@/lib/deur-svgs";
+import { getDeurSvg } from "@/lib/deur-svg-technical";
 
 export default function BartMooiDeurenConfigurator() {
   const [activeType, setActiveType] = useState("Enkele deur");
 
   const deuren = [
     // ── Enkele deur ───────────────────────────────────────────────────────────
-    { id: 1,  category: "Enkele deur", slug: "voordeur",                       name: "Voordeur",                              best: true,  v: 1,   components: <SingleDoorBase type="voordeur" /> },
-    { id: 2,  category: "Enkele deur", slug: "achterdeur",                     name: "Achterdeur",                            best: true,  v: 1,   components: <SingleDoorBase type="achterdeur" /> },
-    { id: 3,  category: "Enkele deur", slug: "voordeur-bovenlicht",            name: "Voordeur met bovenlicht",               best: true,  v: 1,   components: <VoordeurBovenlicht /> },
-    { id: 4,  category: "Enkele deur", slug: "achterdeur-bovenlicht",          name: "Achterdeur met bovenlicht",             best: true,  v: 1,   components: <AchterdeurBovenlicht /> },
-    { id: 5,  category: "Enkele deur", slug: "achterdeur-borstwering",         name: "Achterdeur met borstwering",            best: false, v: 1,   components: <AchterdeurBorstwering /> },
-    { id: 6,  category: "Enkele deur", slug: "achterdeur-borstwering-bovenlicht", name: "Achterdeur met borstwering en bovenlicht", best: false, v: 1, components: <AchterdeurBorstweringBovenlicht /> },
-    { id: 7,  category: "Enkele deur", slug: "deur-zijlicht",                 name: "Deur met zijlicht",                     best: true,  v: 1.5, components: <DeurZijlicht /> },
-    { id: 8,  category: "Enkele deur", slug: "voordeur-zijlicht",             name: "Voordeur met zijlicht",                 best: true,  v: 1.5, components: <VoordeurZijlicht /> },
-    { id: 9,  category: "Enkele deur", slug: "deur-zijlicht-bovenlicht",      name: "Deur met zijlicht en bovenlicht",       best: false, v: 1.5, components: <DeurZijlichtBovenlicht /> },
-    { id: 10, category: "Enkele deur", slug: "voordeur-zijlicht-bovenlicht",  name: "Voordeur met zijlicht en bovenlicht",   best: false, v: 1.5, components: <VoordeurZijlichtBovenlicht /> },
-    { id: 11, category: "Enkele deur", slug: "deur-zijlicht-borstwering",     name: "Deur met zijlicht en borstwering",      best: false, v: 1.5, components: <DeurZijlichtBorstwering /> },
-    { id: 12, category: "Enkele deur", slug: "deur-zijlichten",               name: "Deur met twee zijlichten",              best: false, v: 1.8, components: <DeurZijlichten /> },
+    { id: 1,  category: "Enkele deur",  slug: "voordeur",                            name: "Voordeur",                                    best: true  },
+    { id: 2,  category: "Enkele deur",  slug: "achterdeur",                          name: "Achterdeur",                                  best: true  },
+    { id: 3,  category: "Enkele deur",  slug: "voordeur-bovenlicht",                 name: "Voordeur met bovenlicht",                     best: true  },
+    { id: 4,  category: "Enkele deur",  slug: "achterdeur-bovenlicht",               name: "Achterdeur met bovenlicht",                   best: true  },
+    { id: 5,  category: "Enkele deur",  slug: "achterdeur-borstwering",              name: "Achterdeur met borstwering",                  best: false },
+    { id: 6,  category: "Enkele deur",  slug: "achterdeur-borstwering-bovenlicht",   name: "Achterdeur met borstwering en bovenlicht",    best: false },
+    { id: 7,  category: "Enkele deur",  slug: "deur-zijlicht",                       name: "Deur met zijlicht",                           best: true  },
+    { id: 8,  category: "Enkele deur",  slug: "voordeur-zijlicht",                   name: "Voordeur met zijlicht",                       best: true  },
+    { id: 9,  category: "Enkele deur",  slug: "deur-zijlicht-bovenlicht",            name: "Deur met zijlicht en bovenlicht",             best: false },
+    { id: 10, category: "Enkele deur",  slug: "voordeur-zijlicht-bovenlicht",        name: "Voordeur met zijlicht en bovenlicht",         best: false },
+    { id: 11, category: "Enkele deur",  slug: "deur-zijlicht-borstwering",           name: "Deur met zijlicht en borstwering",            best: false },
+    { id: 12, category: "Enkele deur",  slug: "deur-zijlichten",                     name: "Deur met twee zijlichten",                    best: false },
     // ── Dubbele deur ──────────────────────────────────────────────────────────
-    { id: 13, category: "Dubbele deur", slug: "dubbele-deur",                        name: "Dubbele deur",                                    best: true,  v: 1,   components: <DoubleDoorBase /> },
-    { id: 14, category: "Dubbele deur", slug: "dubbele-deur-zijlichten",             name: "Dubbele deur met zijlichten",                     best: true,  v: 1.8, components: <DoubleDoorBase hasSideLights /> },
-    { id: 15, category: "Dubbele deur", slug: "dubbele-deur-borstwering",            name: "Dubbele deur met borstwering",                    best: true,  v: 1,   components: <DoubleDoorBase hasPlinth /> },
-    { id: 16, category: "Dubbele deur", slug: "dubbele-deur-bovenlicht",             name: "Dubbele deur met bovenlicht",                     best: true,  v: 1,   components: <DubbeleDeurBovenlicht /> },
-    { id: 17, category: "Dubbele deur", slug: "dubbele-deur-zijlicht",              name: "Dubbele deur met zijlicht",                       best: false, v: 1.5, components: <DubbeleDeurZijlicht /> },
-    { id: 18, category: "Dubbele deur", slug: "dubbele-deur-zijlichten-bovenlichten",name: "Dubbele deur met zijlichten en bovenlichten",     best: false, v: 1.8, components: <DubbeleDeurZijlichtenBovenlichten /> },
-    { id: 19, category: "Dubbele deur", slug: "dubbele-deur-borstwering-bovenlicht", name: "Dubbele deur met borstwering en bovenlicht",      best: false, v: 1,   components: <DubbeleDeurBorstweringBovenlicht /> },
+    { id: 13, category: "Dubbele deur", slug: "dubbele-deur",                        name: "Dubbele deur",                                best: true  },
+    { id: 14, category: "Dubbele deur", slug: "dubbele-deur-zijlichten",             name: "Dubbele deur met zijlichten",                 best: true  },
+    { id: 15, category: "Dubbele deur", slug: "dubbele-deur-borstwering",            name: "Dubbele deur met borstwering",                best: true  },
+    { id: 16, category: "Dubbele deur", slug: "dubbele-deur-bovenlicht",             name: "Dubbele deur met bovenlicht",                 best: true  },
+    { id: 17, category: "Dubbele deur", slug: "dubbele-deur-zijlicht",               name: "Dubbele deur met zijlicht",                   best: false },
+    { id: 18, category: "Dubbele deur", slug: "dubbele-deur-zijlichten-bovenlichten",name: "Dubbele deur met zijlichten en bovenlichten", best: false },
+    { id: 19, category: "Dubbele deur", slug: "dubbele-deur-borstwering-bovenlicht", name: "Dubbele deur met borstwering en bovenlicht",  best: false },
   ];
 
   return (
@@ -97,15 +80,8 @@ export default function BartMooiDeurenConfigurator() {
                     POPULAIR
                   </div>
                 )}
-                <div className="w-full flex items-center justify-center">
-                  <div style={{ width: item.v > 1.4 ? "100%" : "55%" }}>
-                    <svg
-                      viewBox={`0 0 ${item.v * 100} 160`}
-                      className="w-full h-auto">
-                      {item.components}
-                    </svg>
-                  </div>
-                </div>
+                <div className="w-full"
+                  dangerouslySetInnerHTML={{ __html: getDeurSvg(item.slug, { showDims: false }) }} />
               </div>
 
               <div className="mt-4 md:mt-6 text-center">
