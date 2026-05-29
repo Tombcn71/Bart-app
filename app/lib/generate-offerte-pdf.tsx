@@ -169,7 +169,7 @@ export async function generateOffertePdf(
   if (data.slug) {
     const svgStr = getSvgString(data.slug);
     if (svgStr) {
-      const pngBuf = svgToPng(svgStr, 500);
+      const pngBuf = await svgToPng(svgStr, 500);
       kozijnPng = `data:image/png;base64,${pngBuf.toString("base64")}`;
     }
   }
