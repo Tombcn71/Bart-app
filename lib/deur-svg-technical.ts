@@ -37,9 +37,9 @@ function vdim(y1: number, y2: number, x: number, label: string): string {
       transform="rotate(-90 ${r(x-10)} ${r(my)})">${label}</text>`;
 }
 
-function label(x: number, y: number, lines: string[], fontSize = 10): string {
+function label(lx: number, ly: number, lines: string[], fontSize = 10): string {
   return lines.map((t, i) =>
-    `<text x="${r(x)}" y="${r(y + i * (fontSize + 3))}" text-anchor="middle" font-family="${FONT}" font-size="${fontSize}" fill="${LINE}">${t}</text>`
+    `<text x="${r(lx)}" y="${r(ly + i * (fontSize + 3))}" text-anchor="middle" font-family="${FONT}" font-size="${fontSize}" fill="${LINE}">${x(t)}</text>`
   ).join('');
 }
 
