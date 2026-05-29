@@ -1,10 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    turbopack: {
-      root: "/Users/tom/Bart-app",
-    },
-  },
+  serverExternalPackages: ["@resvg/resvg-js"],
 };
 
 export default nextConfig;
