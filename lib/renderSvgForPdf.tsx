@@ -62,13 +62,10 @@ const slugToSvg: Record<string, string> = {
   "draai-kiep-draai-kiep-draai-kiep-draai-kiep-kozijn": kozijnSvg(4, dkSymbol(0) + dkSymbol(100) + dkSymbol(200) + dkSymbol(300, true)),
 };
 
-export function renderSvgForPdf(slug: string): string | null {
+function buildSvgString(slug: string): string | null {
   const svg = slugToSvg[slug];
-  if (svg) {
-    return `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
-  }
+  if (svg) return svg;
 
-  // Schuifpui
   if (slug.includes("schuifpui")) {
     const sections = slug.includes("4-vaks") ? 4 : 2;
     const w = sections * 45;
@@ -80,37 +77,42 @@ export function renderSvgForPdf(slug: string): string | null {
     const dividers = Array.from({ length: sections - 1 }, (_, i) =>
       `<line x1="${(i + 1) * 45}" y1="0" x2="${(i + 1) * 45}" y2="100" stroke="${DARK}" stroke-width="0.8"/>`
     ).join("");
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} 100" width="${w}" height="100">
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} 100" width="${w}" height="100">
       <rect x="0.5" y="0.5" width="${w - 1}" height="99" fill="none" stroke="${DARK}" stroke-width="1"/>
       ${dividers}${arrow}
     </svg>`;
-    return `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
   }
 
-  // Harmonicadeur
   if (slug.includes("harmonica")) {
     const sections = slug.includes("vijf") ? 5 : slug.includes("vier") ? 4 : 3;
     const w = sections * 30;
     const folds = Array.from({ length: sections - 1 }, (_, i) =>
       `<line x1="${(i + 1) * 30}" y1="0" x2="${(i + 1) * 30}" y2="100" stroke="${DARK}" stroke-width="0.8" stroke-dasharray="4,3"/>`
     ).join("");
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} 100" width="${w}" height="100">
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} 100" width="${w}" height="100">
       <rect x="0.5" y="0.5" width="${w - 1}" height="99" fill="none" stroke="${DARK}" stroke-width="1"/>
       ${folds}
     </svg>`;
-    return `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
   }
 
-  // Deur (fallback)
   if (slug.includes("deur") || slug.includes("voordeur") || slug.includes("achterdeur")) {
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 120" width="80" height="120">
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 120" width="80" height="120">
       <rect x="0.5" y="0.5" width="79" height="119" fill="none" stroke="${DARK}" stroke-width="1"/>
       <rect x="8" y="8" width="64" height="104" fill="none" stroke="${DARK}" stroke-width="0.6"/>
       <path d="M 8 112 Q 72 112 72 8" fill="none" stroke="${DARK}" stroke-width="0.5" stroke-dasharray="3,3"/>
       <circle cx="14" cy="60" r="2.5" fill="${DARK}"/>
     </svg>`;
-    return `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
   }
 
   return null;
+}
+
+export function getSvgString(slug: string): string | null {
+  return buildSvgString(slug);
+}
+
+export function renderSvgForPdf(slug: string): string | null {
+  const svg = buildSvgString(slug);
+  if (!svg) return null;
+  return `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
 }

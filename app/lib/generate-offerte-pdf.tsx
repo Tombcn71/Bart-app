@@ -11,6 +11,8 @@ import {
 } from "@react-pdf/renderer";
 import path from "path";
 import fs from "fs";
+import { getSvgString } from "@/lib/renderSvgForPdf";
+import { svgToPng } from "./svg-to-png";
 
 const styles = StyleSheet.create({
   page: {
@@ -144,6 +146,7 @@ interface OfferteData {
   naam?: string;
   product?: string;
   kozijnNaam?: string;
+  slug?: string;
   breedte?: number;
   hoogte?: number;
   kleur?: string;
@@ -154,12 +157,22 @@ interface OfferteData {
 }
 
 export async function generateOffertePdf(
-  email: string,
+  _email: string,
   data: OfferteData
 ): Promise<Buffer> {
   const logoPath = path.join(process.cwd(), "public", "bartmooi-logo-1.png");
   const logoData = fs.readFileSync(logoPath);
   const logoBase64 = `data:image/png;base64,${logoData.toString("base64")}`;
+
+  // Kozijntekening: SVG → PNG (geen SVG in de PDF, veilig voor email)
+  let kozijnPng: string | null = null;
+  if (data.slug) {
+    const svgStr = getSvgString(data.slug);
+    if (svgStr) {
+      const pngBuf = svgToPng(svgStr, 500);
+      kozijnPng = `data:image/png;base64,${pngBuf.toString("base64")}`;
+    }
+  }
 
   const productNaam = data.product || data.kozijnNaam || "kozijn";
   const naam = data.naam || "geachte klant";
@@ -245,6 +258,16 @@ export async function generateOffertePdf(
             </View>
           )}
         </View>
+
+        {/* Kozijntekening als PNG */}
+        {kozijnPng && (
+          <View style={{ alignItems: "center", marginVertical: 10 }}>
+            <Image src={kozijnPng} style={{ width: 180, objectFit: "contain" }} />
+            <Text style={{ fontSize: 7, color: "#aaa", marginTop: 4 }}>
+              Schematische weergave — niet op schaal
+            </Text>
+          </View>
+        )}
 
         <View style={styles.divider} />
 
