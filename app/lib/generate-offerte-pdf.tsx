@@ -167,7 +167,7 @@ export async function generateOffertePdf(
   // Kozijntekening: SVG → PNG (geen SVG in de PDF, veilig voor email)
   let kozijnPng: string | null = null;
   if (data.slug) {
-    const svgStr = getSvgString(data.slug);
+    const svgStr = getSvgString(data.slug, data.breedte, data.hoogte);
     if (svgStr) {
       const pngBuf = await svgToPng(svgStr, 500);
       kozijnPng = `data:image/png;base64,${pngBuf.toString("base64")}`;
