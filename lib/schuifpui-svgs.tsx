@@ -10,23 +10,35 @@ const S = {
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 
-const VastPanel = ({ ox }: { ox: number }) => (
-  <>
-    <rect x={ox+5} y={5} width={90} height={90} fill="white" stroke={S.stroke} strokeWidth={S.lineWidth} />
-    <rect x={ox+9} y={9} width={82} height={82} fill="none"  stroke={S.stroke} strokeWidth={S.lineThin} />
-  </>
-);
-
-// Schuivend paneel — pijl wijst in schuifrichting
-const SchuifPanel = ({ ox, dir }: { ox: number; dir: "l" | "r" }) => {
-  const ax1 = ox + 30, ax2 = ox + 70, ay = 50;
-  const head = dir === "r"
-    ? `M${ax2} ${ay} L${ax2-7} ${ay-3} L${ax2-7} ${ay+3} Z`
-    : `M${ax1} ${ay} L${ax1+7} ${ay-3} L${ax1+7} ${ay+3} Z`;
+// Vast (fixed) paneel — dubbele rand + kruis
+const VastPanel = ({ ox }: { ox: number }) => {
+  const cx = ox + 50, cy = 50;
   return (
     <>
       <rect x={ox+5} y={5} width={90} height={90} fill="white" stroke={S.stroke} strokeWidth={S.lineWidth} />
       <rect x={ox+9} y={9} width={82} height={82} fill="none"  stroke={S.stroke} strokeWidth={S.lineThin} />
+      <line x1={cx-6} y1={cy}   x2={cx+6} y2={cy}   stroke={S.stroke} strokeWidth={S.lineThin} />
+      <line x1={cx}   y1={cy-6} x2={cx}   y2={cy+6} stroke={S.stroke} strokeWidth={S.lineThin} />
+    </>
+  );
+};
+
+// Schuivend paneel — dubbele rand + greep + pijl
+const SchuifPanel = ({ ox, dir }: { ox: number; dir: "l" | "r" }) => {
+  const ax1 = ox + 32, ax2 = ox + 68, ay = 50;
+  // pijlpunt aan het einde van de schuifrichting
+  const head = dir === "r"
+    ? `M${ax2},${ay} L${ax2-8},${ay-3.5} L${ax2-8},${ay+3.5} Z`
+    : `M${ax1},${ay} L${ax1+8},${ay-3.5} L${ax1+8},${ay+3.5} Z`;
+  // greep aan de kant vanwaar je het paneel grijpt
+  const hx = dir === "r" ? ox + 8 : ox + 87;
+  return (
+    <>
+      <rect x={ox+5} y={5} width={90} height={90} fill="white" stroke={S.stroke} strokeWidth={S.lineWidth} />
+      <rect x={ox+9} y={9} width={82} height={82} fill="none"  stroke={S.stroke} strokeWidth={S.lineThin} />
+      {/* greep */}
+      <rect x={hx} y={38} width={5} height={24} rx="2" fill="white" stroke={S.stroke} strokeWidth={S.lineThin} />
+      {/* schuifpijl */}
       <line x1={ax1} y1={ay} x2={ax2} y2={ay} stroke={S.stroke} strokeWidth={S.lineThin} />
       <path d={head} fill={S.stroke} />
     </>
@@ -35,11 +47,11 @@ const SchuifPanel = ({ ox, dir }: { ox: number; dir: "l" | "r" }) => {
 
 // ─── COMPONENTEN ─────────────────────────────────────────────────────────────
 
-/** 2-vaks: links vast, rechts schuivend → */
+/** 2-vaks: links schuivend →, rechts vast */
 export const SchuifpuiTweevaks = () => (
   <g strokeLinecap="round" strokeLinejoin="round">
-    <VastPanel  ox={0} />
-    <SchuifPanel ox={100} dir="r" />
+    <SchuifPanel ox={0}   dir="r" />
+    <VastPanel   ox={100} />
   </g>
 );
 

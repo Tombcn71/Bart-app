@@ -44,17 +44,22 @@ function dimV(y1: number, y2: number, x: number, label: string) {
 }
 
 function vastP(ox: number): string {
+  const cx = ox+50, cy = 50;
   return sRect(ox+5, 5, 90, 90, "white", C, LW)
-    + sRect(ox+9, 9, 82, 82, "none", C, LT);
+    + sRect(ox+9, 9, 82, 82, "none", C, LT)
+    + sLine(cx-6, cy, cx+6, cy, C, LT)
+    + sLine(cx, cy-6, cx, cy+6, C, LT);
 }
 
 function schuifP(ox: number, dir: "l" | "r"): string {
-  const ax1 = ox+30, ax2 = ox+70, ay = 50;
+  const ax1 = ox+32, ax2 = ox+68, ay = 50;
   const head = dir === "r"
-    ? `${r(ax2)},${r(ay)} ${r(ax2-7)},${r(ay-3)} ${r(ax2-7)},${r(ay+3)}`
-    : `${r(ax1)},${r(ay)} ${r(ax1+7)},${r(ay-3)} ${r(ax1+7)},${r(ay+3)}`;
+    ? `${r(ax2)},${r(ay)} ${r(ax2-8)},${r(ay-3.5)} ${r(ax2-8)},${r(ay+3.5)}`
+    : `${r(ax1)},${r(ay)} ${r(ax1+8)},${r(ay-3.5)} ${r(ax1+8)},${r(ay+3.5)}`;
+  const hx = dir === "r" ? ox+8 : ox+87;
   return sRect(ox+5, 5, 90, 90, "white", C, LW)
     + sRect(ox+9, 9, 82, 82, "none", C, LT)
+    + sRect(hx, 38, 5, 24, "white", C, LT)
     + sLine(ax1, ay, ax2, ay, C, LT)
     + sPoly(head, C);
 }
@@ -65,7 +70,7 @@ export function buildSchuifpuiSvgString(slug: string, breedte: number, hoogte: n
 
   const body = slug.includes("4-vaks")
     ? vastP(0) + schuifP(100, "l") + schuifP(200, "r") + vastP(300)
-    : vastP(0) + schuifP(100, "r");
+    : schuifP(0, "r") + vastP(100);
 
   const PL = 30, PT = 8, PB = 24, PR = 6;
   const totalW = vW + PL + PR;
