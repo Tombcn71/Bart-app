@@ -31,6 +31,13 @@ const NAV_ITEMS = [
       { label: "Aluminium schuifpui", href: "/aluminium/schuifpui" },
     ],
   },
+  {
+    label: "Horren",
+    items: [
+      { label: "Inzethor", href: "/horren" },
+      { label: "Klemhor",  href: "/horren" },
+    ],
+  },
 ];
 
 function DropdownItem({ label, items }: { label: string; items: { label: string; href: string }[] }) {
