@@ -1,4 +1,5 @@
 "use client";
+import { toast } from "sonner";
 import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -178,7 +179,7 @@ export default function AluSchuifpuiDetailPage() {
               <button
                 disabled={isSubmitting}
                 onClick={async () => {
-                  if (!email || !naam) return alert("Vul a.u.b. uw gegevens in.");
+                  if (!email || !naam) { toast.error("Vul a.u.b. uw gegevens in."); return; }
                   setIsSubmitting(true);
                   await saveOfferte(email, {
                     naam, product: `Aluminium ${pui.name}`, slug, breedte, hoogte,
@@ -186,7 +187,7 @@ export default function AluSchuifpuiDetailPage() {
                     afstandshouder, roeden, ventilatieRooster, draairichting, kruk, voorboren,
                     aantal, prijs: berekendePrijs,
                   });
-                  alert("Offerte verstuurd!");
+                  toast.success("Offerte verstuurd! U ontvangt een bevestiging per e-mail.");
                   setIsSubmitting(false);
                 }}
                 className="w-full bg-[#1066a3] text-white py-4 rounded-lg font-bold uppercase text-[11px] tracking-widest hover:bg-[#0a4d7d] transition-colors">

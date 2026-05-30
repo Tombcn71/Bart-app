@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "./components/Navbar";
-// Importeer de headers functie van Next.js
+import { Toaster } from "@/components/ui/sonner";
 import { headers } from "next/headers";
 
 const geistSans = Geist({
@@ -38,8 +38,12 @@ export default async function RootLayout({
 
         {/* De rest van de pagina (children) komt hieronder */}
         <main className="flex-grow">{children}</main>
-
-        {/* Eventueel hier later een Footer */}
+        <Toaster
+          position="top-center"
+          toastOptions={{
+            style: { background: "#1066a3", color: "white", fontWeight: "600" },
+          }}
+        />
       </body>
     </html>
   );

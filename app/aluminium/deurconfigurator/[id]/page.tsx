@@ -1,4 +1,5 @@
 "use client";
+import { toast } from "sonner";
 import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -173,7 +174,7 @@ export default function AluDeurConfiguratorDetail() {
               <button
                 disabled={isSubmitting}
                 onClick={async () => {
-                  if (!email || !naam) return alert("Vul naam en e-mail in!");
+                  if (!email || !naam) { toast.error("Vul naam en e-mail in!"); return; }
                   setIsSubmitting(true);
                   await saveOfferte(email, {
                     naam, deurNaam: `Aluminium ${deur.name}`, slug, breedte, hoogte,
@@ -181,7 +182,7 @@ export default function AluDeurConfiguratorDetail() {
                     onderdorpel, draairichting, afstandshouder, roeden,
                     aantal, prijs: berekendePrijs,
                   });
-                  alert("Offerte verstuurd!");
+                  toast.success("Offerte verstuurd! U ontvangt een bevestiging per e-mail.");
                   setIsSubmitting(false);
                 }}
                 className="w-full bg-[#1066a3] text-white py-4 rounded-lg font-bold uppercase text-[11px] tracking-widest">
