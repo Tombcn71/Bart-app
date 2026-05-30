@@ -4,7 +4,7 @@
 const C  = "#000000";
 const LW = 0.8;   // lineWidth — panelen en frame
 const LT = 0.5;   // lineThin  — details, borstwering
-const DC = "#1066a3"; // dimension color
+const DC = "#9ca3af"; // subtiele maat-kleur // dimension color
 const DS = 0.4;   // dimension stroke width
 
 function r(n: number) { return n.toFixed(1); }
@@ -31,20 +31,20 @@ function dimH(x1: number, x2: number, y: number, label: string) {
   return sLine(x1, y+3, x1, y-3, DC, DS)
     + sLine(x2, y+3, x2, y-3, DC, DS)
     + sLine(x1, y, x2, y, DC, DS)
-    + sPoly(`${r(x1)},${r(y)} ${r(x1+7)},${r(y-2.5)} ${r(x1+7)},${r(y+2.5)}`, DC)
-    + sPoly(`${r(x2)},${r(y)} ${r(x2-7)},${r(y-2.5)} ${r(x2-7)},${r(y+2.5)}`, DC)
+    + sPoly(`${r(x1)},${r(y)} ${r(x1+5)},${r(y-2)} ${r(x1+5)},${r(y+2)}`, DC)
+    + sPoly(`${r(x2)},${r(y)} ${r(x2-5)},${r(y-2)} ${r(x2-5)},${r(y+2)}`, DC)
     + sRect(mx-16, y-5, 32, 10, "white", "none", 0)
-    + sText(mx, y+3.5, label, "middle", 11, DC);
+    + sText(mx, y+3.5, label, "middle", 8, DC);
 }
 function dimV(y1: number, y2: number, x: number, label: string) {
   const my = (y1 + y2) / 2;
   return sLine(x-3, y1, x+3, y1, DC, DS)
     + sLine(x-3, y2, x+3, y2, DC, DS)
     + sLine(x, y1, x, y2, DC, DS)
-    + sPoly(`${r(x)},${r(y1)} ${r(x-2.5)},${r(y1+7)} ${r(x+2.5)},${r(y1+7)}`, DC)
-    + sPoly(`${r(x)},${r(y2)} ${r(x-2.5)},${r(y2-7)} ${r(x+2.5)},${r(y2-7)}`, DC)
+    + sPoly(`${r(x)},${r(y1)} ${r(x-2)},${r(y1+5)} ${r(x+2.5)},${r(y1+7)}`, DC)
+    + sPoly(`${r(x)},${r(y2)} ${r(x-2)},${r(y2-5)} ${r(x+2.5)},${r(y2-7)}`, DC)
     + sRect(x-5, my-16, 10, 32, "white", "none", 0)
-    + sText(x, my+3.5, label, "middle", 11, DC, `transform="rotate(-90,${r(x)},${r(my)})"`);
+    + sText(x, my+3.5, label, "middle", 8, DC, `transform="rotate(-90,${r(x)},${r(my)})"`);
 }
 
 // ─── Vak helpers ─────────────────────────────────────────────────────────────

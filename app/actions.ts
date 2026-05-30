@@ -73,11 +73,12 @@ export async function saveOfferte(email: string, data: any) {
     // Voeg subsidie toe aan data object
     const dataMetSubsidie = { ...data, subsidieIndicatie: totaalSubsidie };
 
-    // 2. Opslaan in database
-    await db.insert(offertes).values({ email, data: dataMetSubsidie });
+    // 2. Opslaan in database + ID ophalen
+    const inserted = await db.insert(offertes).values({ email, data: dataMetSubsidie }).returning({ id: offertes.id });
+    const offerteId = inserted[0]?.id ?? "";
 
-    // 3. PDF genereren
-    const pdfBuffer = await generateOffertePdf(email, dataMetSubsidie);
+    // 3. PDF genereren (met ID voor acceptatielink)
+    const pdfBuffer = await generateOffertePdf(email, { ...dataMetSubsidie, offerteId });
 
     // 4. E-mail verzenden
     const { data: emailData, error } = await resend.emails.send({

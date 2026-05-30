@@ -282,6 +282,7 @@ interface OfferteData {
   product?: string;
   kozijnNaam?: string;
   deurNaam?: string;
+  materiaal?: string;
   slug?: string;
   breedte?: number;
   hoogte?: number;
@@ -300,6 +301,7 @@ interface OfferteData {
   aantal?: number;
   prijs?: number;
   subsidieIndicatie?: number;
+  offerteId?: string;
 }
 
 function clean(s?: string) {
@@ -329,6 +331,7 @@ export async function generateOffertePdf(_email: string, data: OfferteData): Pro
   // Alle productspecificaties die aanwezig zijn
   const specs: [string, string][] = [
     ["Product", productNaam],
+    data.materiaal ? ["Materiaal", data.materiaal.charAt(0).toUpperCase() + data.materiaal.slice(1)] : null,
     data.breedte && data.hoogte ? ["Maat (B × H)", `${data.breedte} mm × ${data.hoogte} mm`] : null,
     glasLabel ? ["Type glas", glasLabel] : null,
     clean(data.kleur) ? ["Kleur binnenkant", clean(data.kleur)!] : null,
@@ -472,6 +475,18 @@ export async function generateOffertePdf(_email: string, data: OfferteData): Pro
           <Text style={styles.signIntro}>
             Door ondertekening van deze offerte gaat u akkoord met de bovenstaande specificaties, prijzen en voorwaarden van BartMooi B.V. U ontvangt na ontvangst van de aanbetaling een bevestiging en planning.
           </Text>
+
+          {/* Digitale optie */}
+          {data.offerteId && (
+            <View style={{ marginBottom: 16, padding: 10, borderWidth: 1, borderColor: LINE, borderRadius: 4 }}>
+              <Text style={{ fontSize: 8.5, color: GREY, marginBottom: 4 }}>Liever digitaal akkoord geven?</Text>
+              <Text style={{ fontSize: 9, color: DARK, fontFamily: "Helvetica-Bold" }}>
+                {"https://offerte-bartmooi.nl/accepteer/" + data.offerteId}
+              </Text>
+            </View>
+          )}
+
+          {/* Papieren handtekening */}
           <View style={styles.signFields}>
             <View style={styles.signField}>
               <Text style={styles.signLabel}>Naam</Text>
