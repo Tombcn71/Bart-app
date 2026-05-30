@@ -1,5 +1,5 @@
 "use client";
-import { toast } from "sonner";
+import { showToast } from "@/app/components/CenterToast";
 import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -209,7 +209,7 @@ export default function ConfiguratorDetail() {
               <button
                 disabled={isSubmitting}
                 onClick={async () => {
-                  if (!email || !naam) { toast.error("Vul naam en e-mail in!"); return; }
+                  if (!email || !naam) { showToast("Vul naam en e-mail in!", "error"); return; }
                   setIsSubmitting(true);
                   await saveOfferte(email, {
                     naam, kozijnNaam: kozijn.name, slug, breedte, hoogte,
@@ -218,7 +218,7 @@ export default function ConfiguratorDetail() {
                     afstandshouder, roeden, ventilatieRooster, voorboren,
                     aantal, prijs: berekendePrijs,
                   });
-                  toast.success("Offerte verstuurd! U ontvangt een bevestiging per e-mail.");
+                  showToast(`Bedankt, uw offerte is succesvol verstuurd naar ${email}`);
                   setIsSubmitting(false);
                 }}
                 className="w-full bg-[#1066a3] text-white py-4 rounded-lg font-bold uppercase text-[11px] tracking-widest">
