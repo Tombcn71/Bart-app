@@ -1,5 +1,5 @@
 import React from "react";
-// Architecturale stijl — horren zijn vierkant (100×100).
+// Architecturale stijl — horren vierkant (100×100), plisse hordeur portret (100×160).
 
 const S = {
   stroke:    "#000000",
@@ -44,6 +44,21 @@ export const KlemhorSVG = () => (
       {/* klembeugels rechts */}
       <rect x={91} y={28} width={6} height={14} rx="2" fill="white" stroke={S.stroke} strokeWidth={S.lineThin} />
       <rect x={91} y={58} width={6} height={14} rx="2" fill="white" stroke={S.stroke} strokeWidth={S.lineThin} />
+    </g>
+  </svg>
+);
+
+/** Plisse hordeur — deurhoogte (100×160), gaas + horizontale rail + greep */
+export const PlisseHordeurSVG = () => (
+  <svg viewBox="0 0 100 160" style={{ width: "100%", height: "auto" }}>
+    <g strokeLinecap="round" strokeLinejoin="round">
+      <rect x={10} y={5}  width={80} height={150} fill="white" stroke={S.stroke} strokeWidth={S.lineWidth} />
+      <rect x={14} y={9}  width={72} height={142} fill="white" stroke={S.stroke} strokeWidth={S.lineThin} />
+      <Gaas x={14} y={9} w={72} h={142} />
+      {/* horizontale middenrail (plisse mechaniek) */}
+      <rect x={10} y={78} width={80} height={4} fill="white" stroke={S.stroke} strokeWidth={S.lineThin} />
+      {/* greep midden rechts */}
+      <rect x={86} y={77} width={5} height={6} rx="1" fill={S.stroke} stroke="none" />
     </g>
   </svg>
 );

@@ -34,8 +34,9 @@ const NAV_ITEMS = [
   {
     label: "Horren",
     items: [
-      { label: "Inzethor", href: "/horren" },
-      { label: "Klemhor",  href: "/horren" },
+      { label: "Inzethor",       href: "/horren" },
+      { label: "Klemhor",        href: "/horren" },
+      { label: "Plisse hordeur", href: "/horren" },
     ],
   },
 ];

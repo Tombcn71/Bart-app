@@ -47,11 +47,18 @@ function dimV(y1: number, y2: number, x: number, label: string) {
 }
 
 export function buildHorSvgString(slug: string, breedte: number, hoogte: number): string {
-  const vW = 100, vH = 100;
+  const isPlisse = slug === "plisse-hordeur";
+  const vW = 100, vH = isPlisse ? 160 : 100;
 
-  let body = sRect(5, 5, 90, 90, "white", C, LW)
-    + sRect(9, 9, 82, 82, "white", C, LT)
-    + gaas(9, 9, 82, 82);
+  let body = isPlisse
+    ? sRect(10, 5, 80, 150, "white", C, LW)
+      + sRect(14, 9, 72, 142, "white", C, LT)
+      + gaas(14, 9, 72, 142)
+      + sRect(10, 78, 80, 4, "white", C, LT)
+      + `<rect x="86" y="77" width="5" height="6" rx="1" fill="${C}" stroke="none"/>`
+    : sRect(5, 5, 90, 90, "white", C, LW)
+      + sRect(9, 9, 82, 82, "white", C, LT)
+      + gaas(9, 9, 82, 82);
 
   if (slug === "klemhor") {
     body += sRect(91, 28, 6, 14, "white", C, LT);

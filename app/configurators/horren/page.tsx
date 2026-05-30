@@ -2,7 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { InmeetServiceCard } from "@/app/components/InmeetServiceCard";
-import { InzethorSVG, KlemhorSVG } from "@/lib/hor-svgs";
+import { InzethorSVG, KlemhorSVG, PlisseHordeurSVG } from "@/lib/hor-svgs";
 
 const horren = [
   {
@@ -20,6 +20,14 @@ const horren = [
     best: false,
     description: "Wordt vastgeklemd aan het kozijn met klembeugels aan de zijkant.",
     component: <KlemhorSVG />,
+  },
+  {
+    id: 3,
+    slug: "plisse-hordeur",
+    name: "Plisse hordeur",
+    best: true,
+    description: "Harmonicavouwdeur met fijn gaas — ideaal als hordeur.",
+    component: <PlisseHordeurSVG />,
   },
 ];
 
@@ -40,11 +48,11 @@ export default function HorrenOverzicht() {
           </p>
         </div>
         <div className="flex bg-[#f4f7f9] p-1 rounded-xl">
-          {["inzethor", "klemhor"].map((t) => (
+          {["inzethor", "klemhor", "plisse-hordeur"].map((t) => (
             <button
               key={t}
               onClick={() => setActiveType(activeType === t ? null : t)}
-              className={`px-6 md:px-8 py-2.5 md:py-3 text-xs md:text-sm font-bold rounded-lg transition-all capitalize ${
+              className={`px-4 md:px-6 py-2.5 md:py-3 text-xs md:text-sm font-bold rounded-lg transition-all capitalize ${
                 activeType === t ? "bg-[#1066a3] text-white shadow-md" : "text-[#666666]"
               }`}>
               {t}
