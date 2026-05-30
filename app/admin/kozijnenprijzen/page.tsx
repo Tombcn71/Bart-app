@@ -8,7 +8,7 @@ const BASE_DEFAULTS = {
   basisPrijs: 0, m2Tarief: 0,
   kleurToeslag: { wit: 0, "creme-wit": 0, antraciet: 0, "ral-kleur": 0 },
   kleurBuitenkantToeslag: { wit: 0, "creme-wit": 0, antraciet: 0, "basalt-grijs": 0, "kwarts-grijs": 0, zwart: 0 },
-  glasToeslag: { "dubbel-glas": 0, "triple-glas": 0, "hr-plus-plus": 0 },
+  glasToeslag: { "hr-plus-plus": 0, "triple-glas": 0 },
   profielToeslag: { "vlak-82": 0, "creon-82": 0, "creon-verdiept-120": 0, "creon-verdiept-120-hvl": 0 },
   aanslagToeslag: { ja: 0, nee: 0 },
   afstandshouderToeslag: { aluminium: 0, zwart: 0 },
@@ -120,7 +120,7 @@ export default function KozijnenPrijzen() {
                     {Object.entries(value).map(([subKey, subValue]: [string, any]) => (
                       <tr key={`${key}-${subKey}`}>
                         <td className="py-2 px-6 text-slate-600 capitalize pl-10 text-sm">
-                          - {subKey.replace(/-/g, " ")}
+                          - {subKey.replace(/-/g, " ").replace(/creon /gi, "").trim()}
                         </td>
                         <td className="py-2 px-6">
                           <input

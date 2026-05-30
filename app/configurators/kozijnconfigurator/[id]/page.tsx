@@ -19,7 +19,7 @@ const DEFAULT_MATRIX = {
   basisPrijs: 0, m2Tarief: 0,
   kleurToeslag: { wit: 0, "creme-wit": 0, antraciet: 0, "ral-kleur": 0 },
   kleurBuitenkantToeslag: { wit: 0, "creme-wit": 0, antraciet: 0, "basalt-grijs": 0, "kwarts-grijs": 0, zwart: 0 },
-  glasToeslag: { "dubbel-glas": 0, "triple-glas": 0, "hr-plus-plus": 0 },
+  glasToeslag: { "hr-plus-plus": 0, "triple-glas": 0 },
   profielToeslag: { "vlak-82": 0, "creon-82": 0, "creon-verdiept-120": 0, "creon-verdiept-120-hvl": 0 },
   aanslagToeslag: { ja: 0, nee: 0 },
   afstandshouderToeslag: { aluminium: 0, zwart: 0 },
@@ -132,7 +132,7 @@ export default function ConfiguratorDetail() {
     <div>
       <label className="text-[10px] font-bold text-slate-500 uppercase">{label}</label>
       <select value={value} onChange={(e) => setter(e.target.value)} className="w-full border p-2.5 rounded-lg text-sm capitalize">
-        {Object.keys(opties).map((k) => <option key={k} value={k}>{k.replace(/-/g, " ")}</option>)}
+        {Object.keys(opties).map((k) => <option key={k} value={k}>{k.replace(/-/g, " ").replace(/creon /gi, "").trim()}</option>)}
       </select>
     </div>
   );
