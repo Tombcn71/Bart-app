@@ -131,7 +131,7 @@ export default function AluDeurConfiguratorDetail() {
     <div>
       <label className="text-[10px] font-bold text-slate-500 uppercase">{label}</label>
       <select value={value} onChange={(e) => setter(e.target.value)} className="w-full border p-2.5 rounded-lg text-sm capitalize">
-        {Object.keys(opties).map((k) => <option key={k} value={k}>{k.replace(/-/g, " ")}</option>)}
+        {Object.keys(opties).map((k) => <option key={k} value={k}>{k.replace(/-/g, " ").replace(/creon /gi, "").trim()}</option>)}
       </select>
     </div>
   );
