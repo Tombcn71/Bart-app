@@ -34,10 +34,14 @@ export default function KozijnenPrijzen() {
         getMatrix("kozijn_matrix"),
         getMatrix("alu_kozijn_matrix"),
       ]);
-      setPrijzen({
-        kunststof: { ...BASE_DEFAULTS, ...(kData && Object.keys(kData).length ? kData : {}) },
-        aluminium: { ...BASE_DEFAULTS, ...(aData && Object.keys(aData).length ? aData : {}) },
-      });
+      const fixGlas = (data: any) => {
+        const m = { ...BASE_DEFAULTS, ...(data && Object.keys(data).length ? data : {}) };
+        m.glasToeslag = Object.fromEntries(
+          Object.keys(BASE_DEFAULTS.glasToeslag).map(k => [k, data?.glasToeslag?.[k] ?? 0])
+        );
+        return m;
+      };
+      setPrijzen({ kunststof: fixGlas(kData), aluminium: fixGlas(aData) });
       setLoading(false);
     }
     loadData();

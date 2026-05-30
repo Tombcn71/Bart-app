@@ -85,10 +85,13 @@ export default function AluKozijnConfiguratorDetail() {
   useEffect(() => {
     getMatrix("alu_kozijn_matrix").then((data: any) => {
       const m = { ...DEFAULT_MATRIX, ...(data && Object.keys(data).length ? data : {}) };
+      m.glasToeslag = Object.fromEntries(
+        Object.keys(DEFAULT_MATRIX.glasToeslag).map(k => [k, data?.glasToeslag?.[k] ?? 0])
+      );
       setMatrix(m);
       setKleur(Object.keys(m.kleurToeslag || {})[0] || "");
       setKleurBuitenkant(Object.keys(m.kleurBuitenkantToeslag || {})[0] || "");
-      setGlas(Object.keys(m.glasToeslag || {})[0] || "");
+      setGlas(Object.keys(m.glasToeslag)[0] || "");
       setProfiel(Object.keys(m.profielToeslag || {})[0] || "");
       setAanslag(Object.keys(m.aanslagToeslag || {})[0] || "");
       setAfstandshouder(Object.keys(m.afstandshouderToeslag || {})[0] || "");
