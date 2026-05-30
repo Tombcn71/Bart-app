@@ -100,21 +100,10 @@ export async function saveOfferte(email: string, data: any) {
       html: `
         <div style="font-family: Arial, sans-serif; line-height: 1.7; color: #333; max-width: 600px; margin: 0 auto;">
 
-          <div style="background: #1066a3; padding: 28px 32px; border-radius: 8px 8px 0 0;">
-            <p style="color: white; font-size: 22px; font-weight: bold; margin: 0;">BartMooi</p>
-            <p style="color: rgba(255,255,255,0.75); font-size: 12px; margin: 4px 0 0;">Uw offerte is klaar</p>
-          </div>
-
-          <div style="background: white; padding: 32px; border: 1px solid #e8edf2; border-top: 0; border-radius: 0 0 8px 8px;">
+          <div style="background: white; padding: 32px; border: 1px solid #e8edf2; border-radius: 8px;">
             <p style="font-size: 16px; font-weight: bold; color: #1a1a1a; margin: 0 0 8px;">Geachte ${data.naam || ""},</p>
             <p style="color: #555; margin: 0 0 20px;">Hartelijk dank voor uw aanvraag voor een <strong>${data.product || data.kozijnNaam || data.deurNaam || "product"}</strong>. Wij hebben uw aanvraag in goede orde ontvangen.</p>
-            <p style="color: #555; margin: 0 0 24px;">In de <strong>bijlage</strong> vindt u uw persoonlijke offerte met alle specificaties, een technische tekening, de betalingsvoorwaarden en onze garanties.</p>
-
-            <div style="background: #f0f7ff; border-left: 4px solid #1066a3; padding: 16px 20px; margin: 0 0 24px; border-radius: 0 6px 6px 0;">
-              <p style="margin: 0 0 4px; font-weight: bold; color: #1066a3; font-size: 13px;">Uw ISDE subsidie-indicatie</p>
-              <p style="font-size: 28px; font-weight: bold; color: #1066a3; margin: 4px 0;">€ ${totaalSubsidie.toLocaleString("nl-NL")}</p>
-              <p style="font-size: 11px; color: #888; margin: 4px 0 0;"><em>Indicatie op basis van uw maten en glastype. Exacte bedrag afhankelijk van uw situatie.</em></p>
-            </div>
+            <p style="color: #555; margin: 0 0 32px;">In de <strong>bijlage</strong> vindt u uw persoonlijke offerte met alle specificaties, een technische tekening, de betalingsvoorwaarden en onze garanties.</p>
 
             <p style="color: #555; margin: 0 0 32px;">Wij nemen zo spoedig mogelijk contact met u op om de offerte samen door te nemen.</p>
 
