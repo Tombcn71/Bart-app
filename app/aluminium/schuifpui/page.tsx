@@ -37,7 +37,7 @@ export default function AluSchuifpuiOverzicht() {
                 <div className="absolute top-3 left-3 bg-[#1066a3] text-white text-[9px] font-black px-3 py-1.5 rounded-full tracking-widest z-10 uppercase">POPULAIR</div>
               )}
               <div style={{ width: item.v > 1.5 ? "100%" : "70%" }}>
-                <svg viewBox={`0 0 ${item.v * 100} 100`} className="w-full h-auto">{item.components}</svg>
+                <svg viewBox={`0 0 ${item.v * 100} 160`} className="w-full h-auto">{item.components}</svg>
               </div>
             </div>
             <div className="mt-4 md:mt-6 text-center">

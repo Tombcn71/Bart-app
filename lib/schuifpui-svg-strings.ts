@@ -43,34 +43,39 @@ function dimV(y1: number, y2: number, x: number, label: string) {
     + sText(x, my+3.5, label, "middle", 11, DC, `transform="rotate(-90,${r(x)},${r(my)})"`);
 }
 
-function vastP(ox: number): string {
-  const cx = ox+50, cy = 50;
-  return sRect(ox+5, 5, 90, 90, "white", C, LW)
-    + sRect(ox+9, 9, 82, 82, "none", C, LT)
-    + sLine(cx-6, cy, cx+6, cy, C, LT)
-    + sLine(cx, cy-6, cx, cy+6, C, LT);
+// x1/x2 = exacte linker/rechtergrens van het paneel
+const VH = 160;   // deur-hoogte
+const CY = 80;    // verticaal centrum
+
+function vastP(x1: number, x2: number): string {
+  const cx = (x1+x2)/2, w = x2-x1;
+  return sRect(x1, 5, w, VH-10, "white", C, LW)
+    + sRect(x1+4, 9, w-8, VH-18, "none", C, LT)
+    + sLine(cx-6, CY, cx+6, CY, C, LT)
+    + sLine(cx, CY-6, cx, CY+6, C, LT);
 }
 
-function schuifP(ox: number, dir: "l" | "r"): string {
-  const ax1 = ox+32, ax2 = ox+68, ay = 50;
+function schuifP(x1: number, x2: number, dir: "l" | "r"): string {
+  const cx = (x1+x2)/2, w = x2-x1;
+  const ax1 = cx-18, ax2 = cx+18;
   const head = dir === "r"
-    ? `${r(ax2)},${r(ay)} ${r(ax2-8)},${r(ay-3.5)} ${r(ax2-8)},${r(ay+3.5)}`
-    : `${r(ax1)},${r(ay)} ${r(ax1+8)},${r(ay-3.5)} ${r(ax1+8)},${r(ay+3.5)}`;
-  const hx = dir === "r" ? ox+8 : ox+87;
-  return sRect(ox+5, 5, 90, 90, "white", C, LW)
-    + sRect(ox+9, 9, 82, 82, "none", C, LT)
-    + sRect(hx, 38, 5, 24, "white", C, LT)
-    + sLine(ax1, ay, ax2, ay, C, LT)
+    ? `${r(ax2)},${r(CY)} ${r(ax2-8)},${r(CY-3.5)} ${r(ax2-8)},${r(CY+3.5)}`
+    : `${r(ax1)},${r(CY)} ${r(ax1+8)},${r(CY-3.5)} ${r(ax1+8)},${r(CY+3.5)}`;
+  const hx = dir === "r" ? x1+3 : x2-8;
+  return sRect(x1, 5, w, VH-10, "white", C, LW)
+    + sRect(x1+4, 9, w-8, VH-18, "none", C, LT)
+    + sRect(hx, CY-12, 5, 24, "white", C, LT)
+    + sLine(ax1, CY, ax2, CY, C, LT)
     + sPoly(head, C);
 }
 
 export function buildSchuifpuiSvgString(slug: string, breedte: number, hoogte: number): string {
-  const vH = 100;
+  const vH = VH;
   const vW = slug.includes("4-vaks") ? 400 : 200;
 
   const body = slug.includes("4-vaks")
-    ? vastP(0) + schuifP(100, "l") + schuifP(200, "r") + vastP(300)
-    : schuifP(0, "r") + vastP(100);
+    ? vastP(5,100) + schuifP(100,200,"l") + schuifP(200,300,"r") + vastP(300,395)
+    : schuifP(5,100,"r") + vastP(100,195);
 
   const PL = 30, PT = 8, PB = 24, PR = 6;
   const totalW = vW + PL + PR;

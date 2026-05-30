@@ -80,7 +80,7 @@ export default function SchuifpuiOverview() {
                 <div className="w-full h-full flex items-center justify-center">
                   <div style={{ width: item.v > 1.5 ? "100%" : "70%" }}>
                     <svg
-                      viewBox={`0 0 ${item.v * 100} 100`}
+                      viewBox={`0 0 ${item.v * 100} 160`}
                       className="w-full h-auto drop-shadow-sm">
                       {item.components}
                     </svg>
