@@ -28,9 +28,9 @@ export const HarmonicadeurSVG = ({ sections }: { sections: 3 | 4 | 5 }) => {
                 fill="white" stroke={S.stroke} strokeWidth={S.lineWidth} />
               <rect x={ix} y={iy} width={iw} height={ih}
                 fill="none" stroke={S.stroke} strokeWidth={S.lineThin} />
-              {/* openingsindicator alleen op ankerpaneel */}
-              {i === 0 && (
-                <path d={`M${ix} ${iy} L${ix+iw} ${iy+ih}`} fill="none" stroke={S.stroke} strokeWidth={S.lineThin} />
+              {/* openingsindicator op vrij paneel (zelfde kant als greep) */}
+              {i === sections - 1 && (
+                <path d={`M${ix+iw} ${iy} L${ix} ${iy+ih}`} fill="none" stroke={S.stroke} strokeWidth={S.lineThin} />
               )}
               {/* scharnier bij elke paneelaansluiting */}
               {i < sections - 1 && (

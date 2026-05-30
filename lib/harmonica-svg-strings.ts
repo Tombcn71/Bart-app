@@ -58,8 +58,8 @@ export function buildHarmonicaSvgString(slug: string, breedte: number, hoogte: n
 
     body += sRect(x1, 5, w, H-10, "white", C, LW);
     body += sRect(ix, iy, iw, ih, "none", C, LT);
-    if (i === 0) {
-      body += `<path d="M${r(ix)} ${r(iy)} L${r(ix+iw)} ${r(iy+ih)}" fill="none" stroke="${C}" stroke-width="${LT}"/>`;
+    if (i === sections - 1) {
+      body += `<path d="M${r(ix+iw)} ${r(iy)} L${r(ix)} ${r(iy+ih)}" fill="none" stroke="${C}" stroke-width="${LT}"/>`;
     }
     if (i < sections - 1) {
       body += sRect(x2-2, H/2-5, 4, 10, "white", C, LT);
