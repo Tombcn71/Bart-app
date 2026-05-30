@@ -14,238 +14,261 @@ import fs from "fs";
 import { getSvgString } from "@/lib/renderSvgForPdf";
 import { svgToPng } from "./svg-to-png";
 
-const BLUE  = "#1066a3";
-const DARK  = "#1a1a1a";
-const GREY  = "#64748b";
-const LIGHT = "#f8fafc";
-const BORDER = "#e2e8f0";
+const DARK = "#1a1a1a";
+const GREY = "#64748b";
+const LIGHT_GREY = "#f1f5f9";
+const LINE = "#d1d5db";
 
 const styles = StyleSheet.create({
   page: {
     fontFamily: "Helvetica",
     fontSize: 10,
     color: DARK,
-    paddingTop: 0,
-    paddingBottom: 64,
-    paddingHorizontal: 0,
+    paddingTop: 44,
+    paddingBottom: 72,
+    paddingHorizontal: 48,
+    backgroundColor: "white",
   },
 
-  // ── Header banner ──────────────────────────────────────────────────────────
-  headerBand: {
-    backgroundColor: BLUE,
-    paddingHorizontal: 40,
-    paddingTop: 28,
-    paddingBottom: 24,
+  // ── Header ─────────────────────────────────────────────────────────────────
+  header: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "flex-start",
+    marginBottom: 28,
   },
   logo: {
-    width: 120,
-    height: 42,
+    width: 130,
+    height: 46,
     objectFit: "contain",
   },
-  headerRight: {
+  companyBlock: {
     alignItems: "flex-end",
   },
-  headerLabel: {
-    fontSize: 9,
-    color: "rgba(255,255,255,0.7)",
-    letterSpacing: 1,
-    textTransform: "uppercase",
-  },
-  headerDate: {
-    fontSize: 10,
-    color: "white",
-    fontFamily: "Helvetica-Bold",
-    marginTop: 2,
-  },
-
-  // ── Body ───────────────────────────────────────────────────────────────────
-  body: {
-    paddingHorizontal: 40,
-    paddingTop: 28,
-  },
-
-  greeting: {
-    fontSize: 15,
-    fontFamily: "Helvetica-Bold",
-    color: DARK,
-    marginBottom: 6,
-  },
-  intro: {
-    fontSize: 10,
-    lineHeight: 1.7,
-    color: GREY,
-    marginBottom: 22,
-    maxWidth: 460,
-  },
-
-  // ── Section ────────────────────────────────────────────────────────────────
-  sectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 20,
-    marginBottom: 10,
-  },
-  sectionBar: {
-    width: 3,
-    height: 14,
-    backgroundColor: BLUE,
-    marginRight: 8,
-    borderRadius: 2,
-  },
-  sectionTitle: {
+  companyName: {
     fontSize: 11,
     fontFamily: "Helvetica-Bold",
     color: DARK,
+    marginBottom: 3,
+  },
+  companyInfo: {
+    fontSize: 8.5,
+    color: GREY,
+    lineHeight: 1.5,
+    textAlign: "right",
   },
 
-  // ── Specs card ─────────────────────────────────────────────────────────────
-  card: {
-    backgroundColor: LIGHT,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: BORDER,
-    padding: 14,
-    marginBottom: 4,
+  // ── Divider ────────────────────────────────────────────────────────────────
+  divider: {
+    borderTopWidth: 1,
+    borderTopColor: LINE,
+    marginBottom: 22,
   },
-  row: {
+  thinDivider: {
+    borderTopWidth: 1,
+    borderTopColor: LIGHT_GREY,
+    marginVertical: 10,
+  },
+
+  // ── Offerte titel ──────────────────────────────────────────────────────────
+  offerteBlock: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
+    marginBottom: 24,
+  },
+  offerteTitle: {
+    fontSize: 22,
+    fontFamily: "Helvetica-Bold",
+    color: DARK,
+    letterSpacing: -0.5,
+  },
+  offerteSubtitle: {
+    fontSize: 10,
+    color: GREY,
+    marginTop: 3,
+  },
+  dateBlock: {
+    alignItems: "flex-end",
+  },
+  dateLabel: {
+    fontSize: 8.5,
+    color: GREY,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  dateValue: {
+    fontSize: 10,
+    fontFamily: "Helvetica-Bold",
+    color: DARK,
+    marginTop: 2,
+  },
+
+  // ── Klant info ─────────────────────────────────────────────────────────────
+  clientBlock: {
+    marginBottom: 22,
+  },
+  clientName: {
+    fontSize: 12,
+    fontFamily: "Helvetica-Bold",
+    color: DARK,
+    marginBottom: 1,
+  },
+  clientInfo: {
+    fontSize: 9,
+    color: GREY,
+    lineHeight: 1.5,
+  },
+
+  // ── Section ────────────────────────────────────────────────────────────────
+  sectionTitle: {
+    fontSize: 10,
+    fontFamily: "Helvetica-Bold",
+    color: DARK,
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+    marginBottom: 8,
+    marginTop: 20,
+  },
+
+  // ── Specs tabel ────────────────────────────────────────────────────────────
+  specRow: {
     flexDirection: "row",
     paddingVertical: 5,
     borderBottomWidth: 1,
-    borderBottomColor: BORDER,
+    borderBottomColor: LIGHT_GREY,
   },
-  lastRow: {
-    flexDirection: "row",
-    paddingVertical: 5,
-  },
-  label: {
-    width: 150,
+  specLabel: {
+    width: 160,
     fontSize: 9.5,
     color: GREY,
   },
-  value: {
+  specValue: {
+    flex: 1,
+    fontSize: 9.5,
+    color: DARK,
+  },
+  specValueBold: {
     flex: 1,
     fontSize: 9.5,
     color: DARK,
     fontFamily: "Helvetica-Bold",
   },
 
-  // ── Prijs + subsidie ───────────────────────────────────────────────────────
-  priceRow: {
-    flexDirection: "row",
-    gap: 10,
-    marginBottom: 4,
-  },
-  priceBox: {
-    flex: 1,
-    backgroundColor: BLUE,
-    borderRadius: 6,
-    padding: 14,
-    alignItems: "center",
-  },
-  priceLabel: {
-    fontSize: 8.5,
-    color: "rgba(255,255,255,0.75)",
-    letterSpacing: 0.5,
-    textTransform: "uppercase",
-    marginBottom: 4,
-  },
-  priceAmount: {
-    fontSize: 20,
-    fontFamily: "Helvetica-Bold",
-    color: "white",
-  },
-  subsidieBox: {
-    flex: 1,
-    backgroundColor: "#e0f2fe",
-    borderRadius: 6,
-    padding: 14,
-    alignItems: "center",
-  },
-  subsidieLabel: {
-    fontSize: 8.5,
-    color: BLUE,
-    letterSpacing: 0.5,
-    textTransform: "uppercase",
-    marginBottom: 4,
-  },
-  subsidieAmount: {
-    fontSize: 20,
-    fontFamily: "Helvetica-Bold",
-    color: BLUE,
-  },
-  subsidieNote: {
-    fontSize: 7.5,
-    color: GREY,
-    marginTop: 3,
-    textAlign: "center",
-  },
-
   // ── Tekening ───────────────────────────────────────────────────────────────
-  drawingBox: {
+  drawingWrapper: {
     alignItems: "center",
-    marginVertical: 12,
-    borderWidth: 1,
-    borderColor: BORDER,
-    borderRadius: 6,
-    padding: 12,
-    backgroundColor: "white",
+    marginTop: 18,
+    marginBottom: 18,
+    paddingVertical: 16,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: LINE,
+  },
+  drawingImage: {
+    width: 420,
+    objectFit: "contain",
   },
   drawingCaption: {
     fontSize: 7.5,
     color: "#aaa",
-    marginTop: 6,
+    marginTop: 8,
   },
 
   // ── Bullets ────────────────────────────────────────────────────────────────
   bulletRow: {
     flexDirection: "row",
-    marginBottom: 5,
+    marginBottom: 4,
   },
   bulletDot: {
-    width: 14,
+    width: 12,
     fontSize: 9.5,
-    color: BLUE,
-    fontFamily: "Helvetica-Bold",
+    color: DARK,
   },
   bulletText: {
     flex: 1,
     fontSize: 9.5,
     color: DARK,
-    lineHeight: 1.5,
+    lineHeight: 1.55,
   },
 
-  // ── Garantie ───────────────────────────────────────────────────────────────
-  warrantyRow: {
+  // ── Betaling 2-kolommen ────────────────────────────────────────────────────
+  twoCol: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: 5,
-    borderBottomWidth: 1,
-    borderBottomColor: BORDER,
+    gap: 24,
+    marginTop: 4,
   },
-  warrantyLabel: {
+  colBlock: {
+    flex: 1,
+  },
+  colLabel: {
+    fontSize: 8.5,
+    fontFamily: "Helvetica-Bold",
+    color: GREY,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    marginBottom: 3,
+  },
+  colText: {
     fontSize: 9.5,
     color: DARK,
+    lineHeight: 1.6,
   },
-  warrantyValue: {
-    fontSize: 9.5,
+
+  // ── Handtekening ───────────────────────────────────────────────────────────
+  signBlock: {
+    marginTop: 28,
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: LINE,
+  },
+  signTitle: {
+    fontSize: 11,
     fontFamily: "Helvetica-Bold",
-    color: BLUE,
+    color: DARK,
+    marginBottom: 6,
+  },
+  signIntro: {
+    fontSize: 9.5,
+    color: GREY,
+    lineHeight: 1.6,
+    marginBottom: 20,
+  },
+  signFields: {
+    flexDirection: "row",
+    gap: 24,
+  },
+  signField: {
+    flex: 1,
+  },
+  signLabel: {
+    fontSize: 8,
+    color: GREY,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    marginBottom: 24,
+  },
+  signLine: {
+    borderBottomWidth: 1,
+    borderBottomColor: DARK,
+    marginBottom: 4,
+  },
+  signLineLabel: {
+    fontSize: 7.5,
+    color: GREY,
   },
 
   // ── Footer ─────────────────────────────────────────────────────────────────
   footer: {
     position: "absolute",
-    bottom: 22,
-    left: 40,
-    right: 40,
+    bottom: 24,
+    left: 48,
+    right: 48,
     flexDirection: "row",
     justifyContent: "space-between",
     borderTopWidth: 1,
-    borderTopColor: BORDER,
-    paddingTop: 8,
+    borderTopColor: LIGHT_GREY,
+    paddingTop: 7,
   },
   footerText: {
     fontSize: 7.5,
@@ -255,6 +278,7 @@ const styles = StyleSheet.create({
 
 interface OfferteData {
   naam?: string;
+  woonplaats?: string;
   product?: string;
   kozijnNaam?: string;
   deurNaam?: string;
@@ -262,11 +286,25 @@ interface OfferteData {
   breedte?: number;
   hoogte?: number;
   kleur?: string;
+  kleurBuitenkant?: string;
   glas?: string;
   glasType?: string;
+  beslag?: string;
+  paneel?: string;
+  profiel?: string;
+  onderdorpel?: string;
+  draairichting?: string;
+  afstandshouder?: string;
+  roeden?: string;
+  bediening?: string;
   aantal?: number;
   prijs?: number;
   subsidieIndicatie?: number;
+}
+
+function clean(s?: string) {
+  if (!s) return null;
+  return s.replace(/-/g, " ").replace(/creon /gi, "").trim();
 }
 
 export async function generateOffertePdf(_email: string, data: OfferteData): Promise<Buffer> {
@@ -276,9 +314,9 @@ export async function generateOffertePdf(_email: string, data: OfferteData): Pro
 
   let kozijnPng: string | null = null;
   if (data.slug) {
-    const svgStr = getSvgString(data.slug, data.breedte, data.hoogte);
+    const svgStr = getSvgString(data.slug, data.breedte, data.hoogte, data.glasType || data.glas);
     if (svgStr) {
-      const pngBuf = await svgToPng(svgStr, 600);
+      const pngBuf = await svgToPng(svgStr, 900);
       kozijnPng = `data:image/png;base64,${pngBuf.toString("base64")}`;
     }
   }
@@ -288,145 +326,175 @@ export async function generateOffertePdf(_email: string, data: OfferteData): Pro
   const glasLabel = data.glasType || data.glas || null;
   const datum = new Date().toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" });
 
-  const SectionHeader = ({ title }: { title: string }) => (
-    <View style={styles.sectionHeader}>
-      <View style={styles.sectionBar} />
-      <Text style={styles.sectionTitle}>{title}</Text>
-    </View>
-  );
+  // Alle productspecificaties die aanwezig zijn
+  const specs: [string, string][] = [
+    ["Product", productNaam],
+    data.breedte && data.hoogte ? ["Maat (B × H)", `${data.breedte} mm × ${data.hoogte} mm`] : null,
+    glasLabel ? ["Type glas", glasLabel] : null,
+    clean(data.kleur) ? ["Kleur binnenkant", clean(data.kleur)!] : null,
+    clean(data.kleurBuitenkant) ? ["Kleur buitenkant", clean(data.kleurBuitenkant)!] : null,
+    clean(data.paneel) ? ["Paneel", clean(data.paneel)!] : null,
+    clean(data.profiel) ? ["Profiel", clean(data.profiel)!] : null,
+    clean(data.beslag) ? ["Beslag", clean(data.beslag)!] : null,
+    clean(data.onderdorpel) ? ["Onderdorpel", clean(data.onderdorpel)!] : null,
+    clean(data.draairichting) ? ["Draairichting", clean(data.draairichting)!] : null,
+    clean(data.afstandshouder) ? ["Afstandshouder", clean(data.afstandshouder)!] : null,
+    clean(data.roeden) ? ["Roeden", clean(data.roeden)!] : null,
+    clean(data.bediening) ? ["Bediening", clean(data.bediening)!] : null,
+    data.aantal ? ["Aantal", `${data.aantal} stuks`] : null,
+  ].filter(Boolean) as [string, string][];
 
   const doc = (
     <Document>
       <Page size="A4" style={styles.page}>
 
-        {/* ── Header banner ── */}
-        <View style={styles.headerBand}>
+        {/* ── Header ── */}
+        <View style={styles.header}>
           <Image src={logoBase64} style={styles.logo} />
-          <View style={styles.headerRight}>
-            <Text style={styles.headerLabel}>Offerte aanvraag</Text>
-            <Text style={styles.headerDate}>{datum}</Text>
+          <View style={styles.companyBlock}>
+            <Text style={styles.companyName}>BartMooi B.V.</Text>
+            <Text style={styles.companyInfo}>
+              Burgemeester Hovylaan 157{"\n"}
+              2552 XB Den Haag{"\n"}
+              info@offerte-bartmooi.nl
+            </Text>
+          </View>
+        </View>
+        <View style={styles.divider} />
+
+        {/* ── Offerte titel + datum ── */}
+        <View style={styles.offerteBlock}>
+          <View>
+            <Text style={styles.offerteTitle}>Offerte aanvraag</Text>
+            <Text style={styles.offerteSubtitle}>{productNaam}</Text>
+          </View>
+          <View style={styles.dateBlock}>
+            <Text style={styles.dateLabel}>Datum</Text>
+            <Text style={styles.dateValue}>{datum}</Text>
           </View>
         </View>
 
-        <View style={styles.body}>
-
-          {/* ── Aanhef ── */}
-          <Text style={styles.greeting}>Geachte {naam},</Text>
-          <Text style={styles.intro}>
-            Hartelijk dank voor uw aanvraag voor een <Text style={{ fontFamily: "Helvetica-Bold", color: DARK }}>{productNaam}</Text>. Wij hebben uw aanvraag in goede orde ontvangen en zijn verheugd u onderstaande offerte aan te bieden.
+        {/* ── Klantgegevens ── */}
+        <View style={styles.clientBlock}>
+          <Text style={styles.clientName}>{naam}</Text>
+          <Text style={styles.clientInfo}>
+            {[data.woonplaats, _email].filter(Boolean).join("  ·  ")}
           </Text>
+        </View>
 
-          {/* ── Prijs + subsidie ── */}
-          <View style={styles.priceRow}>
-            <View style={styles.priceBox}>
-              <Text style={styles.priceLabel}>Prijsindicatie</Text>
-              <Text style={styles.priceAmount}>
-                € {data.prijs?.toLocaleString("nl-NL", { minimumFractionDigits: 2 })}
-              </Text>
-              <Text style={[styles.subsidieNote, { color: "rgba(255,255,255,0.6)" }]}>excl. btw · indicatie</Text>
-            </View>
-            {data.subsidieIndicatie && data.subsidieIndicatie > 0 ? (
-              <View style={styles.subsidieBox}>
-                <Text style={styles.subsidieLabel}>ISDE subsidie-indicatie</Text>
-                <Text style={styles.subsidieAmount}>
-                  ≈ € {data.subsidieIndicatie.toLocaleString("nl-NL")}
-                </Text>
-                <Text style={styles.subsidieNote}>indicatie — afhankelijk van uw situatie</Text>
-              </View>
-            ) : null}
+        <View style={styles.divider} />
+
+        {/* ── Productspecificaties ── */}
+        <Text style={styles.sectionTitle}>Productspecificaties</Text>
+        {specs.map(([label, value], i) => (
+          <View key={i} style={styles.specRow}>
+            <Text style={styles.specLabel}>{label}</Text>
+            <Text style={label === "Product" || label === "Prijsindicatie" ? styles.specValueBold : styles.specValue}>
+              {value}
+            </Text>
           </View>
+        ))}
+        {/* Prijs */}
+        <View style={[styles.specRow, { marginTop: 2 }]}>
+          <Text style={styles.specLabel}>Prijsindicatie</Text>
+          <Text style={styles.specValueBold}>
+            € {data.prijs?.toLocaleString("nl-NL", { minimumFractionDigits: 2 })} excl. btw
+          </Text>
+        </View>
+        {data.subsidieIndicatie && data.subsidieIndicatie > 0 ? (
+          <View style={styles.specRow}>
+            <Text style={styles.specLabel}>ISDE subsidie-indicatie</Text>
+            <Text style={styles.specValueBold}>
+              ≈ € {data.subsidieIndicatie.toLocaleString("nl-NL")}
+            </Text>
+          </View>
+        ) : null}
 
-          {/* ── Specificaties ── */}
-          <SectionHeader title={`Uw aanvraag — ${productNaam}`} />
-          <View style={styles.card}>
-            {data.breedte && data.hoogte && (
-              <View style={styles.row}>
-                <Text style={styles.label}>Maat (B × H)</Text>
-                <Text style={styles.value}>{data.breedte} mm × {data.hoogte} mm</Text>
-              </View>
-            )}
-            {data.kleur && (
-              <View style={styles.row}>
-                <Text style={styles.label}>Kleur</Text>
-                <Text style={styles.value}>{data.kleur}</Text>
-              </View>
-            )}
-            {glasLabel && (
-              <View style={styles.row}>
-                <Text style={styles.label}>Glas</Text>
-                <Text style={styles.value}>{glasLabel}</Text>
-              </View>
-            )}
-            <View style={styles.lastRow}>
-              <Text style={styles.label}>Aantal</Text>
-              <Text style={styles.value}>{data.aantal} stuks</Text>
+        {/* ── Technische tekening ── */}
+        {kozijnPng && (
+          <View style={styles.drawingWrapper}>
+            <Image src={kozijnPng} style={styles.drawingImage} />
+            <Text style={styles.drawingCaption}>Schematische weergave — niet op schaal</Text>
+          </View>
+        )}
+
+        {/* ── Inclusief montage ── */}
+        <Text style={styles.sectionTitle}>In de prijs inbegrepen</Text>
+        {[
+          "Verwijderen en afvoeren van de bestaande kozijnen.",
+          "Plaatsen van nieuwe kozijnen met HR+++ glas.",
+          "Water- en winddichte buiten afwerking.",
+          "Binnen afwerking (zonder schilderwerk) met witte PVC vensterbanken.",
+          "Vakkundige montage door gecertificeerde monteurs.",
+          "Reinigen van het werkgebied na oplevering.",
+        ].map((item, i) => (
+          <View key={i} style={styles.bulletRow}>
+            <Text style={styles.bulletDot}>–</Text>
+            <Text style={styles.bulletText}>{item}</Text>
+          </View>
+        ))}
+
+        {/* ── Betaling & levertijd ── */}
+        <Text style={styles.sectionTitle}>Betaling & levertijd</Text>
+        <View style={styles.twoCol}>
+          <View style={styles.colBlock}>
+            <Text style={styles.colLabel}>Betalingstermijnen</Text>
+            <Text style={styles.colText}>
+              30% direct na akkoord{"\n"}
+              40% bij aanvang werkzaamheden{"\n"}
+              30% na oplevering
+            </Text>
+          </View>
+          <View style={styles.colBlock}>
+            <Text style={styles.colLabel}>Levertijd</Text>
+            <Text style={styles.colText}>Circa 6 weken na aanbetaling.</Text>
+            <Text style={[styles.colLabel, { marginTop: 10 }]}>Geldigheid offerte</Text>
+            <Text style={styles.colText}>30 dagen na offertedatum.</Text>
+          </View>
+        </View>
+
+        {/* ── Garantie ── */}
+        <Text style={styles.sectionTitle}>Garantie</Text>
+        {([
+          ["Kozijnen & isolatieglas", "10 jaar"],
+          ["Hang- en sluitwerk", "5 jaar"],
+          ["Ventilatieroosters", "2 jaar"],
+        ] as [string, string][]).map(([label, years], i) => (
+          <View key={i} style={styles.specRow}>
+            <Text style={styles.specLabel}>{label}</Text>
+            <Text style={styles.specValue}>{years}</Text>
+          </View>
+        ))}
+
+        {/* ── Digitale acceptatie ── */}
+        <View style={styles.signBlock}>
+          <Text style={styles.signTitle}>Akkoord offerte</Text>
+          <Text style={styles.signIntro}>
+            Door ondertekening van deze offerte gaat u akkoord met de bovenstaande specificaties, prijzen en voorwaarden van BartMooi B.V. U ontvangt na ontvangst van de aanbetaling een bevestiging en planning.
+          </Text>
+          <View style={styles.signFields}>
+            <View style={styles.signField}>
+              <Text style={styles.signLabel}>Naam</Text>
+              <View style={styles.signLine} />
+              <Text style={styles.signLineLabel}>{naam}</Text>
+            </View>
+            <View style={styles.signField}>
+              <Text style={styles.signLabel}>Datum</Text>
+              <View style={styles.signLine} />
+              <Text style={styles.signLineLabel}>________________________</Text>
+            </View>
+            <View style={styles.signField}>
+              <Text style={styles.signLabel}>Handtekening</Text>
+              <View style={styles.signLine} />
+              <Text style={styles.signLineLabel}> </Text>
             </View>
           </View>
-
-          {/* ── Technische tekening ── */}
-          {kozijnPng && (
-            <View style={styles.drawingBox}>
-              <Image src={kozijnPng} style={{ width: 200, objectFit: "contain" }} />
-              <Text style={styles.drawingCaption}>Schematische weergave — niet op schaal</Text>
-            </View>
-          )}
-
-          {/* ── Inbegrepen ── */}
-          <SectionHeader title="In de prijs inbegrepen" />
-          <View style={styles.card}>
-            {[
-              "Verwijderen en afvoeren van de bestaande kozijnen.",
-              "Plaatsen van nieuwe kozijnen met HR+++ glas.",
-              "Water- en winddichte buiten afwerking.",
-              "Binnen afwerking (zonder schilderwerk) met witte PVC vensterbanken.",
-            ].map((item, i) => (
-              <View key={i} style={styles.bulletRow}>
-                <Text style={styles.bulletDot}>›</Text>
-                <Text style={styles.bulletText}>{item}</Text>
-              </View>
-            ))}
-          </View>
-
-          {/* ── Betaling ── */}
-          <SectionHeader title="Betaling & levertijd" />
-          <View style={styles.card}>
-            <View style={styles.bulletRow}>
-              <Text style={styles.bulletDot}>›</Text>
-              <Text style={styles.bulletText}>
-                <Text style={{ fontFamily: "Helvetica-Bold" }}>Betaling: </Text>
-                30% direct na akkoord · 40% bij aanvang · 30% na oplevering.
-              </Text>
-            </View>
-            <View style={[styles.bulletRow, { marginBottom: 0 }]}>
-              <Text style={styles.bulletDot}>›</Text>
-              <Text style={styles.bulletText}>
-                <Text style={{ fontFamily: "Helvetica-Bold" }}>Levertijd: </Text>
-                Ongeveer 6 weken na aanbetaling.
-              </Text>
-            </View>
-          </View>
-
-          {/* ── Garantie ── */}
-          <SectionHeader title="Garantie" />
-          <View style={styles.card}>
-            {([
-              ["Kozijnen & isolatieglas", "10 jaar"],
-              ["Hang- en sluitwerk", "5 jaar"],
-              ["Ventilatieroosters", "2 jaar"],
-            ] as [string, string][]).map(([label, years], i, arr) => (
-              <View key={i} style={i < arr.length - 1 ? styles.warrantyRow : { ...styles.warrantyRow, borderBottomWidth: 0 }}>
-                <Text style={styles.warrantyLabel}>{label}</Text>
-                <Text style={styles.warrantyValue}>{years}</Text>
-              </View>
-            ))}
-          </View>
-
         </View>
 
         {/* ── Footer ── */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>BARTMOOI B.V. · Burgemeester Hovylaan 157 · 2552 XB Den Haag</Text>
-          <Text style={styles.footerText}>info@offerte-bartmooi.nl</Text>
+          <Text style={styles.footerText}>BartMooi B.V. · KvK 12345678 · BTW NL123456789B01</Text>
+          <Text style={styles.footerText}>info@offerte-bartmooi.nl · bartmooi.nl</Text>
         </View>
 
       </Page>
