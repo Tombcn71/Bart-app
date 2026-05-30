@@ -78,6 +78,7 @@ export default function AluKozijnConfiguratorDetail() {
   const [voorboren, setVoorboren] = useState("");
   const [aantal, setAantal] = useState(1);
   const [naam, setNaam] = useState("");
+  const [woonplaats, setWoonplaats] = useState("");
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -198,6 +199,7 @@ export default function AluKozijnConfiguratorDetail() {
                 <h3 className="text-sm font-bold text-slate-800">Check uw subsidie</h3>
                 <label className="block text-[10px] mt-2 font-bold text-slate-500 uppercase">Naam</label>
                 <input type="text" placeholder="Uw naam" value={naam} onChange={(e) => setNaam(e.target.value)} className="w-full p-2 rounded-lg border text-sm" />
+                <input type="text" placeholder="Woonplaats" value={woonplaats} onChange={(e) => setWoonplaats(e.target.value)} className="w-full p-2 rounded-lg border text-sm mt-2" />
                 <label className="block text-[10px] mt-2 font-bold text-slate-500 uppercase">E-mailadres</label>
                 <input type="email" placeholder="Uw e-mailadres" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full p-2 rounded-lg border text-sm" />
               </div>
@@ -209,7 +211,7 @@ export default function AluKozijnConfiguratorDetail() {
                   if (!naam || !emailOk) { showToast("Vul a.u.b. uw naam en e-mailadres in om verder te gaan.", "error"); return; }
                   setIsSubmitting(true);
                   await saveOfferte(email, {
-                    naam, kozijnNaam: `Aluminium ${kozijn.name}`, slug, breedte, hoogte,
+                    naam, woonplaats, kozijnNaam: `Aluminium ${kozijn.name}`, slug, breedte, hoogte,
                     binnenwerksBreedte, binnenwerkseHoogte,
                     kleur, kleurBuitenkant, glas, profiel, aanslag,
                     afstandshouder, roeden, ventilatieRooster, voorboren,

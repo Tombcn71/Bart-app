@@ -33,6 +33,7 @@ export default function RolluikConfigurator() {
   const [bediening, setBediening] = useState("handmatig");
   const [aantal, setAantal]       = useState(1);
   const [naam, setNaam]           = useState("");
+  const [woonplaats, setWoonplaats] = useState("");
   const [email, setEmail]         = useState("");
   const [verzonden, setVerzonden] = useState(false);
   const [bezig, setBezig]         = useState(false);
@@ -56,7 +57,7 @@ export default function RolluikConfigurator() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setBezig(true);
-    await saveOfferte(email, { naam, product: info.name, slug, breedte, hoogte, kleur, aantal, prijs });
+    await saveOfferte(email, { naam, woonplaats, product: info.name, slug, breedte, hoogte, kleur, aantal, prijs });
     setVerzonden(true);
     setBezig(false);
   }
@@ -140,6 +141,11 @@ export default function RolluikConfigurator() {
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">Uw naam</label>
               <input required value={naam} onChange={e => setNaam(e.target.value)} placeholder="Jan de Vries"
+                className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1066a3]" />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">Woonplaats</label>
+              <input value={woonplaats} onChange={e => setWoonplaats(e.target.value)} placeholder="Amsterdam"
                 className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1066a3]" />
             </div>
             <div>
