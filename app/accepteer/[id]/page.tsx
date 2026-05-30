@@ -109,8 +109,11 @@ export default function AccepteerOfferte() {
             {/* Datum + aanhef */}
             <p className="text-xs text-slate-400 mb-6">{datum}</p>
             <p className="text-sm text-slate-700 mb-1">Geachte <strong>{offerte?.naam || "klant"}</strong>,</p>
-            <p className="text-sm text-slate-500 mb-8 leading-relaxed">
+            <p className="text-sm text-slate-500 mb-4 leading-relaxed">
               Hierbij ontvangt u de offerte voor uw aanvraag bij BartMooi B.V. Lees de specificaties zorgvuldig door en geef onderaan uw akkoord.
+            </p>
+            <p className="text-sm text-slate-500 mb-8 leading-relaxed">
+              Na akkoord komen wij eerst langs voor de <strong className="text-slate-700">officiële inmeting</strong>. Op basis daarvan stellen wij de officiële fabrieksspecificaties op, inclusief de benodigde documentatie voor eventuele subsidieaanvragen (ISDE-regeling).
             </p>
 
             {/* Specificaties */}

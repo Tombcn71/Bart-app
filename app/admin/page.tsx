@@ -16,7 +16,7 @@ export default async function AdminDashboard() {
       {/* Statistieken */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         <StatCard label="Verzonden offertes" value={totaal} />
-        <StatCard label="Geaccepteerd" value={geaccepteerd} accent />
+        <StatCard label="Geaccepteerd" value={geaccepteerd} />
         <StatCard label="Conversie" value={`${conversie}%`} />
       </div>
 

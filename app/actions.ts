@@ -4,7 +4,7 @@ import { db } from "@/db";
 import { instellingen, offertes } from "@/db/schema";
 import { revalidatePath } from "next/cache";
 import { Resend } from "resend";
-import { desc } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { generateOffertePdf } from "@/app/lib/generate-offerte-pdf";
 
@@ -26,6 +26,16 @@ export async function adminLogout() {
 }
 
 const resend = new Resend(process.env.RESEND_API_KEY);
+
+// Verwijder een offerte
+export async function deleteOfferte(id: string) {
+  try {
+    await db.delete(offertes).where(eq(offertes.id, id));
+    return { success: true };
+  } catch {
+    return { success: false };
+  }
+}
 
 // 1. Functie om offertes op te halen voor het Admin Dashboard
 export async function getOffertes() {
