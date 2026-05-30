@@ -86,7 +86,7 @@ export function AppSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
 
-            <Collapsible className="group/offertes">
+            <Collapsible defaultOpen className="group/offertes">
               <SidebarMenuItem>
                 <CollapsibleTrigger asChild>
                   <SidebarMenuButton className="hover:bg-black/20 text-white w-full flex justify-between">
