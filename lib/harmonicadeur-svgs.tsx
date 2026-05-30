@@ -22,18 +22,16 @@ export const HarmonicadeurSVG = ({ sections }: { sections: 3 | 4 | 5 }) => {
           const w  = x2 - x1;
           const ix = x1 + 4, iy = 9, iw = w - 8, ih = H - 18;
 
-          // diagonaal: even panelen links→rechts, oneven panelen rechts→links
-          const d = i % 2 === 0
-            ? `M${ix} ${iy} L${ix+iw} ${iy+ih}`
-            : `M${ix+iw} ${iy} L${ix} ${iy+ih}`;
-
           return (
             <g key={i}>
               <rect x={x1} y={5} width={w} height={H-10}
                 fill="white" stroke={S.stroke} strokeWidth={S.lineWidth} />
               <rect x={ix} y={iy} width={iw} height={ih}
                 fill="none" stroke={S.stroke} strokeWidth={S.lineThin} />
-              <path d={d} fill="none" stroke={S.stroke} strokeWidth={S.lineThin} />
+              {/* openingsindicator alleen op ankerpaneel */}
+              {i === 0 && (
+                <path d={`M${ix} ${iy} L${ix+iw} ${iy+ih}`} fill="none" stroke={S.stroke} strokeWidth={S.lineThin} />
+              )}
               {/* scharnier bij elke paneelaansluiting */}
               {i < sections - 1 && (
                 <rect x={x2-2} y={H/2-5} width={4} height={10}
