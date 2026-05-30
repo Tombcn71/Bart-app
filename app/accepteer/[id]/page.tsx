@@ -109,6 +109,12 @@ export default function AccepteerOfferte() {
             {/* Datum + aanhef */}
             <p className="text-xs text-slate-400 mb-6">{datum}</p>
             <p className="text-sm text-slate-700 mb-1">Geachte <strong>{offerte?.naam || "klant"}</strong>,</p>
+            {offerte?.telefoon && (
+              <p className="text-xs text-slate-400 mb-2">
+                <a href={`tel:${offerte.telefoon}`} className="hover:text-[#1066a3]">📞 {offerte.telefoon}</a>
+                {offerte?.woonplaats ? <span> · {offerte.woonplaats}</span> : null}
+              </p>
+            )}
             <p className="text-sm text-slate-500 mb-4 leading-relaxed">
               Hierbij ontvangt u de offerte voor uw aanvraag bij BartMooi B.V. Lees de specificaties zorgvuldig door en geef onderaan uw akkoord.
             </p>

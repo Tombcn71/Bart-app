@@ -55,6 +55,7 @@ export default function OffertesPagina() {
                     <td className="py-4 px-6">
                       <p className="font-semibold text-slate-800">{d?.naam || "—"}</p>
                       <p className="text-xs text-slate-400">{o.email}</p>
+                      {d?.telefoon && <a href={`tel:${d.telefoon}`} className="text-xs text-[#1066a3] hover:underline">{d.telefoon}</a>}
                     </td>
                     <td className="py-4 px-6 text-slate-600">{d?.product || d?.kozijnNaam || d?.deurNaam || "—"}</td>
                     <td className="py-4 px-6 font-semibold text-slate-800">
