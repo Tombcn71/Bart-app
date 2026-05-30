@@ -84,31 +84,35 @@ export async function saveOfferte(email: string, data: any) {
       from: "Bart Mooi <info@offerte-bartmooi.nl>",
       to: [email],
       replyTo: "info@offerte-bartmooi.nl",
-      subject: `Uw offerte aanvraag — ${data.product || data.kozijnNaam}`,
-      text: `Geachte ${data.naam || ""},\n\nBedankt voor uw aanvraag. In de bijlage vindt u uw offerte met alle specificaties en voorwaarden.\n\nWij nemen zo spoedig mogelijk contact met u op.\n\nMet vriendelijke groet,\nBart Mooi Kozijnen`,
+      subject: `Uw offerte voor ${data.product || data.kozijnNaam || data.deurNaam || "uw aanvraag"} — BartMooi`,
+      text: `Geachte ${data.naam || ""},\n\nHartelijk dank voor uw aanvraag voor een ${data.product || data.kozijnNaam || data.deurNaam || "product"}.\nIn de bijlage vindt u uw offerte.\n\nMet vriendelijke groet,\nBartMooi`,
       html: `
         <div style="font-family: Arial, sans-serif; line-height: 1.7; color: #333; max-width: 600px; margin: 0 auto;">
-          <div style="border-bottom: 3px solid #1066a3; padding-bottom: 16px; margin-bottom: 24px;">
-            <h1 style="color: #1066a3; font-size: 20px; margin: 0;">Uw offerte aanvraag</h1>
+
+          <div style="background: #1066a3; padding: 28px 32px; border-radius: 8px 8px 0 0;">
+            <p style="color: white; font-size: 22px; font-weight: bold; margin: 0;">BartMooi</p>
+            <p style="color: rgba(255,255,255,0.75); font-size: 12px; margin: 4px 0 0;">Uw offerte is klaar</p>
           </div>
 
-          <p>Geachte ${data.naam || ""},</p>
-          <p>Hartelijk dank voor uw interesse in onze kozijnen en deuren. Wij hebben uw aanvraag in goede orde ontvangen.</p>
-          <p>In de <strong>bijlage</strong> vindt u uw offerte met alle specificaties, wat er in de prijs inbegrepen is, de betalingsvoorwaarden en onze garanties.</p>
+          <div style="background: white; padding: 32px; border: 1px solid #e8edf2; border-top: 0; border-radius: 0 0 8px 8px;">
+            <p style="font-size: 16px; font-weight: bold; color: #1a1a1a; margin: 0 0 8px;">Geachte ${data.naam || ""},</p>
+            <p style="color: #555; margin: 0 0 20px;">Hartelijk dank voor uw aanvraag voor een <strong>${data.product || data.kozijnNaam || data.deurNaam || "product"}</strong>. Wij hebben uw aanvraag in goede orde ontvangen.</p>
+            <p style="color: #555; margin: 0 0 24px;">In de <strong>bijlage</strong> vindt u uw persoonlijke offerte met alle specificaties, een technische tekening, de betalingsvoorwaarden en onze garanties.</p>
 
-          <div style="background-color: #f0f7ff; border-left: 4px solid #1066a3; padding: 14px 18px; margin: 24px 0; border-radius: 0 6px 6px 0;">
-            <p style="margin: 0 0 4px; font-weight: bold; color: #1066a3;">Indicatie subsidiekans (ISDE-regeling)</p>
-            <p style="font-size: 22px; font-weight: bold; color: #1066a3; margin: 0;">€ ${totaalSubsidie.toLocaleString("nl-NL")}</p>
-            <p style="font-size: 11px; color: #666; margin: 6px 0 0;"><em>Dit is een indicatie. Het exacte bedrag hangt af van uw situatie.</em></p>
+            <div style="background: #f0f7ff; border-left: 4px solid #1066a3; padding: 16px 20px; margin: 0 0 24px; border-radius: 0 6px 6px 0;">
+              <p style="margin: 0 0 4px; font-weight: bold; color: #1066a3; font-size: 13px;">Uw ISDE subsidie-indicatie</p>
+              <p style="font-size: 28px; font-weight: bold; color: #1066a3; margin: 4px 0;">€ ${totaalSubsidie.toLocaleString("nl-NL")}</p>
+              <p style="font-size: 11px; color: #888; margin: 4px 0 0;"><em>Indicatie op basis van uw maten en glastype. Exacte bedrag afhankelijk van uw situatie.</em></p>
+            </div>
+
+            <p style="color: #555; margin: 0 0 32px;">Wij nemen zo spoedig mogelijk contact met u op om de offerte samen door te nemen.</p>
+
+            <p style="color: #333; margin: 0;">Met vriendelijke groet,<br/>
+            <strong style="color: #1066a3;">BartMooi B.V.</strong><br/>
+            <span style="color: #999; font-size: 12px;">info@offerte-bartmooi.nl · Den Haag</span></p>
           </div>
 
-          <p>Wij nemen zo spoedig mogelijk contact met u op om de offerte door te nemen.</p>
-
-          <p style="margin-top: 32px;">Met vriendelijke groet,<br/><strong>Bart Mooi Kozijnen</strong><br/>
-          <span style="color: #999; font-size: 12px;">info@offerte-bartmooi.nl</span></p>
-
-          <hr style="border: 0; border-top: 1px solid #eee; margin: 28px 0;" />
-          <p style="font-size: 11px; color: #aaa;">BARTMOOI B.V. · Burgemeester Hovylaan 157 · 2552 XB Den Haag</p>
+          <p style="font-size: 10px; color: #bbb; text-align: center; margin-top: 16px;">BARTMOOI B.V. · Burgemeester Hovylaan 157 · 2552 XB Den Haag</p>
         </div>`,
       attachments: [
         {
