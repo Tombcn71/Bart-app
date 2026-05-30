@@ -1,3 +1,4 @@
+import React from "react";
 // Architecturale stijl — rolluiken, vierkant (100×100).
 // Lamellen = horizontale lijnen; screens = fijnere lijnen.
 
@@ -11,7 +12,7 @@ const S = {
 
 // Lamellen (horizontale lijnen)
 const Lamellen = ({ x, y, w, h, step = 7 }: { x: number; y: number; w: number; h: number; step?: number }) => {
-  const lines = [];
+  const lines: React.ReactElement[] = [];
   for (let dy = step; dy < h; dy += step) {
     lines.push(<line key={dy} x1={x} y1={y+dy} x2={x+w} y2={y+dy} stroke={S.stroke} strokeWidth={S.slat} />);
   }

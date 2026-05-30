@@ -76,7 +76,7 @@ function DropdownItem({ label, items }: { label: string; items: { label: string;
         <div className="absolute top-full left-0 w-52 bg-white rounded-xl shadow-lg border border-slate-100 py-1 z-50">
           {items.map((item) => (
             <Link
-              key={item.href}
+              key={item.label}
               href={item.href}
               onClick={() => setOpen(false)}
               className="block px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-[#1066a3] transition-colors">
@@ -149,7 +149,7 @@ const Navbar = () => {
                   <div className="flex flex-col pl-4 pb-2 gap-1">
                     {item.items.map((sub) => (
                       <Link
-                        key={sub.href}
+                        key={sub.label}
                         href={sub.href}
                         onClick={() => { setIsOpen(false); setOpenMobile(null); }}
                         className="py-2 text-sm font-medium text-slate-500 hover:text-[#1066a3] normal-case">
