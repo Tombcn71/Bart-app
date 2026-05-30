@@ -130,7 +130,7 @@ export default function AccepteerOfferte() {
                   <span className="w-40 text-slate-400 shrink-0">{label}</span>
                   <span className="text-slate-800 font-medium">{value}</span>
                 </div>
-              ))}
+              )))}
               <div className="flex px-5 py-3 text-sm bg-slate-50">
                 <span className="w-40 text-slate-400 flex-shrink-0">Prijsindicatie</span>
                 <span className="text-[#1066a3] font-bold">
