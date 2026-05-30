@@ -1,4 +1,5 @@
 "use client";
+import { toast } from "sonner";
 import React, { useState, useEffect } from "react";
 import { saveMatrix } from "@/app/actions";
 import { getMatrix } from "@/lib/data";
@@ -51,8 +52,8 @@ export default function SchuifpuiPrijzenBeheer() {
     const key = materiaal === "kunststof" ? "schuifpui_matrix" : "alu_schuifpui_matrix";
     const result = await saveMatrix(key, prijzen[materiaal]);
     setSaving(false);
-    if (result.success) alert(`${materiaal === "kunststof" ? "Kunststof" : "Aluminium"} prijzen opgeslagen!`);
-    else alert("Fout bij opslaan.");
+    if (result.success) toast.success(`${materiaal === "kunststof" ? "Kunststof" : "Aluminium"} prijzen opgeslagen!`);
+    else toast.error("Fout bij opslaan.");
   };
 
   const handleChange = (key: string, value: any, subKey?: string) => {
