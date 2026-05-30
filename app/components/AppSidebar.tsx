@@ -86,16 +86,36 @@ export function AppSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
 
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                className="hover:bg-black/20 text-white">
-                <a href="/admin/offertes">
-                  <FileText size={20} />
-                  <span>Offertes</span>
-                </a>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
+            <Collapsible className="group/offertes">
+              <SidebarMenuItem>
+                <CollapsibleTrigger asChild>
+                  <SidebarMenuButton className="hover:bg-black/20 text-white w-full flex justify-between">
+                    <div className="flex items-center gap-3">
+                      <FileText size={20} />
+                      <span>Offertes</span>
+                    </div>
+                    <ChevronRight
+                      className="transition-transform group-data-[state=open]/offertes:rotate-90"
+                      size={16}
+                    />
+                  </SidebarMenuButton>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <SidebarMenuSub className="border-l border-white/20 ml-6 mt-1 space-y-1">
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton asChild className="text-white hover:bg-black/10">
+                        <a href="/admin/offertes">Verstuurd</a>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton asChild className="text-white hover:bg-black/10">
+                        <a href="/admin/offertes/geaccepteerd">Geaccepteerd</a>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                  </SidebarMenuSub>
+                </CollapsibleContent>
+              </SidebarMenuItem>
+            </Collapsible>
 
             <Collapsible defaultOpen className="group/collapsible">
               <SidebarMenuItem>
