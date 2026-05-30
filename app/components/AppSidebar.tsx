@@ -141,6 +141,20 @@ export function AppSidebar() {
                         <a href="/admin/harmonicadeuurprijzen">Harmonicadeur Prijzen</a>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton
+                        asChild
+                        className="text-white hover:bg-black/10">
+                        <a href="/admin/rolluikenprijzen">Rolluiken Prijzen</a>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton
+                        asChild
+                        className="text-white hover:bg-black/10">
+                        <a href="/admin/horrenprijzen">Horren Prijzen</a>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
                   </SidebarMenuSub>
                 </CollapsibleContent>
               </SidebarMenuItem>
