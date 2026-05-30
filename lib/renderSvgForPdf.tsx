@@ -1,52 +1,20 @@
 import { buildDeurSvgString } from "./deur-svg-strings";
+import { buildKozijnSvgString } from "./kozijn-svg-strings";
 
-// ─── Kleuren ─────────────────────────────────────────────────────────────────
-const FRAME_FILL   = "#d4d8de";   // kozijnprofiel grijs
-const FRAME_STROKE = "#2d3748";   // buitenlijn kozijn
-const GLASS_FILL   = "#dbeafe";   // lichtblauw glas
-const GLASS_LINE   = "#93c5fd";   // diagonalen in glas
-const VLEUGEL      = "#1e293b";   // vleugel / binnenprofiel
-const OPEN_LINE    = "#475569";   // openingsindicator stippel
-const DIM_COLOR    = "#1066a3";   // maatvoeringskleur
-const HINGE_FILL   = "#94a3b8";   // scharnier
+// ─── Kleuren (schuifpui / harmonica) ─────────────────────────────────────────
+const FRAME_FILL   = "#d4d8de";
+const FRAME_STROKE = "#2d3748";
+const GLASS_FILL   = "#dbeafe";
+const GLASS_LINE   = "#93c5fd";
+const VLEUGEL      = "#1e293b";
+const DIM_COLOR    = "#1066a3";
 
-// ─── Constanten ──────────────────────────────────────────────────────────────
-const FT  = 16;   // frame thickness px
-const VT  = 5;    // vleugel inset px
-const DIV = 10;   // tussenstijl breedte
-const DIM_GAP  = 14;  // ruimte boven dimensielijn
-const DIM_H    = 22;  // hoogte dimensie-gebied
-const DIM_R    = 42;  // breedte dimensie rechts
-
-// ─── Types ────────────────────────────────────────────────────────────────────
-type VakDef = { type: "vast" | "dk" | "kiep"; mirror?: boolean };
-
-// ─── Slug parser ──────────────────────────────────────────────────────────────
-function parseVakken(slug: string): VakDef[] {
-  const map: Record<string, VakDef[]> = {
-    "vast-kozijn":                                        [{ type:"vast" }],
-    "draai-kiep-kozijn":                                  [{ type:"dk" }],
-    "kiep-kozijn":                                        [{ type:"kiep" }],
-    "draai-kiep-vast-kozijn":                             [{ type:"dk" },{ type:"vast" }],
-    "draai-kiep-draai-stolp-kozijn":                      [{ type:"dk" },{ type:"dk",mirror:true }],
-    "vast-vast-kozijn":                                   [{ type:"vast" },{ type:"vast" }],
-    "kiep-vast-liggend":                                  [{ type:"kiep" },{ type:"vast" }],
-    "kiep-kiep-kozijn":                                   [{ type:"kiep" },{ type:"kiep" }],
-    "dk-dk-gelijk":                                       [{ type:"dk" },{ type:"dk",mirror:true }],
-    "vast-bovenlicht-kiep":                               [{ type:"vast" }],
-    "dk-bovenlicht-vast":                                 [{ type:"dk" }],
-    "dk-bovenlicht-kiep":                                 [{ type:"dk" }],
-    "dk-borstwering-vast":                                [{ type:"dk" }],
-    "draai-kiep-vast-draai-kiep-kozijn":                  [{ type:"dk" },{ type:"vast" },{ type:"dk",mirror:true }],
-    "vast-vast-vast-kozijn":                              [{ type:"vast" },{ type:"vast" },{ type:"vast" }],
-    "vast-draai-kiep-vast-kozijn":                        [{ type:"vast" },{ type:"dk" },{ type:"vast" }],
-    "draai-kiep-vast-vast-kozijn":                        [{ type:"dk" },{ type:"vast" },{ type:"vast" }],
-    "draai-kiep-draai-kiep-draai-kiep-kozijn":            [{ type:"dk" },{ type:"dk" },{ type:"dk",mirror:true }],
-    "draai-kiep-vast-vast-draai-kiep-kozijn":             [{ type:"dk" },{ type:"vast" },{ type:"vast" },{ type:"dk",mirror:true }],
-    "draai-kiep-draai-kiep-draai-kiep-draai-kiep-kozijn": [{ type:"dk" },{ type:"dk" },{ type:"dk" },{ type:"dk",mirror:true }],
-  };
-  return map[slug] ?? [{ type:"vast" }];
-}
+// ─── Constanten (schuifpui / harmonica) ──────────────────────────────────────
+const FT      = 16;
+const DIV     = 10;
+const DIM_GAP = 14;
+const DIM_H   = 22;
+const DIM_R   = 42;
 
 // ─── SVG helpers ──────────────────────────────────────────────────────────────
 
@@ -61,125 +29,6 @@ function text(x:number,y:number,txt:string,anchor="middle",size=11,fill=DIM_COLO
   return `<text x="${r(x)}" y="${r(y)}" text-anchor="${anchor}" font-family="Arial,sans-serif" font-size="${size}" fill="${fill}" ${transform}>${txt}</text>`;
 }
 function r(n:number):string { return n.toFixed(1); }
-
-// ─── Vak tekeningen ──────────────────────────────────────────────────────────
-
-function drawVastVak(x:number,y:number,w:number,h:number):string {
-  let s = "";
-  s += rect(x,y,w,h, GLASS_FILL,"none",0);
-  s += line(x,y,x+w,y+h, GLASS_LINE,0.9);
-  s += line(x+w,y,x,y+h, GLASS_LINE,0.9);
-  return s;
-}
-
-function drawDkVak(x:number,y:number,w:number,h:number,mirror=false):string {
-  let s = "";
-  s += rect(x,y,w,h, GLASS_FILL,"none",0);
-  s += line(x,y,x+w,y+h, GLASS_LINE,0.9);
-  s += line(x+w,y,x,y+h, GLASS_LINE,0.9);
-  // vleugel binnenprofiel
-  const vx=x+VT, vy=y+VT, vw=w-VT*2, vh=h-VT*2;
-  s += rect(vx,vy,vw,vh,"none",VLEUGEL,2);
-  // openingsindicator (driehoek stippel)
-  const ax = mirror ? vx+vw : vx;
-  const bx = mirror ? vx : vx+vw;
-  const mx = vx+vw/2;
-  s += line(ax,vy, mx,vy+vh, OPEN_LINE,1.2,"6,3");
-  s += line(mx,vy+vh, bx,vy, OPEN_LINE,1.2,"6,3");
-  s += line(ax,vy, bx,vy, OPEN_LINE,1.2,"6,3");
-  // greep
-  const hx = mirror ? vx+5 : vx+vw-10;
-  s += `<rect x="${r(hx)}" y="${r(vy+vh/2-14)}" width="5" height="28" rx="2.5" fill="${HINGE_FILL}" stroke="${VLEUGEL}" stroke-width="0.8"/>`;
-  return s;
-}
-
-function drawKiepVak(x:number,y:number,w:number,h:number):string {
-  let s = "";
-  s += rect(x,y,w,h, GLASS_FILL,"none",0);
-  s += line(x,y,x+w,y+h, GLASS_LINE,0.9);
-  s += line(x+w,y,x,y+h, GLASS_LINE,0.9);
-  const vx=x+VT, vy=y+VT, vw=w-VT*2, vh=h-VT*2;
-  s += rect(vx,vy,vw,vh,"none",VLEUGEL,2);
-  const mx=vx+vw/2;
-  s += line(vx,vy+vh, mx,vy, OPEN_LINE,1.2,"6,3");
-  s += line(mx,vy, vx+vw,vy+vh, OPEN_LINE,1.2,"6,3");
-  s += line(vx,vy+vh, vx+vw,vy+vh, OPEN_LINE,1.2,"6,3");
-  s += `<rect x="${r(mx-14)}" y="${r(vy+5)}" width="28" height="5" rx="2.5" fill="${HINGE_FILL}" stroke="${VLEUGEL}" stroke-width="0.8"/>`;
-  return s;
-}
-
-// ─── Hoofd bouwer: kozijn ─────────────────────────────────────────────────────
-
-function buildKozijnSvg(slug:string,breedte:number,hoogte:number):string {
-  const vakken = parseVakken(slug);
-  const n = vakken.length;
-
-  // Canvas proporties
-  const CW = 460;
-  const ratio = breedte/hoogte;
-  const CH = Math.max(160, Math.min(Math.round(CW/ratio), 560));
-
-  // Glas-gebied (binnen het frame)
-  const gx = FT, gy = FT;
-  const gw = CW - FT*2;
-  const gh = CH - FT*2;
-
-  // Breedte van elk vak
-  const vakW = (gw - (n-1)*DIV) / n;
-
-  let s = "";
-
-  // Buitenste kader (frame)
-  s += rect(0,0,CW,CH, FRAME_FILL,FRAME_STROKE,2.5,"rx='2'");
-
-  // Glas achtergrond
-  s += rect(gx,gy,gw,gh, GLASS_FILL,"none",0);
-
-  // Tussenstijlen
-  for(let i=1;i<n;i++){
-    const tx = gx + i*(vakW+DIV) - DIV;
-    s += rect(tx,0,DIV,CH, FRAME_FILL,FRAME_STROKE,1);
-  }
-
-  // Vakken
-  for(let i=0;i<n;i++){
-    const vx = gx + i*(vakW+DIV);
-    const vy = gy;
-    const vk = vakken[i];
-    if(vk.type==="vast")      s += drawVastVak(vx,vy,vakW,gh);
-    else if(vk.type==="dk")   s += drawDkVak(vx,vy,vakW,gh,vk.mirror);
-    else if(vk.type==="kiep") s += drawKiepVak(vx,vy,vakW,gh);
-  }
-
-  // Binnenste kaderlijn bovenop (geeft diepte aan frame)
-  s += rect(FT-4,FT-4,gw+8,gh+8,"none",FRAME_STROKE,1.5);
-
-  // Maatvoering — breedte onderkant
-  const dimY = CH + DIM_GAP;
-  s += line(0,CH+4, 0,CH+12, DIM_COLOR,1);
-  s += line(CW,CH+4, CW,CH+12, DIM_COLOR,1);
-  s += line(0,CH+8, CW,CH+8, DIM_COLOR,1);
-  // pijlpunten
-  s += `<polygon points="6,${r(CH+8)} 0,${r(CH+5)} 0,${r(CH+11)}" fill="${DIM_COLOR}"/>`;
-  s += `<polygon points="${r(CW-6)},${r(CH+8)} ${r(CW)},${r(CH+5)} ${r(CW)},${r(CH+11)}" fill="${DIM_COLOR}"/>`;
-  s += text(CW/2, dimY+10, `${breedte} mm`);
-
-  // Maatvoering — hoogte rechterkant
-  s += line(CW+4,0, CW+12,0, DIM_COLOR,1);
-  s += line(CW+4,CH, CW+12,CH, DIM_COLOR,1);
-  s += line(CW+8,0, CW+8,CH, DIM_COLOR,1);
-  s += `<polygon points="${r(CW+8)},6 ${r(CW+5)},0 ${r(CW+11)},0" fill="${DIM_COLOR}"/>`;
-  s += `<polygon points="${r(CW+8)},${r(CH-6)} ${r(CW+5)},${r(CH)} ${r(CW+11)},${r(CH)}" fill="${DIM_COLOR}"/>`;
-  s += text(CW+DIM_R/2+2, CH/2+5, `${hoogte} mm`,  "middle",11,DIM_COLOR,`transform="rotate(-90,${r(CW+DIM_R/2+2)},${r(CH/2)})"`);
-
-  const totalW = CW + DIM_R + 4;
-  const totalH = CH + DIM_H + 8;
-
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${totalW} ${totalH}" width="${totalW}" height="${totalH}">
-  <rect x="0" y="0" width="${totalW}" height="${totalH}" fill="white"/>
-  ${s}
-</svg>`;
-}
 
 // ─── Schuifpui ────────────────────────────────────────────────────────────────
 
@@ -265,7 +114,7 @@ export function getSvgString(slug:string, breedte=1000, hoogte=1200, glas?:strin
   if(slug.includes("deur") && !slug.includes("kozijn")) {
     return buildDeurSvgString(slug, breedte, hoogte, glas);
   }
-  return buildKozijnSvg(slug,breedte,hoogte);
+  return buildKozijnSvgString(slug, breedte, hoogte, glas);
 }
 
 export function renderSvgForPdf(slug:string):string|null {
