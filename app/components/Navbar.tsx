@@ -32,6 +32,14 @@ const NAV_ITEMS = [
     ],
   },
   {
+    label: "Rolluiken",
+    items: [
+      { label: "Rolluik",        href: "/rolluiken" },
+      { label: "Inbouw rolluik", href: "/rolluiken" },
+      { label: "Screens",        href: "/rolluiken" },
+    ],
+  },
+  {
     label: "Horren",
     items: [
       { label: "Inzethor",       href: "/horren" },
