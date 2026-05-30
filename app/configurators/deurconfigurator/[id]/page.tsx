@@ -175,7 +175,7 @@ export default function DeurConfiguratorDetail() {
                 disabled={isSubmitting}
                 onClick={async () => {
                   const emailOk = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email);
-                  if (!naam || !emailOk) { showToast("Vul een geldig e-mailadres en naam in.", "error"); return; }
+                  if (!naam || !emailOk) { showToast("Vul a.u.b. uw naam en e-mailadres in om verder te gaan.", "error"); return; }
                   setIsSubmitting(true);
                   await saveOfferte(email, {
                     naam, deurNaam: deur.name, slug, breedte, hoogte,
