@@ -138,7 +138,7 @@ export default function DeurenPrijzen() {
                     {Object.entries(value).map(([subKey, subValue]: [string, any]) => (
                       <tr key={`${key}-${subKey}`}>
                         <td className="py-2 px-6 text-slate-600 capitalize pl-10 text-sm">
-                          - {subKey.replace(/-/g, " ")}
+                          - {subKey.replace(/-/g, " ").replace(/creon /gi, "").trim()}
                         </td>
                         <td className="py-2 px-6">
                           <input
