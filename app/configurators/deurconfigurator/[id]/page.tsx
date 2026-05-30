@@ -1,5 +1,6 @@
 "use client";
 import { showToast } from "@/app/components/CenterToast";
+import { FormField } from "@/app/components/FormField";
 import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -128,15 +129,6 @@ export default function DeurConfiguratorDetail() {
 
   if (!matrix) return <div className="p-10 text-center text-slate-400">Configuratie laden...</div>;
 
-  const selectField = (label: string, value: string, setter: (v: string) => void, opties: Record<string, number>) => (
-    <div>
-      <label className="text-[10px] font-bold text-slate-500 uppercase">{label}</label>
-      <select value={value} onChange={(e) => setter(e.target.value)} className="w-full border p-2.5 rounded-lg text-sm capitalize">
-        {Object.keys(opties).map((k) => <option key={k} value={k}>{k.replace(/-/g, " ").replace(/creon /gi, "").trim()}</option>)}
-      </select>
-    </div>
-  );
-
   return (
     <div className="w-full min-h-screen bg-white">
       <div className="max-w-[1200px] mx-auto px-6 py-10">
@@ -152,72 +144,116 @@ export default function DeurConfiguratorDetail() {
           </div>
 
           <div className="lg:col-span-5">
-            <div className="bg-white border rounded-xl p-6 space-y-4">
-              <div>
+            <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+
+              {/* Prijs */}
+              <div className="px-5 py-4 border-b border-slate-100">
                 <span className="text-[10px] text-slate-400 uppercase tracking-widest">Prijsindicatie</span>
-                <div className="text-3xl font-light">€ {berekendePrijs.toLocaleString("nl-NL", { minimumFractionDigits: 2 })}</div>
+                <div className="text-3xl font-light text-slate-800 mt-0.5">€ {berekendePrijs.toLocaleString("nl-NL", { minimumFractionDigits: 2 })}</div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-[10px] font-bold text-slate-500 uppercase">Breedte (mm)</label>
-                  <input type="number" value={breedte} onChange={(e) => setBreedte(Number(e.target.value))} className="w-full border p-2.5 rounded-lg text-sm" />
-                </div>
-                <div>
-                  <label className="text-[10px] font-bold text-slate-500 uppercase">Hoogte (mm)</label>
-                  <input type="number" value={hoogte} onChange={(e) => setHoogte(Number(e.target.value))} className="w-full border p-2.5 rounded-lg text-sm" />
-                </div>
+              {/* Accordeon velden */}
+              <div className="px-5">
+                <FormField label="Afmetingen" value={`${breedte} × ${hoogte} mm`} defaultOpen>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">Breedte (mm)</label>
+                      <input type="number" value={breedte} onChange={e => setBreedte(Number(e.target.value))} className="w-full border rounded-lg p-2.5 text-sm" />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">Hoogte (mm)</label>
+                      <input type="number" value={hoogte} onChange={e => setHoogte(Number(e.target.value))} className="w-full border rounded-lg p-2.5 text-sm" />
+                    </div>
+                  </div>
+                </FormField>
+
+                <FormField label="Type profiel" value={profiel.replace(/-/g, " ").replace(/creon /gi, "").trim()}>
+                  <select value={profiel} onChange={e => setProfiel(e.target.value)} className="w-full border rounded-lg p-2.5 text-sm">
+                    {Object.keys(matrix.profielToeslag || {}).map(k => <option key={k} value={k}>{k.replace(/-/g, " ").replace(/creon /gi, "").trim()}</option>)}
+                  </select>
+                </FormField>
+                <FormField label="Onderdorpel" value={onderdorpel.replace(/-/g, " ")}>
+                  <select value={onderdorpel} onChange={e => setOnderdorpel(e.target.value)} className="w-full border rounded-lg p-2.5 text-sm capitalize">
+                    {Object.keys(matrix.onderdorpelToeslag || {}).map(k => <option key={k} value={k}>{k.replace(/-/g, " ")}</option>)}
+                  </select>
+                </FormField>
+                <FormField label="Draairichting" value={draairichting.replace(/-/g, " ")}>
+                  <select value={draairichting} onChange={e => setDraairichting(e.target.value)} className="w-full border rounded-lg p-2.5 text-sm capitalize">
+                    {Object.keys(matrix.draairichtingToeslag || {}).map(k => <option key={k} value={k}>{k.replace(/-/g, " ")}</option>)}
+                  </select>
+                </FormField>
+                <FormField label="Kleur binnenkant" value={kleur.replace(/-/g, " ")}>
+                  <select value={kleur} onChange={e => setKleur(e.target.value)} className="w-full border rounded-lg p-2.5 text-sm capitalize">
+                    {Object.keys(matrix.kleurToeslag || {}).map(k => <option key={k} value={k}>{k.replace(/-/g, " ")}</option>)}
+                  </select>
+                </FormField>
+                <FormField label="Kleur buitenkant" value={kleurBuitenkant.replace(/-/g, " ")}>
+                  <select value={kleurBuitenkant} onChange={e => setKleurBuitenkant(e.target.value)} className="w-full border rounded-lg p-2.5 text-sm capitalize">
+                    {Object.keys(matrix.kleurBuitenkantToeslag || {}).map(k => <option key={k} value={k}>{k.replace(/-/g, " ")}</option>)}
+                  </select>
+                </FormField>
+                <FormField label="Paneel" value={paneel.replace(/-/g, " ")}>
+                  <select value={paneel} onChange={e => setPaneel(e.target.value)} className="w-full border rounded-lg p-2.5 text-sm capitalize">
+                    {Object.keys(matrix.paneelToeslag || {}).map(k => <option key={k} value={k}>{k.replace(/-/g, " ")}</option>)}
+                  </select>
+                </FormField>
+                <FormField label="Beslag" value={beslag.replace(/-/g, " ")}>
+                  <select value={beslag} onChange={e => setBeslag(e.target.value)} className="w-full border rounded-lg p-2.5 text-sm capitalize">
+                    {Object.keys(matrix.typeBeslag || {}).map(k => <option key={k} value={k}>{k.replace(/-/g, " ")}</option>)}
+                  </select>
+                </FormField>
+                <FormField label="Afstandshouder" value={afstandshouder}>
+                  <select value={afstandshouder} onChange={e => setAfstandshouder(e.target.value)} className="w-full border rounded-lg p-2.5 text-sm capitalize">
+                    {Object.keys(matrix.afstandshouderToeslag || {}).map(k => <option key={k} value={k}>{k}</option>)}
+                  </select>
+                </FormField>
+                <FormField label="Roeden" value={roeden.replace(/-/g, " ")}>
+                  <select value={roeden} onChange={e => setRoeden(e.target.value)} className="w-full border rounded-lg p-2.5 text-sm">
+                    {Object.keys(matrix.roedenToeslag || {}).map(k => <option key={k} value={k}>{k.replace(/-/g, " ")}</option>)}
+                  </select>
+                </FormField>
+                <FormField label="Type glas" value={glasType}>
+                  <select value={glasType} onChange={e => setGlasType(e.target.value)} className="w-full border rounded-lg p-2.5 text-sm">
+                    {Object.keys(matrix.glasToeslag || {}).map(k => <option key={k} value={k}>{k}</option>)}
+                  </select>
+                </FormField>
+                <FormField label="Aantal" value={`${aantal} stuks`}>
+                  <div className="flex items-center gap-4">
+                    <button type="button" onClick={() => setAantal(Math.max(1, aantal - 1))} className="w-10 h-10 rounded-lg border text-xl font-bold text-slate-500 hover:bg-slate-50">−</button>
+                    <span className="text-lg font-bold w-8 text-center">{aantal}</span>
+                    <button type="button" onClick={() => setAantal(aantal + 1)} className="w-10 h-10 rounded-lg border text-xl font-bold text-slate-500 hover:bg-slate-50">+</button>
+                  </div>
+                </FormField>
+                <FormField label="Uw gegevens" value={naam || "invullen"}>
+                  <div className="space-y-2">
+                    <input type="text" placeholder="Naam" value={naam} onChange={e => setNaam(e.target.value)} className="w-full border rounded-lg px-3 py-2 text-sm" />
+                    <input type="text" placeholder="Woonplaats" value={woonplaats} onChange={e => setWoonplaats(e.target.value)} className="w-full border rounded-lg px-3 py-2 text-sm" />
+                    <input type="tel" placeholder="Telefoonnummer" value={telefoon} onChange={e => setTelefoon(e.target.value)} className="w-full border rounded-lg px-3 py-2 text-sm" />
+                    <input type="email" placeholder="E-mailadres" value={email} onChange={e => setEmail(e.target.value)} className="w-full border rounded-lg px-3 py-2 text-sm" />
+                  </div>
+                </FormField>
               </div>
 
-              {selectField("Type profiel", profiel, setProfiel, matrix.profielToeslag || {})}
-              {selectField("Onderdorpel", onderdorpel, setOnderdorpel, matrix.onderdorpelToeslag || {})}
-              {selectField("Draairichting", draairichting, setDraairichting, matrix.draairichtingToeslag || {})}
-              {selectField("Kleur binnenkant", kleur, setKleur, matrix.kleurToeslag || {})}
-              {selectField("Kleur buitenkant", kleurBuitenkant, setKleurBuitenkant, matrix.kleurBuitenkantToeslag || {})}
-              {selectField("Paneel", paneel, setPaneel, matrix.paneelToeslag || {})}
-              {selectField("Beslag", beslag, setBeslag, matrix.typeBeslag || {})}
-              {selectField("Afstandshouder", afstandshouder, setAfstandshouder, matrix.afstandshouderToeslag || {})}
-              {selectField("Roeden", roeden, setRoeden, matrix.roedenToeslag || {})}
-              <div>
-                <label className="text-[10px] font-bold text-slate-500 uppercase">Type glas</label>
-                <select value={glasType} onChange={e => setGlasType(e.target.value)} className="w-full border p-2.5 rounded-lg text-sm">
-                  {Object.keys(matrix.glasToeslag || {}).map(k => <option key={k} value={k}>{k}</option>)}
-                </select>
+              <div className="px-5 pb-5 pt-2">
+                <button
+                  disabled={isSubmitting}
+                  onClick={async () => {
+                    const emailOk = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email);
+                    if (!naam || !emailOk) { showToast("Vul a.u.b. uw naam en e-mailadres in om verder te gaan.", "error"); return; }
+                    setIsSubmitting(true);
+                    await saveOfferte(email, {
+                      naam, deurNaam: deur.name, slug, breedte, hoogte,
+                      kleur, kleurBuitenkant, beslag, paneel, profiel,
+                      onderdorpel, draairichting, afstandshouder, roeden,
+                      glasType, aantal, prijs: berekendePrijs,
+                    });
+                    showToast(`Bedankt, uw offerte is succesvol verstuurd naar ${email}`);
+                    setIsSubmitting(false);
+                  }}
+                  className="w-full bg-[#1066a3] text-white py-4 rounded-xl font-bold text-sm tracking-wide">
+                  {isSubmitting ? "Bezig..." : "Offerte aanvragen"}
+                </button>
               </div>
-
-              <div>
-                <label className="text-[10px] font-bold text-slate-500 uppercase">Aantal</label>
-                <input type="number" min={1} value={aantal} onChange={(e) => setAantal(Number(e.target.value))} className="w-full border p-2.5 rounded-lg text-sm" />
-              </div>
-
-              <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl mt-4">
-                <h3 className="text-sm font-bold text-slate-800">Check uw subsidie</h3>
-                <label className="block text-[10px] mt-2 font-bold text-slate-500 uppercase">Naam</label>
-                <input type="text" placeholder="Uw naam" value={naam} onChange={(e) => setNaam(e.target.value)} className="w-full p-2 rounded-lg border text-sm" />
-                <input type="text" placeholder="Woonplaats" value={woonplaats} onChange={(e) => setWoonplaats(e.target.value)} className="w-full p-2 rounded-lg border text-sm mt-2" />
-                <input type="tel" placeholder="Telefoonnummer" value={telefoon} onChange={(e) => setTelefoon(e.target.value)} className="w-full p-2 rounded-lg border text-sm mt-2" />
-                <label className="block text-[10px] mt-2 font-bold text-slate-500 uppercase">E-mailadres</label>
-                <input type="email" placeholder="Uw e-mailadres" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full p-2 rounded-lg border text-sm" />
-              </div>
-
-              <button
-                disabled={isSubmitting}
-                onClick={async () => {
-                  const emailOk = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email);
-                  if (!naam || !emailOk) { showToast("Vul a.u.b. uw naam en e-mailadres in om verder te gaan.", "error"); return; }
-                  setIsSubmitting(true);
-                  await saveOfferte(email, {
-                    naam, deurNaam: deur.name, slug, breedte, hoogte,
-                    kleur, kleurBuitenkant, beslag, paneel, profiel,
-                    onderdorpel, draairichting, afstandshouder, roeden,
-                    glasType, aantal, prijs: berekendePrijs,
-                  });
-                  showToast(`Bedankt, uw offerte is succesvol verstuurd naar ${email}`);
-                  setIsSubmitting(false);
-                }}
-                className="w-full bg-[#1066a3] text-white py-4 rounded-lg font-bold uppercase text-[11px] tracking-widest">
-                {isSubmitting ? "Bezig..." : "Bereken subsidie & Vraag offerte aan"}
-              </button>
             </div>
           </div>
         </div>
