@@ -1,24 +1,32 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { saveOfferte } from "@/app/actions";
+import { getMatrix } from "@/lib/data";
 import { RolluikSVG, InbouwRolluikSVG, ScreenSVG } from "@/lib/rolluik-svgs";
 
-const rolluikData: Record<string, { name: string; component: React.ReactNode; basisPrijs: number }> = {
-  "rolluik":         { name: "Rolluik",         component: <RolluikSVG />,        basisPrijs: 120 },
-  "inbouw-rolluik":  { name: "Inbouw rolluik",  component: <InbouwRolluikSVG />,  basisPrijs: 175 },
-  "screen":          { name: "Screen",          component: <ScreenSVG />,         basisPrijs: 145 },
+const ROLLUIK_INFO: Record<string, { name: string; matrixKey: string; component: React.ReactNode }> = {
+  "rolluik":        { name: "Rolluik",        matrixKey: "rolluik_matrix",        component: <RolluikSVG /> },
+  "inbouw-rolluik": { name: "Inbouw rolluik",  matrixKey: "inbouw_rolluik_matrix", component: <InbouwRolluikSVG /> },
+  "screen":         { name: "Screen",          matrixKey: "screen_matrix",         component: <ScreenSVG /> },
 };
 
-const KLEUREN = ["wit", "antraciet", "crème-wit", "RAL kleur"];
+const DEFAULTS = {
+  basisPrijs: 0, m2Tarief: 0, montageKosten: 0,
+  kleurToeslag: { wit: 0, antraciet: 0, "creme-wit": 0, "ral-kleur": 0 },
+  bedieningToeslag: { handmatig: 0, elektrisch: 0 },
+};
+
+const KLEUREN   = ["wit", "antraciet", "creme-wit", "ral-kleur"];
 const BEDIENINGEN = ["handmatig", "elektrisch"];
 
 export default function RolluikConfigurator() {
   const { id } = useParams();
-  const slug = typeof id === "string" ? id : "rolluik";
-  const product = rolluikData[slug] ?? rolluikData["rolluik"];
+  const slug = typeof id === "string" && id in ROLLUIK_INFO ? id : "rolluik";
+  const info = ROLLUIK_INFO[slug];
 
+  const [matrix, setMatrix]       = useState<any>(null);
   const [breedte, setBreedte]     = useState(1000);
   const [hoogte, setHoogte]       = useState(1200);
   const [kleur, setKleur]         = useState("wit");
@@ -29,14 +37,26 @@ export default function RolluikConfigurator() {
   const [verzonden, setVerzonden] = useState(false);
   const [bezig, setBezig]         = useState(false);
 
+  useEffect(() => {
+    getMatrix(info.matrixKey).then(m => setMatrix({ ...DEFAULTS, ...(m ?? {}) }));
+  }, [info.matrixKey]);
+
   const m2 = (breedte / 1000) * (hoogte / 1000);
-  const elektrischToeslag = bediening === "elektrisch" ? 85 : 0;
-  const prijs = Math.round((product.basisPrijs * m2 + elektrischToeslag) * aantal * 100) / 100;
+  const prijs = matrix
+    ? Math.round(
+        ((matrix.basisPrijs ?? 0)
+          + m2 * (matrix.m2Tarief ?? 0)
+          + (matrix.kleurToeslag?.[kleur] ?? 0)
+          + (matrix.bedieningToeslag?.[bediening] ?? 0)
+          + (matrix.montageKosten ?? 0)
+        ) * aantal * 100
+      ) / 100
+    : 0;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setBezig(true);
-    await saveOfferte(email, { naam, product: product.name, slug, breedte, hoogte, kleur, aantal, prijs });
+    await saveOfferte(email, { naam, product: info.name, slug, breedte, hoogte, kleur, aantal, prijs });
     setVerzonden(true);
     setBezig(false);
   }
@@ -59,9 +79,9 @@ export default function RolluikConfigurator() {
       </Link>
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 mt-6">
         <div className="lg:col-span-7">
-          <h1 className="text-2xl font-semibold mb-6">{product.name}</h1>
+          <h1 className="text-2xl font-semibold mb-6">{info.name}</h1>
           <div className="bg-slate-50 p-10 rounded-xl border flex items-center justify-center">
-            <div style={{ width: "50%", maxWidth: 220 }}>{product.component}</div>
+            <div style={{ width: "50%", maxWidth: 220 }}>{info.component}</div>
           </div>
         </div>
 
@@ -79,19 +99,17 @@ export default function RolluikConfigurator() {
                 onChange={e => setHoogte(Number(e.target.value))}
                 className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1066a3]" />
             </div>
-
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">Kleur</label>
               <div className="flex gap-2 flex-wrap">
                 {KLEUREN.map(k => (
                   <button key={k} type="button" onClick={() => setKleur(k)}
-                    className={`px-3 py-2 rounded-lg text-sm font-medium border transition-all ${
+                    className={`px-3 py-2 rounded-lg text-sm font-medium border transition-all capitalize ${
                       kleur === k ? "bg-[#1066a3] text-white border-[#1066a3]" : "border-slate-200 text-slate-600"
-                    }`}>{k}</button>
+                    }`}>{k.replace(/-/g, " ")}</button>
                 ))}
               </div>
             </div>
-
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">Bediening</label>
               <div className="flex gap-2">
@@ -103,14 +121,12 @@ export default function RolluikConfigurator() {
                 ))}
               </div>
             </div>
-
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">Aantal</label>
               <input type="number" min={1} max={50} value={aantal}
                 onChange={e => setAantal(Number(e.target.value))}
                 className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1066a3]" />
             </div>
-
             <div className="bg-[#f4f7f9] rounded-lg p-4">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-slate-600">Prijsindicatie</span>
@@ -120,9 +136,7 @@ export default function RolluikConfigurator() {
               </div>
               <p className="text-xs text-slate-400 mt-1">Excl. btw · indicatie</p>
             </div>
-
             <hr className="border-slate-100" />
-
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">Uw naam</label>
               <input required value={naam} onChange={e => setNaam(e.target.value)} placeholder="Jan de Vries"
@@ -133,7 +147,6 @@ export default function RolluikConfigurator() {
               <input required type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="jan@email.nl"
                 className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1066a3]" />
             </div>
-
             <button type="submit" disabled={bezig}
               className="w-full bg-[#1066a3] text-white font-bold py-3 rounded-xl hover:bg-[#0d5491] transition-colors disabled:opacity-50">
               {bezig ? "Verzenden..." : "Offerte aanvragen"}
