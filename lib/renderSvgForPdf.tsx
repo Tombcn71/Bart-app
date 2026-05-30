@@ -1,5 +1,6 @@
 import { buildDeurSvgString } from "./deur-svg-strings";
 import { buildKozijnSvgString } from "./kozijn-svg-strings";
+import { buildSchuifpuiSvgString } from "./schuifpui-svg-strings";
 
 // ─── Kleuren (schuifpui / harmonica) ─────────────────────────────────────────
 const FRAME_FILL   = "#d4d8de";
@@ -11,7 +12,6 @@ const DIM_COLOR    = "#1066a3";
 
 // ─── Constanten (schuifpui / harmonica) ──────────────────────────────────────
 const FT      = 16;
-const DIV     = 10;
 const DIM_GAP = 14;
 const DIM_H   = 22;
 const DIM_R   = 42;
@@ -30,35 +30,6 @@ function text(x:number,y:number,txt:string,anchor="middle",size=11,fill=DIM_COLO
 }
 function r(n:number):string { return n.toFixed(1); }
 
-// ─── Schuifpui ────────────────────────────────────────────────────────────────
-
-function buildSchuifpuiSvg(slug:string,breedte:number,hoogte:number):string {
-  const n = slug.includes("4-vaks") ? 4 : 2;
-  const CW=460, ratio=breedte/hoogte;
-  const CH=Math.max(160,Math.min(Math.round(CW/ratio),400));
-  const vakW=(CW-FT*2-(n-1)*DIV)/n;
-  let s="";
-  s+=rect(0,0,CW,CH,FRAME_FILL,FRAME_STROKE,2.5,"rx='2'");
-  for(let i=0;i<n;i++){
-    const vx=FT+i*(vakW+DIV), vy=FT, vw=vakW, vh=CH-FT*2;
-    s+=rect(vx,vy,vw,vh,GLASS_FILL,"none",0);
-    s+=line(vx,vy,vx+vw,vy+vh,GLASS_LINE,0.9);
-    s+=line(vx+vw,vy,vx,vy+vh,GLASS_LINE,0.9);
-    if(i<n-1) s+=rect(vx+vw,0,DIV,CH,FRAME_FILL,FRAME_STROKE,1);
-    // schuifpijl afwisselend links/rechts
-    const ay=vy+vh/2, dir=i%2===0?1:-1;
-    const ax1=vx+vw/2-dir*16, ax2=vx+vw/2+dir*16;
-    s+=line(ax1,ay,ax2,ay,VLEUGEL,2);
-    s+=`<polygon points="${r(ax2)},${r(ay)} ${r(ax2-dir*8)},${r(ay-5)} ${r(ax2-dir*8)},${r(ay+5)}" fill="${VLEUGEL}"/>`;
-  }
-  s+=rect(FT-4,FT-4,CW-FT*2+8,CH-FT*2+8,"none",FRAME_STROKE,1.5);
-  const totalW=CW+DIM_R+4, totalH=CH+DIM_H+8;
-  s+=dimLines(CW,CH,breedte,hoogte);
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${totalW} ${totalH}" width="${totalW}" height="${totalH}">
-  <rect x="0" y="0" width="${totalW}" height="${totalH}" fill="white"/>
-  ${s}
-</svg>`;
-}
 
 // ─── Harmonicadeur ────────────────────────────────────────────────────────────
 
@@ -109,7 +80,7 @@ function dimLines(CW:number,CH:number,breedte:number,hoogte:number):string {
 
 export function getSvgString(slug:string, breedte=1000, hoogte=1200, glas?:string):string|null {
   if(!slug) return null;
-  if(slug.includes("schuifpui")) return buildSchuifpuiSvg(slug,breedte,hoogte);
+  if(slug.includes("schuifpui")) return buildSchuifpuiSvgString(slug,breedte,hoogte);
   if(slug.includes("harmonica")) return buildHarmonicaSvg(slug,breedte,hoogte);
   if(slug.includes("deur") && !slug.includes("kozijn")) {
     return buildDeurSvgString(slug, breedte, hoogte, glas);

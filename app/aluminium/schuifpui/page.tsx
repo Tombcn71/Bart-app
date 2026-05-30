@@ -2,60 +2,11 @@
 import { useState } from "react";
 import Link from "next/link";
 import { InmeetServiceCard } from "@/app/components/InmeetServiceCard";
-
-const COLORS = { primary: "#1066a3", textDark: "#2d3748" };
-
-const SlidingDoorSVG = ({ sections }: { sections: 2 | 4 }) => {
-  const baseWidth = sections === 4 ? 180 : 90;
-  const sw = baseWidth / sections;
-  return (
-    <g transform="translate(0, 5)">
-      <rect x="0" y="0" width={baseWidth} height="90" fill="none" stroke={COLORS.textDark} strokeWidth="1" />
-      {sections === 2 ? (
-        <>
-          <rect x="2" y="2" width={sw - 3} height="86" fill="none" stroke={COLORS.textDark} strokeWidth="0.8" />
-          <g transform={`translate(${sw / 2 - 2}, 43)`}>
-            <line x1="0" y1="0" x2="4" y2="0" stroke="#cbd5e1" strokeWidth="0.8" />
-            <line x1="2" y1="-2" x2="2" y2="2" stroke="#cbd5e1" strokeWidth="0.8" />
-          </g>
-          <rect x={sw + 1} y="2" width={sw - 3} height="86" fill="none" stroke={COLORS.textDark} strokeWidth="0.8" />
-          <g transform={`translate(${sw + 10}, 45)`}>
-            <line x1="0" y1="0" x2="12" y2="0" stroke={COLORS.textDark} strokeWidth="1" />
-            <line x1="0" y1="0" x2="3" y2="-3" stroke={COLORS.textDark} strokeWidth="1" />
-            <line x1="0" y1="0" x2="3" y2="3" stroke={COLORS.textDark} strokeWidth="1" />
-          </g>
-        </>
-      ) : (
-        [0, 1, 2, 3].map((i) => {
-          const x = i * sw;
-          const isFixed = i === 0 || i === 3;
-          const isLeft = i === 1;
-          return (
-            <g key={i}>
-              <rect x={x + 1} y="2" width={sw - 2} height="86" fill="none" stroke={COLORS.textDark} strokeWidth="0.8" />
-              {isFixed ? (
-                <g transform={`translate(${x + sw / 2 - 2}, 43)`}>
-                  <line x1="0" y1="0" x2="4" y2="0" stroke="#cbd5e1" strokeWidth="0.8" />
-                  <line x1="2" y1="-2" x2="2" y2="2" stroke="#cbd5e1" strokeWidth="0.8" />
-                </g>
-              ) : (
-                <g transform={`translate(${x + (isLeft ? 5 : sw - 15)}, 45)`}>
-                  <line x1="0" y1="0" x2="10" y2="0" stroke={COLORS.textDark} strokeWidth="1" />
-                  <line x1={isLeft ? 0 : 10} y1="0" x2={isLeft ? 3 : 7} y2="-3" stroke={COLORS.textDark} strokeWidth="1" />
-                  <line x1={isLeft ? 0 : 10} y1="0" x2={isLeft ? 3 : 7} y2="3" stroke={COLORS.textDark} strokeWidth="1" />
-                </g>
-              )}
-            </g>
-          );
-        })
-      )}
-    </g>
-  );
-};
+import { SchuifpuiTweevaks, SchuifpuiViervaks } from "@/lib/schuifpui-svgs";
 
 const puien = [
-  { id: 1, category: "2-vaks", slug: "schuifpui-2-vaks", name: "Schuifpui 2-vaks", best: true,  v: 1,   components: <SlidingDoorSVG sections={2} /> },
-  { id: 2, category: "4-vaks", slug: "schuifpui-4-vaks", name: "Schuifpui 4-vaks", best: true,  v: 1.8, components: <SlidingDoorSVG sections={4} /> },
+  { id: 1, category: "2-vaks", slug: "schuifpui-2-vaks", name: "Schuifpui 2-vaks", best: true, v: 2,   components: <SchuifpuiTweevaks /> },
+  { id: 2, category: "4-vaks", slug: "schuifpui-4-vaks", name: "Schuifpui 4-vaks", best: true, v: 4,   components: <SchuifpuiViervaks /> },
 ];
 
 export default function AluSchuifpuiOverzicht() {

@@ -1,175 +1,8 @@
 "use client";
-import React, { useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { InmeetServiceCard } from "@/app/components/InmeetServiceCard";
-
-// --- STYLING ---
-const COLORS = {
-  primary: "#1066a3",
-  textDark: "#2d3748",
-  textLight: "#666666",
-  bgLight: "#f4f7f9",
-};
-
-// --- GEFIXTE SVG SCHUIFPUI COMPONENT ---
-const SlidingDoorSVG = ({ sections }: { sections: 2 | 4 }) => {
-  const isFourVaks = sections === 4;
-  const baseWidth = isFourVaks ? 180 : 90;
-  const sectionWidth = baseWidth / sections;
-
-  return (
-    <g transform="translate(0, 5)">
-      <rect
-        x="0"
-        y="0"
-        width={baseWidth}
-        height="90"
-        fill="none"
-        stroke={COLORS.textDark}
-        strokeWidth="1"
-      />
-
-      {sections === 2 ? (
-        <>
-          <rect
-            x="2"
-            y="2"
-            width={sectionWidth - 3}
-            height="86"
-            fill="none"
-            stroke={COLORS.textDark}
-            strokeWidth="0.8"
-          />
-          <g transform={`translate(${sectionWidth / 2 - 2}, 43)`}>
-            <line
-              x1="0"
-              y1="0"
-              x2="4"
-              y2="0"
-              stroke="#cbd5e1"
-              strokeWidth="0.8"
-            />
-            <line
-              x1="2"
-              y1="-2"
-              x2="2"
-              y2="2"
-              stroke="#cbd5e1"
-              strokeWidth="0.8"
-            />
-          </g>
-
-          <rect
-            x={sectionWidth + 1}
-            y="2"
-            width={sectionWidth - 3}
-            height="86"
-            fill="none"
-            stroke={COLORS.textDark}
-            strokeWidth="0.8"
-          />
-          <g transform={`translate(${sectionWidth + 10}, 45)`}>
-            <line
-              x1="0"
-              y1="0"
-              x2="12"
-              y2="0"
-              stroke={COLORS.textDark}
-              strokeWidth="1"
-            />
-            <line
-              x1="0"
-              y1="0"
-              x2="3"
-              y2="-3"
-              stroke={COLORS.textDark}
-              strokeWidth="1"
-            />
-            <line
-              x1="0"
-              y1="0"
-              x2="3"
-              y2="3"
-              stroke={COLORS.textDark}
-              strokeWidth="1"
-            />
-          </g>
-        </>
-      ) : (
-        <>
-          {[0, 1, 2, 3].map((i) => {
-            const xPos = i * sectionWidth;
-            const isFixed = i === 0 || i === 3;
-            const isMovingLeft = i === 1;
-
-            return (
-              <g key={i}>
-                <rect
-                  x={xPos + 1}
-                  y="2"
-                  width={sectionWidth - 2}
-                  height="86"
-                  fill="none"
-                  stroke={COLORS.textDark}
-                  strokeWidth="0.8"
-                />
-                {isFixed ? (
-                  <g
-                    transform={`translate(${xPos + sectionWidth / 2 - 2}, 43)`}>
-                    <line
-                      x1="0"
-                      y1="0"
-                      x2="4"
-                      y2="0"
-                      stroke="#cbd5e1"
-                      strokeWidth="0.8"
-                    />
-                    <line
-                      x1="2"
-                      y1="-2"
-                      x2="2"
-                      y2="2"
-                      stroke="#cbd5e1"
-                      strokeWidth="0.8"
-                    />
-                  </g>
-                ) : (
-                  <g
-                    transform={`translate(${xPos + (isMovingLeft ? 5 : sectionWidth - 15)}, 45)`}>
-                    <line
-                      x1="0"
-                      y1="0"
-                      x2="10"
-                      y2="0"
-                      stroke={COLORS.textDark}
-                      strokeWidth="1"
-                    />
-                    <line
-                      x1={isMovingLeft ? 0 : 10}
-                      y1="0"
-                      x2={isMovingLeft ? 3 : 7}
-                      y2="-3"
-                      stroke={COLORS.textDark}
-                      strokeWidth="1"
-                    />
-                    <line
-                      x1={isMovingLeft ? 0 : 10}
-                      y1="0"
-                      x2={isMovingLeft ? 3 : 7}
-                      y2="3"
-                      stroke={COLORS.textDark}
-                      strokeWidth="1"
-                    />
-                  </g>
-                )}
-              </g>
-            );
-          })}
-        </>
-      )}
-    </g>
-  );
-};
+import { SchuifpuiTweevaks, SchuifpuiViervaks } from "@/lib/schuifpui-svgs";
 
 export default function SchuifpuiOverview() {
   const [activeType, setActiveType] = useState("2-vaks");
@@ -181,8 +14,8 @@ export default function SchuifpuiOverview() {
       slug: "schuifpui-2-vaks",
       name: "Schuifpui 2-vaks",
       best: true,
-      v: 1,
-      components: <SlidingDoorSVG sections={2} />,
+      v: 2,
+      components: <SchuifpuiTweevaks />,
     },
     {
       id: 2,
@@ -190,8 +23,8 @@ export default function SchuifpuiOverview() {
       slug: "schuifpui-4-vaks",
       name: "Schuifpui 4-vaks",
       best: true,
-      v: 1.8,
-      components: <SlidingDoorSVG sections={4} />,
+      v: 4,
+      components: <SchuifpuiViervaks />,
     },
   ];
 
