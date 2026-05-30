@@ -1,79 +1,54 @@
-const C = {
-  frame:  "#334155",
-  glass:  "#eff6ff",
+// Architecturale stijl — zelfde principes als deur-svgs.tsx.
+// Hoogte 160, breedte 50px per paneel + 10px frame.
+
+const S = {
+  stroke:    "#000000",
+  lineWidth: 0.8,
+  lineThin:  0.5,
 };
 
+const H  = 160;
+const PW = 50;   // panel breedte
+
 export const HarmonicadeurSVG = ({ sections }: { sections: 3 | 4 | 5 }) => {
-  const panelW = 50;
-  const totalH = 120;
-  const totalW = sections * panelW + 16;
-
-  const fX = 4, fY = 4;
-  const fW = totalW - 8, fH = totalH - 8;
-  const ifX = fX + 4, ifY = fY + 4;
-  const ifW = fW - 8, ifH = fH - 8;
-
-  const postW = 4;
-  const numPosts = sections - 1;
-  const pW = (ifW - numPosts * postW) / sections;
-  const pH = ifH;
-  const getPX = (i: number) => ifX + i * (pW + postW);
-
-  const pad = 4;
+  const totalW = sections * PW + 10;
 
   return (
-    <svg
-      viewBox={`0 0 ${totalW} ${totalH}`}
-      className="w-full h-auto"
-      preserveAspectRatio="xMidYMid meet">
+    <svg viewBox={`0 0 ${totalW} ${H}`} style={{ width: "100%", height: "auto" }}>
+      <g strokeLinecap="round" strokeLinejoin="round">
+        {Array.from({ length: sections }, (_, i) => {
+          const x1 = 5 + i * PW;
+          const x2 = i === sections - 1 ? totalW - 5 : x1 + PW;
+          const w  = x2 - x1;
+          const ix = x1 + 4, iy = 9, iw = w - 8, ih = H - 18;
 
-      {/* buitenkader */}
-      <rect x={fX} y={fY} width={fW} height={fH} fill="none" stroke={C.frame} strokeWidth="2.5" />
-      {/* binnenkader */}
-      <rect x={ifX} y={ifY} width={ifW} height={ifH} fill="none" stroke={C.frame} strokeWidth="1" />
+          // diagonaal: even panelen links→rechts, oneven panelen rechts→links
+          const d = i % 2 === 0
+            ? `M${ix} ${iy} L${ix+iw} ${iy+ih}`
+            : `M${ix+iw} ${iy} L${ix} ${iy+ih}`;
 
-      {/* stijlen tussen panelen */}
-      {Array.from({ length: numPosts }, (_, i) => (
-        <rect key={i} x={getPX(i) + pW} y={ifY} width={postW} height={pH} fill={C.frame} />
-      ))}
-
-      {/* scharnierpaneel (links) */}
-      {(() => {
-        const px = getPX(0);
-        const bx = px + pad, by = ifY + pad;
-        const bw = pW - pad * 2, bh = pH - pad * 2;
-        const hx = bx + bw, hy = by + bh / 2;
-        return (
-          <>
-            <rect x={px} y={ifY} width={pW} height={pH} fill={C.glass} />
-            <rect x={bx} y={by} width={bw} height={bh} fill="none" stroke={C.frame} strokeWidth="1.5" />
-            {/* openingsindicator: V naar handgreep */}
-            <line x1={bx} y1={by}      x2={hx} y2={hy} stroke={C.frame} strokeWidth="1" />
-            <line x1={bx} y1={by + bh} x2={hx} y2={hy} stroke={C.frame} strokeWidth="1" />
-            {/* handgreep */}
-            <circle cx={hx - 1} cy={hy} r="2.5" fill="none" stroke={C.frame} strokeWidth="1.2" />
-          </>
-        );
-      })()}
-
-      {/* schuifpanelen */}
-      {Array.from({ length: sections - 1 }, (_, i) => {
-        const px = getPX(i + 1);
-        const bx = px + pad, by = ifY + pad;
-        const bw = pW - pad * 2, bh = pH - pad * 2;
-        const cx = bx + bw / 2, cy = by + bh / 2;
-        const al = 9;
-        return (
-          <g key={i}>
-            <rect x={px} y={ifY} width={pW} height={pH} fill={C.glass} />
-            <rect x={bx} y={by} width={bw} height={bh} fill="none" stroke={C.frame} strokeWidth="1.5" />
-            {/* pijl naar rechts */}
-            <line x1={cx - al} y1={cy} x2={cx + al} y2={cy} stroke={C.frame} strokeWidth="1.2" />
-            <line x1={cx + al - 5} y1={cy - 4} x2={cx + al} y2={cy} stroke={C.frame} strokeWidth="1.2" />
-            <line x1={cx + al - 5} y1={cy + 4} x2={cx + al} y2={cy} stroke={C.frame} strokeWidth="1.2" />
-          </g>
-        );
-      })}
+          return (
+            <g key={i}>
+              <rect x={x1} y={5} width={w} height={H-10}
+                fill="white" stroke={S.stroke} strokeWidth={S.lineWidth} />
+              <rect x={ix} y={iy} width={iw} height={ih}
+                fill="none" stroke={S.stroke} strokeWidth={S.lineThin} />
+              <path d={d} fill="none" stroke={S.stroke} strokeWidth={S.lineThin} />
+              {/* scharnier bij elke paneelaansluiting */}
+              {i < sections - 1 && (
+                <rect x={x2-2} y={H/2-5} width={4} height={10}
+                  fill="white" stroke={S.stroke} strokeWidth={S.lineThin} />
+              )}
+            </g>
+          );
+        })}
+        {/* greep op vrije zijde (rechts van laatste paneel) */}
+        <rect
+          x={totalW - 9} y={H/2 - 12}
+          width={4} height={24} rx="2"
+          fill="white" stroke={S.stroke} strokeWidth={S.lineThin}
+        />
+      </g>
     </svg>
   );
 };
