@@ -179,7 +179,8 @@ export default function AluSchuifpuiDetailPage() {
               <button
                 disabled={isSubmitting}
                 onClick={async () => {
-                  if (!email || !naam) { showToast("Vul a.u.b. uw gegevens in.", "error"); return; }
+                  const emailOk = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email);
+                  if (!naam || !emailOk) { showToast("Vul een geldig e-mailadres en naam in.", "error"); return; }
                   setIsSubmitting(true);
                   await saveOfferte(email, {
                     naam, product: `Aluminium ${pui.name}`, slug, breedte, hoogte,
