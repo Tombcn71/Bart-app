@@ -15,6 +15,22 @@ const BASE_DEFAULTS = {
   kleurBuitenkantToeslag: { wit: 0, "creme-wit": 0, antraciet: 0, "basalt-grijs": 0, "kwarts-grijs": 0, zwart: 0 },
   afstandshouderToeslag: { aluminium: 0, zwart: 0 },
   roedenToeslag: { geen: 0, "6-vaks-18mm": 0, "8-vaks-18mm": 0, "6-vaks-26mm": 0, "8-vaks-26mm": 0 },
+  glasToeslag: {
+    "Dubbel glas": 0,
+    "Dubbel glas (mat buitenzijde)": 0,
+    "Dubbel glas binnen zijde gelaagd": 0,
+    "Dubbel glas binnen zijde gelaagd (mat buitenzijde)": 0,
+    "Dubbel glas dubbelzijdig gelaagd": 0,
+    "Dubbel glas dubbelzijdig gelaagd (mat buitenzijde)": 0,
+    "Sandwichpaneel": 0,
+    "Geen glas (glaslatten voor 24 mm glas)": 0,
+    "Triple glas": 0,
+    "Triple matglas (mat middelste ruit)": 0,
+    "Triple glas binnen zijde gelaagd": 0,
+    "Triple glas binnen zijde gelaagd (mat middelste ruit)": 0,
+    "Triple glas dubbelzijdig gelaagd": 0,
+    "Triple glas dubbelzijdig gelaagd (mat middelste ruit)": 0,
+  },
 };
 
 

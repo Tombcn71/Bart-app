@@ -24,6 +24,22 @@ const DEFAULT_MATRIX = {
   kleurBuitenkantToeslag: { wit: 0, "creme-wit": 0, antraciet: 0, "basalt-grijs": 0, "kwarts-grijs": 0, zwart: 0 },
   afstandshouderToeslag: { aluminium: 0, zwart: 0 },
   roedenToeslag: { geen: 0, "6-vaks-18mm": 0, "8-vaks-18mm": 0, "6-vaks-26mm": 0, "8-vaks-26mm": 0 },
+  glasToeslag: {
+    "Dubbel glas": 0,
+    "Dubbel glas (mat buitenzijde)": 0,
+    "Dubbel glas binnen zijde gelaagd": 0,
+    "Dubbel glas binnen zijde gelaagd (mat buitenzijde)": 0,
+    "Dubbel glas dubbelzijdig gelaagd": 0,
+    "Dubbel glas dubbelzijdig gelaagd (mat buitenzijde)": 0,
+    "Sandwichpaneel": 0,
+    "Geen glas (glaslatten voor 24 mm glas)": 0,
+    "Triple glas": 0,
+    "Triple matglas (mat middelste ruit)": 0,
+    "Triple glas binnen zijde gelaagd": 0,
+    "Triple glas binnen zijde gelaagd (mat middelste ruit)": 0,
+    "Triple glas dubbelzijdig gelaagd": 0,
+    "Triple glas dubbelzijdig gelaagd (mat middelste ruit)": 0,
+  },
 };
 
 const deurOpties: Record<string, { v: number; name: string; comp: React.ReactNode }> = {
@@ -65,6 +81,7 @@ export default function AluDeurConfiguratorDetail() {
   const [kleurBuitenkant, setKleurBuitenkant] = useState("");
   const [afstandshouder, setAfstandshouder] = useState("");
   const [roeden, setRoeden] = useState("");
+  const [glasType, setGlasType] = useState("");
   const [aantal, setAantal] = useState(1);
   const [naam, setNaam] = useState("");
   const [woonplaats, setWoonplaats] = useState("");
@@ -84,6 +101,7 @@ export default function AluDeurConfiguratorDetail() {
       setKleurBuitenkant(Object.keys(m.kleurBuitenkantToeslag || {})[0] || "");
       setAfstandshouder(Object.keys(m.afstandshouderToeslag || {})[0] || "");
       setRoeden(Object.keys(m.roedenToeslag || {})[0] || "");
+      setGlasType(Object.keys(m.glasToeslag || {})[0] || "");
     });
   }, []);
 
@@ -102,9 +120,10 @@ export default function AluDeurConfiguratorDetail() {
         (matrix.kleurBuitenkantToeslag?.[kleurBuitenkant] ?? 0) +
         (matrix.afstandshouderToeslag?.[afstandshouder] ?? 0) +
         (matrix.roedenToeslag?.[roeden] ?? 0) +
+        (matrix.glasToeslag?.[glasType] ?? 0) +
         matrix.montageKosten) * aantal
     );
-  }, [matrix, breedte, hoogte, aantal, kleur, beslag, paneel, profiel, onderdorpel, draairichting, kleurBuitenkant, afstandshouder, roeden]);
+  }, [matrix, breedte, hoogte, aantal, kleur, beslag, paneel, profiel, onderdorpel, draairichting, kleurBuitenkant, afstandshouder, roeden, glasType]);
 
   if (!matrix) return <div className="p-10 text-center text-slate-400">Configuratie laden...</div>;
 
@@ -158,6 +177,12 @@ export default function AluDeurConfiguratorDetail() {
               {selectField("Beslag", beslag, setBeslag, matrix.typeBeslag || {})}
               {selectField("Afstandshouder", afstandshouder, setAfstandshouder, matrix.afstandshouderToeslag || {})}
               {selectField("Roeden", roeden, setRoeden, matrix.roedenToeslag || {})}
+              <div>
+                <label className="text-[10px] font-bold text-slate-500 uppercase">Type glas</label>
+                <select value={glasType} onChange={e => setGlasType(e.target.value)} className="w-full border p-2.5 rounded-lg text-sm">
+                  {Object.keys(matrix.glasToeslag || {}).map(k => <option key={k} value={k}>{k}</option>)}
+                </select>
+              </div>
 
               <div>
                 <label className="text-[10px] font-bold text-slate-500 uppercase">Aantal</label>
@@ -183,7 +208,7 @@ export default function AluDeurConfiguratorDetail() {
                     naam, deurNaam: `Aluminium ${deur.name}`, slug, breedte, hoogte,
                     kleur, kleurBuitenkant, beslag, paneel, profiel,
                     onderdorpel, draairichting, afstandshouder, roeden,
-                    aantal, prijs: berekendePrijs,
+                    glasType, aantal, prijs: berekendePrijs,
                   });
                   showToast(`Bedankt, uw offerte is succesvol verstuurd naar ${email}`);
                   setIsSubmitting(false);
