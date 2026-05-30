@@ -26,6 +26,11 @@ export function middleware(request: NextRequest) {
     return withPathname(NextResponse.next(), pathname);
   }
 
+  // 3. Accepteer pagina — direct (niet herschrijven)
+  if (pathname.startsWith("/accepteer")) {
+    return withPathname(NextResponse.next(), pathname);
+  }
+
   // 3. Alle overige routes → configurators
   url.pathname =
     pathname === "/" ? "/configurators/kozijnen" : `/configurators${pathname}`;
