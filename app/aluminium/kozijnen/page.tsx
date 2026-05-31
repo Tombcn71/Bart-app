@@ -2,6 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { InmeetServiceCard } from "@/app/components/InmeetServiceCard";
+import { Wrench, ShieldCheck, Zap, Sparkles } from "lucide-react";
 
 function FaqBlok({ items }: { items: { q: string; a: string }[] }) {
   const [open, setOpen] = useState<number | null>(null);
@@ -127,13 +128,13 @@ export default function AluKozijnenOverzicht() {
             <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-5">Waarom onze aluminium kozijnen de slimste keuze zijn</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {[
-                { icon: "🛠", title: "Vakkundige Montage", text: "Geen gedoe met technische details. Onze ervaren monteurs zorgen voor een perfecte installatie, waardoor je verzekerd bent van een strak resultaat en optimale isolatie." },
-                { icon: "🛡", title: "Maximale Inbraakveiligheid", text: "Aluminium is van nature extreem sterk. Onze kozijnen zijn standaard voorzien van inbraakwerende meerpuntsluitingen en vakkundig geplaatst voor een optimaal veiligheidsniveau." },
-                { icon: "💰", title: "Duurzame Energiebesparing", text: "Aluminium kozijnen zijn uitstekend bestand tegen wisselende weersomstandigheden en bieden een hoge isolatiewaarde. Dit houdt je woning comfortabel en helpt je direct te besparen op je energierekening." },
-                { icon: "✨", title: "Onderhoudsvriendelijk & Stijlvol", text: "Aluminium oogt modern en strak. Het materiaal is kleurvast, rot niet en trekt geen vuil aan. Even afnemen met een vochtige doek is voldoende om de kozijnen in topconditie te houden." },
+                { icon: <Wrench size={20} />, title: "Vakkundige Montage", text: "Geen gedoe met technische details. Onze ervaren monteurs zorgen voor een perfecte installatie, waardoor je verzekerd bent van een strak resultaat en optimale isolatie." },
+                { icon: <ShieldCheck size={20} />, title: "Maximale Inbraakveiligheid", text: "Aluminium is van nature extreem sterk. Onze kozijnen zijn standaard voorzien van inbraakwerende meerpuntsluitingen en vakkundig geplaatst voor een optimaal veiligheidsniveau." },
+                { icon: <Zap size={20} />, title: "Duurzame Energiebesparing", text: "Aluminium kozijnen zijn uitstekend bestand tegen wisselende weersomstandigheden en bieden een hoge isolatiewaarde. Dit houdt je woning comfortabel en helpt je direct te besparen op je energierekening." },
+                { icon: <Sparkles size={20} />, title: "Onderhoudsvriendelijk & Stijlvol", text: "Aluminium oogt modern en strak. Het materiaal is kleurvast, rot niet en trekt geen vuil aan. Even afnemen met een vochtige doek is voldoende om de kozijnen in topconditie te houden." },
               ].map((b, i) => (
                 <div key={i} className="flex gap-4 bg-slate-50 rounded-xl p-5 border border-slate-100">
-                  <span className="text-2xl shrink-0">{b.icon}</span>
+                  <div className="text-[#1066a3] shrink-0 mt-0.5">{b.icon}</div>
                   <div>
                     <p className="font-semibold text-[#1a1a1a] text-sm mb-1">{b.title}</p>
                     <p className="text-slate-500 text-sm leading-relaxed">{b.text}</p>

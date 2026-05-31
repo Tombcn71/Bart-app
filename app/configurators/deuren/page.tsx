@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import { Wrench, ShieldCheck, Zap, Sparkles } from "lucide-react";
 
 function FaqBlok({ items }: { items: { q: string; a: string }[] }) {
   const [open, setOpen] = useState<number | null>(null);
@@ -140,13 +141,13 @@ export default function BartMooiDeurenConfigurator() {
             <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-5">Waarom onze deuren de slimste keuze zijn</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {[
-                { icon: "🛠", title: "Vakkundige Montage", text: "Geen gedoe of zorgen over technische details. Onze ervaren monteurs zorgen voor een perfecte installatie, waardoor je verzekerd bent van een naadloos resultaat en optimale isolatie." },
-                { icon: "🛡", title: "Maximale Inbraakveiligheid", text: "Je huis is je veilige haven. Daarom zijn onze deuren standaard uitgerust met hoogwaardige meerpuntsluitingen en versterkte profielen, vakkundig geplaatst voor maximale inbraakwering." },
-                { icon: "💰", title: "Directe Energiebesparing", text: "Dankzij onze hoogwaardige profielen en de tochtvrije montage blijft de warmte binnen en de kou buiten. Je merkt het direct aan een structureel lagere energierekening." },
-                { icon: "✨", title: "Onderhoudsvrij Genieten", text: "Zeg vaarwel tegen schuurpapier en verfkwasten. Kunststof is ongevoelig voor vocht, rot niet en behoudt jarenlang zijn kleur. Een doekje erover is alles wat je nodig hebt." },
+                { icon: <Wrench size={20} />, title: "Vakkundige Montage", text: "Geen gedoe of zorgen over technische details. Onze ervaren monteurs zorgen voor een perfecte installatie, waardoor je verzekerd bent van een naadloos resultaat en optimale isolatie." },
+                { icon: <ShieldCheck size={20} />, title: "Maximale Inbraakveiligheid", text: "Je huis is je veilige haven. Daarom zijn onze deuren standaard uitgerust met hoogwaardige meerpuntsluitingen en versterkte profielen, vakkundig geplaatst voor maximale inbraakwering." },
+                { icon: <Zap size={20} />, title: "Directe Energiebesparing", text: "Dankzij onze hoogwaardige profielen en de tochtvrije montage blijft de warmte binnen en de kou buiten. Je merkt het direct aan een structureel lagere energierekening." },
+                { icon: <Sparkles size={20} />, title: "Onderhoudsvrij Genieten", text: "Zeg vaarwel tegen schuurpapier en verfkwasten. Kunststof is ongevoelig voor vocht, rot niet en behoudt jarenlang zijn kleur. Een doekje erover is alles wat je nodig hebt." },
               ].map((b, i) => (
                 <div key={i} className="flex gap-4 bg-slate-50 rounded-xl p-5 border border-slate-100">
-                  <span className="text-2xl flex-shrink-0">{b.icon}</span>
+                  <div className="text-[#1066a3] shrink-0 mt-0.5">{b.icon}</div>
                   <div>
                     <p className="font-semibold text-[#1a1a1a] text-sm mb-1">{b.title}</p>
                     <p className="text-slate-500 text-sm leading-relaxed">{b.text}</p>

@@ -2,6 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { InmeetServiceCard } from "@/app/components/InmeetServiceCard";
+import { Wrench, Recycle, Building2, Sparkles } from "lucide-react";
 
 function FaqBlok({ items }: { items: { q: string; a: string }[] }) {
   const [open, setOpen] = useState<number | null>(null);
@@ -127,13 +128,13 @@ export default function AluDeurenOverzicht() {
             <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-5">Waarom kiezen voor onze aluminium deuren</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {[
-                { icon: "♻", title: "Duurzaam & Milieubewust", text: "Aluminium is een 100% recyclebaar materiaal. Mocht je in de toekomst je deur willen vervangen, dan kan het materiaal gemakkelijk opnieuw worden gebruikt, wat het een verantwoorde keuze maakt." },
-                { icon: "🎨", title: "Stijlvol Maatwerk", text: "Aluminium deuren zijn verkrijgbaar in uiteenlopende kleuren en stijlen. Hierdoor stem je de deur moeiteloos af op de architectuur van je woning, of dit nu gaat om een voordeur, achterdeur of tuindeur." },
-                { icon: "🏢", title: "Modern & Industrieel Design", text: "Dankzij de strakke profielen hebben deze deuren een moderne uitstraling die perfect past bij nieuwbouw, maar ook een prachtig industrieel contrast biedt bij klassieke of landelijke woningen." },
-                { icon: "✨", title: "Minimaal Onderhoud", text: "Aluminium deuren hoeven niet te worden geverfd. Omdat het materiaal nauwelijks vuil aantrekt, volstaat een vochtige doek om de deur weer te laten stralen." },
+                { icon: <Recycle size={20} />, title: "Duurzaam & Milieubewust", text: "Aluminium is een 100% recyclebaar materiaal. Mocht je in de toekomst je deur willen vervangen, dan kan het materiaal gemakkelijk opnieuw worden gebruikt, wat het een verantwoorde keuze maakt." },
+                { icon: <Wrench size={20} />, title: "Stijlvol Maatwerk", text: "Aluminium deuren zijn verkrijgbaar in uiteenlopende kleuren en stijlen. Hierdoor stem je de deur moeiteloos af op de architectuur van je woning, of dit nu gaat om een voordeur, achterdeur of tuindeur." },
+                { icon: <Building2 size={20} />, title: "Modern & Industrieel Design", text: "Dankzij de strakke profielen hebben deze deuren een moderne uitstraling die perfect past bij nieuwbouw, maar ook een prachtig industrieel contrast biedt bij klassieke of landelijke woningen." },
+                { icon: <Sparkles size={20} />, title: "Minimaal Onderhoud", text: "Aluminium deuren hoeven niet te worden geverfd. Omdat het materiaal nauwelijks vuil aantrekt, volstaat een vochtige doek om de deur weer te laten stralen." },
               ].map((b, i) => (
                 <div key={i} className="flex gap-4 bg-slate-50 rounded-xl p-5 border border-slate-100">
-                  <span className="text-2xl shrink-0">{b.icon}</span>
+                  <div className="text-[#1066a3] shrink-0 mt-0.5">{b.icon}</div>
                   <div>
                     <p className="font-semibold text-[#1a1a1a] text-sm mb-1">{b.title}</p>
                     <p className="text-slate-500 text-sm leading-relaxed">{b.text}</p>
