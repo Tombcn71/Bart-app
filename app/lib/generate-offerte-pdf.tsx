@@ -2,6 +2,7 @@
 
 import {
   Document,
+  Font,
   Page,
   Text,
   View,
@@ -14,6 +15,15 @@ import fs from "fs";
 import { getSvgString } from "@/lib/renderSvgForPdf";
 import { svgToPng } from "./svg-to-png";
 
+Font.register({
+  family: "Inter",
+  fonts: [
+    { src: path.join(process.cwd(), "public/fonts/Inter-Light.ttf"),   fontWeight: 300 },
+    { src: path.join(process.cwd(), "public/fonts/Inter-Regular.ttf"), fontWeight: 400 },
+    { src: path.join(process.cwd(), "public/fonts/Inter-Bold.ttf"),    fontWeight: 700 },
+  ],
+});
+
 const DARK = "#1a1a1a";
 const GREY = "#64748b";
 const LIGHT_GREY = "#f1f5f9";
@@ -21,7 +31,7 @@ const LINE = "#d1d5db";
 
 const styles = StyleSheet.create({
   page: {
-    fontFamily: "Helvetica",
+    fontFamily: "Inter",
     fontSize: 10,
     color: DARK,
     paddingTop: 44,
@@ -47,7 +57,7 @@ const styles = StyleSheet.create({
   },
   companyName: {
     fontSize: 11,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "Inter", fontWeight: 700,
     color: DARK,
     marginBottom: 3,
   },
@@ -79,7 +89,7 @@ const styles = StyleSheet.create({
   },
   offerteTitle: {
     fontSize: 22,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "Inter", fontWeight: 700,
     color: DARK,
     letterSpacing: -0.5,
   },
@@ -99,7 +109,7 @@ const styles = StyleSheet.create({
   },
   dateValue: {
     fontSize: 10,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "Inter", fontWeight: 700,
     color: DARK,
     marginTop: 2,
   },
@@ -110,7 +120,7 @@ const styles = StyleSheet.create({
   },
   clientName: {
     fontSize: 12,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "Inter", fontWeight: 700,
     color: DARK,
     marginBottom: 1,
   },
@@ -123,7 +133,7 @@ const styles = StyleSheet.create({
   // ── Section ────────────────────────────────────────────────────────────────
   sectionTitle: {
     fontSize: 10,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "Inter", fontWeight: 700,
     color: DARK,
     textTransform: "uppercase",
     letterSpacing: 0.8,
@@ -152,7 +162,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 9.5,
     color: DARK,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "Inter", fontWeight: 700,
   },
 
   // ── Tekening ───────────────────────────────────────────────────────────────
@@ -203,7 +213,7 @@ const styles = StyleSheet.create({
   },
   colLabel: {
     fontSize: 8.5,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "Inter", fontWeight: 700,
     color: GREY,
     textTransform: "uppercase",
     letterSpacing: 0.5,
@@ -224,7 +234,7 @@ const styles = StyleSheet.create({
   },
   signTitle: {
     fontSize: 11,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "Inter", fontWeight: 700,
     color: DARK,
     marginBottom: 6,
   },
@@ -476,7 +486,7 @@ export async function generateOffertePdf(_email: string, data: OfferteData): Pro
         {/* ── Totaal + subsidie ── */}
         {meerdere && (
           <View style={[styles.specRow, { marginTop: 6, borderBottomWidth: 0 }]}>
-            <Text style={[styles.specLabel, { fontFamily: "Helvetica-Bold", color: DARK }]}>Totaal</Text>
+            <Text style={[styles.specLabel, { fontFamily: "Inter", fontWeight: 700, color: DARK }]}>Totaal</Text>
             <Text style={styles.specValueBold}>
               € {(data.prijs ?? producten.reduce((s, p) => s + p.item.prijs, 0)).toLocaleString("nl-NL", { minimumFractionDigits: 2 })} excl. btw
             </Text>
@@ -548,7 +558,7 @@ export async function generateOffertePdf(_email: string, data: OfferteData): Pro
           {data.offerteId && (
             <View style={{ marginBottom: 16, padding: 10, borderWidth: 1, borderColor: LINE, borderRadius: 4 }}>
               <Text style={{ fontSize: 8.5, color: GREY, marginBottom: 4 }}>Liever digitaal akkoord geven?</Text>
-              <Text style={{ fontSize: 9, color: DARK, fontFamily: "Helvetica-Bold" }}>
+              <Text style={{ fontSize: 9, color: DARK, fontFamily: "Inter", fontWeight: 700 }}>
                 {"https://offerte-bartmooi.nl/accepteer/" + data.offerteId}
               </Text>
             </View>

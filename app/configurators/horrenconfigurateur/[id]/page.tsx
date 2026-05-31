@@ -1,8 +1,9 @@
 "use client";
+import { CartAddedModal } from "@/app/components/CartAddedModal";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { saveOfferte } from "@/app/actions";
+import { addToCart, getCart } from "@/lib/cart";
 import { getMatrix } from "@/lib/data";
 import { InzethorSVG, KlemhorSVG, PlisseHordeurSVG } from "@/lib/hor-svgs";
 
@@ -25,12 +26,8 @@ export default function HorConfigurator() {
   const [hoogte, setHoogte]       = useState(1200);
   const [kleur, setKleur]         = useState("wit");
   const [aantal, setAantal]       = useState(1);
-  const [naam, setNaam]           = useState("");
-  const [telefoon, setTelefoon]     = useState("");
-  const [woonplaats, setWoonplaats] = useState("");
-  const [email, setEmail]         = useState("");
-  const [verzonden, setVerzonden] = useState(false);
-  const [bezig, setBezig]         = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
 
   useEffect(() => {
     getMatrix(info.matrixKey).then(m => setMatrix({ ...DEFAULTS, ...(m ?? {}) }));
@@ -47,23 +44,13 @@ export default function HorConfigurator() {
       ) / 100
     : 0;
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setBezig(true);
-    await saveOfferte(email, { naam, woonplaats, telefoon, product: info.name, slug, breedte, hoogte, kleur, aantal, prijs });
-    setVerzonden(true);
-    setBezig(false);
-  }
-
-  if (verzonden) {
-    return (
-      <div className="max-w-xl mx-auto p-12 text-center">
-        <div className="text-5xl mb-6">✓</div>
-        <h2 className="text-2xl font-bold text-[#1066a3] mb-3">Offerte verzonden!</h2>
-        <p className="text-slate-600 mb-8">U ontvangt uw offerte op <strong>{email}</strong>.</p>
-        <Link href="/horren" className="text-[#1066a3] font-semibold hover:underline">← Terug naar horren</Link>
-      </div>
-    );
+  function handleAdd() {
+    addToCart({
+      slug, product: info.name, prijs,
+      specs: { breedte, hoogte, kleur, aantal },
+    });
+    setCartCount(getCart().length);
+    setModalOpen(true);
   }
 
   return (
@@ -80,7 +67,7 @@ export default function HorConfigurator() {
         </div>
 
         <div className="lg:col-span-5">
-          <form onSubmit={handleSubmit} className="bg-white border p-6 rounded-xl shadow-sm space-y-5">
+          <div className="bg-white border p-6 rounded-xl shadow-sm space-y-5">
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">Breedte (mm)</label>
               <input type="number" min={300} max={2500} value={breedte}
@@ -119,34 +106,26 @@ export default function HorConfigurator() {
               </div>
               <p className="text-xs text-slate-400 mt-1">Excl. btw · indicatie</p>
             </div>
-            <hr className="border-slate-100" />
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">Uw naam</label>
-              <input required value={naam} onChange={e => setNaam(e.target.value)} placeholder="Jan de Vries"
-                className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1066a3]" />
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">Woonplaats</label>
-              <input value={woonplaats} onChange={e => setWoonplaats(e.target.value)} placeholder="Amsterdam"
-                className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1066a3]" />
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">Telefoonnummer</label>
-              <input type="tel" value={telefoon} onChange={e => setTelefoon(e.target.value)} placeholder="06 12345678"
-                className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1066a3]" />
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">E-mailadres</label>
-              <input required type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="jan@email.nl"
-                className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1066a3]" />
-            </div>
-            <button type="submit" disabled={bezig}
-              className="w-full bg-[#1066a3] text-white font-bold py-3 rounded-xl hover:bg-[#0d5491] transition-colors disabled:opacity-50">
-              {bezig ? "Verzenden..." : "Offerte aanvragen"}
+            <button type="button" onClick={handleAdd}
+              className="w-full bg-[#1066a3] text-white font-bold py-3 rounded-xl hover:bg-[#0d5491] transition-colors uppercase text-[11px] tracking-widest">
+              Toevoegen aan offerte
             </button>
-          </form>
+            <p className="text-center text-[11px] text-slate-400">Ontvang uw subsidie-indicatie bij de offerte</p>
+          </div>
         </div>
       </div>
+
+      <CartAddedModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        product={info.name}
+        breedte={breedte}
+        hoogte={hoogte}
+        aantal={aantal}
+        prijs={prijs}
+        cartCount={cartCount}
+        onAddAnother={() => setModalOpen(false)}
+      />
     </div>
   );
 }

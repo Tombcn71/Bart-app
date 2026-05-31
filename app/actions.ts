@@ -70,6 +70,70 @@ export async function saveMatrix(key: string, data: any) {
   }
 }
 
+const INTERN_NOTIFICATIE_ADRES = "info@bartmooi.nl";
+
+function euro(n: number): string {
+  return "€ " + Number(n ?? 0).toLocaleString("nl-NL", { minimumFractionDigits: 2 });
+}
+
+// Korte samenvatting van een offerte-item voor de interne notificatie
+function itemRegel(item: any): string {
+  const s = item.specs ?? {};
+  const maat = s.breedte && s.hoogte ? ` · ${s.breedte}×${s.hoogte}mm` : "";
+  const aantal = s.aantal ? ` · ${s.aantal} stuks` : "";
+  return `${item.product ?? "Product"}${maat}${aantal} — ${euro(item.prijs)}`;
+}
+
+// Interne notificatie naar BartMooi met korte samenvatting van de offerte.
+// Blokkeert de klant-bevestiging niet als deze faalt.
+async function stuurInterneNotificatie(opts: {
+  klant: { naam?: string; email: string; woonplaats?: string; telefoon?: string };
+  items: any[];
+  totaalPrijs: number;
+  totaalSubsidie: number;
+  offerteId: string;
+}): Promise<void> {
+  const { klant, items, totaalPrijs, totaalSubsidie, offerteId } = opts;
+  const regels = items.map(itemRegel);
+  try {
+    await resend.emails.send({
+      from: "Bart Mooi <info@offerte-bartmooi.nl>",
+      to: [INTERN_NOTIFICATIE_ADRES],
+      replyTo: klant.email,
+      subject: `Nieuwe offerte — ${klant.naam || klant.email} (${items.length} product${items.length !== 1 ? "en" : ""}, ${euro(totaalPrijs)})`,
+      text:
+        `Nieuwe offerte aangevraagd\n\n` +
+        `Naam: ${klant.naam || "-"}\n` +
+        `E-mail: ${klant.email}\n` +
+        `Woonplaats: ${klant.woonplaats || "-"}\n` +
+        `Telefoon: ${klant.telefoon || "-"}\n\n` +
+        `Producten:\n${regels.map((r) => `  • ${r}`).join("\n")}\n\n` +
+        `Totaal: ${euro(totaalPrijs)}\n` +
+        `Subsidie-indicatie: ${euro(totaalSubsidie)}\n` +
+        `Offerte-ID: ${offerteId}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px;">
+          <h2 style="color: #1066a3; margin: 0 0 16px;">Nieuwe offerte aangevraagd</h2>
+          <table style="border-collapse: collapse; font-size: 14px; margin-bottom: 20px;">
+            <tr><td style="padding: 2px 12px 2px 0; color: #777;">Naam</td><td><strong>${klant.naam || "-"}</strong></td></tr>
+            <tr><td style="padding: 2px 12px 2px 0; color: #777;">E-mail</td><td>${klant.email}</td></tr>
+            <tr><td style="padding: 2px 12px 2px 0; color: #777;">Woonplaats</td><td>${klant.woonplaats || "-"}</td></tr>
+            <tr><td style="padding: 2px 12px 2px 0; color: #777;">Telefoon</td><td>${klant.telefoon || "-"}</td></tr>
+          </table>
+          <p style="font-weight: bold; margin: 0 0 6px;">Producten</p>
+          <ul style="margin: 0 0 20px; padding-left: 18px; color: #444;">
+            ${regels.map((r) => `<li style="margin-bottom: 4px;">${r}</li>`).join("")}
+          </ul>
+          <p style="margin: 0;"><strong>Totaal:</strong> ${euro(totaalPrijs)}</p>
+          <p style="margin: 0 0 16px;"><strong>Subsidie-indicatie:</strong> ${euro(totaalSubsidie)}</p>
+          <p style="font-size: 11px; color: #aaa;">Offerte-ID: ${offerteId}</p>
+        </div>`,
+    });
+  } catch (error) {
+    console.error("Interne notificatie kon niet worden verzonden:", error);
+  }
+}
+
 // Subsidie per item: triple glas 111/m², overig 25/m²
 function berekenSubsidie(item: any): number {
   const b = Number(item.specs?.breedte ?? 0);
@@ -131,6 +195,14 @@ export async function saveOffertes(
       console.error("Resend error:", error);
       return { success: false, error: "E-mail kon niet worden verzonden." };
     }
+
+    await stuurInterneNotificatie({
+      klant,
+      items,
+      totaalPrijs,
+      totaalSubsidie,
+      offerteId,
+    });
 
     revalidatePath("/admin/offertes");
     return { success: true };
@@ -196,6 +268,20 @@ export async function saveOfferte(email: string, data: any) {
       console.error("Resend error:", error);
       return { success: false, error: "E-mail kon niet worden verzonden." };
     }
+
+    await stuurInterneNotificatie({
+      klant: { naam: data.naam, email, woonplaats: data.woonplaats, telefoon: data.telefoon },
+      items: [
+        {
+          product: data.product || data.kozijnNaam || data.deurNaam || "Product",
+          prijs: data.prijs,
+          specs: { breedte: data.breedte, hoogte: data.hoogte, aantal: data.aantal, glas: data.glas },
+        },
+      ],
+      totaalPrijs: Number(data.prijs ?? 0),
+      totaalSubsidie,
+      offerteId,
+    });
 
     revalidatePath("/admin/offertes");
     return { success: true, data: emailData };

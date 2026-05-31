@@ -10,7 +10,7 @@ export function getSvgString(slug: string, breedte = 1000, hoogte = 1200, glas?:
   if (slug === "inzethor" || slug === "klemhor" || slug === "plisse-hordeur") return buildHorSvgString(slug, breedte, hoogte);
   if (slug === "rolluik" || slug === "inbouw-rolluik" || slug === "screen") return buildRolluikSvgString(slug, breedte, hoogte);
   if (slug.includes("schuifpui")) return buildSchuifpuiSvgString(slug, breedte, hoogte);
-  if (slug.includes("harmonica")) return buildHarmonicaSvgString(slug, breedte, hoogte);
+  if (slug.includes("harmonica") || slug === "driedelig" || slug === "vierdelig" || slug === "vijfdelig") return buildHarmonicaSvgString(slug, breedte, hoogte);
   if (slug.includes("deur") && !slug.includes("kozijn")) return buildDeurSvgString(slug, breedte, hoogte, glas);
   return buildKozijnSvgString(slug, breedte, hoogte, glas);
 }
