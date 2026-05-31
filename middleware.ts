@@ -26,8 +26,8 @@ export function middleware(request: NextRequest) {
     return withPathname(NextResponse.next(), pathname);
   }
 
-  // 3. Accepteer pagina — direct (niet herschrijven)
-  if (pathname.startsWith("/accepteer")) {
+  // 3. Accepteer + offerte pagina — direct (niet herschrijven)
+  if (pathname.startsWith("/accepteer") || pathname.startsWith("/offerte")) {
     return withPathname(NextResponse.next(), pathname);
   }
 

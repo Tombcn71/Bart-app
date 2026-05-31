@@ -302,6 +302,14 @@ interface OfferteData {
   prijs?: number;
   subsidieIndicatie?: number;
   offerteId?: string;
+  items?: CartItemData[];
+}
+
+interface CartItemData {
+  slug: string;
+  product: string;
+  specs: Record<string, string | number>;
+  prijs: number;
 }
 
 function clean(s?: string) {
@@ -309,43 +317,86 @@ function clean(s?: string) {
   return s.replace(/-/g, " ").replace(/creon /gi, "").trim();
 }
 
+const SPEC_LABELS: Record<string, string> = {
+  materiaal: "Materiaal",
+  glas: "Type glas",
+  glasType: "Type glas",
+  kleur: "Kleur binnenkant",
+  kleurBuitenkant: "Kleur buitenkant",
+  paneel: "Paneel",
+  profiel: "Profiel",
+  beslag: "Beslag",
+  onderdorpel: "Onderdorpel",
+  draairichting: "Draairichting",
+  afstandshouder: "Afstandshouder",
+  roeden: "Roeden",
+  bediening: "Bediening",
+  aanslag: "Aanslag",
+  ventilatieRooster: "Ventilatieroosters",
+  voorboren: "Voorboren",
+};
+
+// Bouwt nette spec-regels uit een cart-item specs object
+function buildItemSpecs(specs: Record<string, string | number>): [string, string][] {
+  const out: [string, string][] = [];
+  if (specs.breedte && specs.hoogte) out.push(["Maat (B × H)", `${specs.breedte} mm × ${specs.hoogte} mm`]);
+  for (const [key, label] of Object.entries(SPEC_LABELS)) {
+    const v = specs[key];
+    if (v !== undefined && v !== null && v !== "") out.push([label, clean(String(v)) || String(v)]);
+  }
+  if (specs.aantal) out.push(["Aantal", `${specs.aantal} stuks`]);
+  return out;
+}
+
 export async function generateOffertePdf(_email: string, data: OfferteData): Promise<Buffer> {
   const logoPath = path.join(process.cwd(), "public", "bartmooi-logo-1.png");
   const logoData = fs.readFileSync(logoPath);
   const logoBase64 = `data:image/png;base64,${logoData.toString("base64")}`;
 
-  let kozijnPng: string | null = null;
-  if (data.slug) {
-    const svgStr = getSvgString(data.slug, data.breedte, data.hoogte, data.glasType || data.glas);
-    if (svgStr) {
-      const pngBuf = await svgToPng(svgStr, 900);
-      kozijnPng = `data:image/png;base64,${pngBuf.toString("base64")}`;
-    }
-  }
-
-  const productNaam = data.product || data.kozijnNaam || data.deurNaam || "product";
   const naam = data.naam || "Geachte klant";
-  const glasLabel = data.glasType || data.glas || null;
   const datum = new Date().toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" });
 
-  // Alle productspecificaties die aanwezig zijn
-  const specs: [string, string][] = [
-    ["Product", productNaam],
-    data.materiaal ? ["Materiaal", data.materiaal.charAt(0).toUpperCase() + data.materiaal.slice(1)] : null,
-    data.breedte && data.hoogte ? ["Maat (B × H)", `${data.breedte} mm × ${data.hoogte} mm`] : null,
-    glasLabel ? ["Type glas", glasLabel] : null,
-    clean(data.kleur) ? ["Kleur binnenkant", clean(data.kleur)!] : null,
-    clean(data.kleurBuitenkant) ? ["Kleur buitenkant", clean(data.kleurBuitenkant)!] : null,
-    clean(data.paneel) ? ["Paneel", clean(data.paneel)!] : null,
-    clean(data.profiel) ? ["Profiel", clean(data.profiel)!] : null,
-    clean(data.beslag) ? ["Beslag", clean(data.beslag)!] : null,
-    clean(data.onderdorpel) ? ["Onderdorpel", clean(data.onderdorpel)!] : null,
-    clean(data.draairichting) ? ["Draairichting", clean(data.draairichting)!] : null,
-    clean(data.afstandshouder) ? ["Afstandshouder", clean(data.afstandshouder)!] : null,
-    clean(data.roeden) ? ["Roeden", clean(data.roeden)!] : null,
-    clean(data.bediening) ? ["Bediening", clean(data.bediening)!] : null,
-    data.aantal ? ["Aantal", `${data.aantal} stuks`] : null,
-  ].filter(Boolean) as [string, string][];
+  // Producten: uit winkelmand (items[]) of één enkel product (legacy)
+  const rawItems: CartItemData[] = data.items && data.items.length > 0
+    ? data.items
+    : [{
+        slug: data.slug || "",
+        product: data.product || data.kozijnNaam || data.deurNaam || "product",
+        prijs: data.prijs || 0,
+        specs: {
+          ...(data.breedte ? { breedte: data.breedte } : {}),
+          ...(data.hoogte ? { hoogte: data.hoogte } : {}),
+          ...(data.materiaal ? { materiaal: data.materiaal } : {}),
+          ...(data.glasType || data.glas ? { glas: data.glasType || data.glas! } : {}),
+          ...(data.kleur ? { kleur: data.kleur } : {}),
+          ...(data.kleurBuitenkant ? { kleurBuitenkant: data.kleurBuitenkant } : {}),
+          ...(data.paneel ? { paneel: data.paneel } : {}),
+          ...(data.profiel ? { profiel: data.profiel } : {}),
+          ...(data.beslag ? { beslag: data.beslag } : {}),
+          ...(data.onderdorpel ? { onderdorpel: data.onderdorpel } : {}),
+          ...(data.draairichting ? { draairichting: data.draairichting } : {}),
+          ...(data.afstandshouder ? { afstandshouder: data.afstandshouder } : {}),
+          ...(data.roeden ? { roeden: data.roeden } : {}),
+          ...(data.bediening ? { bediening: data.bediening } : {}),
+          ...(data.aantal ? { aantal: data.aantal } : {}),
+        },
+      }];
+
+  const producten = await Promise.all(rawItems.map(async (item) => {
+    let png: string | null = null;
+    const glas = String(item.specs.glas ?? item.specs.glasType ?? "");
+    const svgStr = item.slug
+      ? getSvgString(item.slug, Number(item.specs.breedte) || undefined, Number(item.specs.hoogte) || undefined, glas || undefined)
+      : null;
+    if (svgStr) {
+      const pngBuf = await svgToPng(svgStr, 900);
+      png = `data:image/png;base64,${pngBuf.toString("base64")}`;
+    }
+    return { item, png, specs: buildItemSpecs(item.specs) };
+  }));
+
+  const meerdere = producten.length > 1;
+  const productNaam = meerdere ? `${producten.length} producten` : producten[0].item.product;
 
   const doc = (
     <Document>
@@ -387,39 +438,56 @@ export async function generateOffertePdf(_email: string, data: OfferteData): Pro
 
         <View style={styles.divider} />
 
-        {/* ── Productspecificaties ── */}
-        <Text style={styles.sectionTitle}>Productspecificaties</Text>
-        {specs.map(([label, value], i) => (
-          <View key={i} style={styles.specRow}>
-            <Text style={styles.specLabel}>{label}</Text>
-            <Text style={label === "Product" || label === "Prijsindicatie" ? styles.specValueBold : styles.specValue}>
-              {value}
+        {/* ── Producten ── */}
+        {producten.map((p, idx) => (
+          <View key={idx} wrap={false}>
+            <Text style={styles.sectionTitle}>
+              {meerdere ? `Product ${idx + 1} — ${p.item.product}` : "Productspecificaties"}
             </Text>
+
+            {meerdere && (
+              <View style={styles.specRow}>
+                <Text style={styles.specLabel}>Product</Text>
+                <Text style={styles.specValueBold}>{p.item.product}</Text>
+              </View>
+            )}
+            {p.specs.map(([label, value], i) => (
+              <View key={i} style={styles.specRow}>
+                <Text style={styles.specLabel}>{label}</Text>
+                <Text style={styles.specValue}>{value}</Text>
+              </View>
+            ))}
+            <View style={styles.specRow}>
+              <Text style={styles.specLabel}>Prijsindicatie</Text>
+              <Text style={styles.specValueBold}>
+                € {p.item.prijs.toLocaleString("nl-NL", { minimumFractionDigits: 2 })} excl. btw
+              </Text>
+            </View>
+
+            {p.png && (
+              <View style={styles.drawingWrapper}>
+                <Image src={p.png} style={styles.drawingImage} />
+                <Text style={styles.drawingCaption}>Schematische weergave — niet op schaal</Text>
+              </View>
+            )}
           </View>
         ))}
-        {/* Prijs */}
-        <View style={[styles.specRow, { marginTop: 2 }]}>
-          <Text style={styles.specLabel}>Prijsindicatie</Text>
-          <Text style={styles.specValueBold}>
-            € {data.prijs?.toLocaleString("nl-NL", { minimumFractionDigits: 2 })} excl. btw
-          </Text>
-        </View>
+
+        {/* ── Totaal + subsidie ── */}
+        {meerdere && (
+          <View style={[styles.specRow, { marginTop: 6, borderBottomWidth: 0 }]}>
+            <Text style={[styles.specLabel, { fontFamily: "Helvetica-Bold", color: DARK }]}>Totaal</Text>
+            <Text style={styles.specValueBold}>
+              € {(data.prijs ?? producten.reduce((s, p) => s + p.item.prijs, 0)).toLocaleString("nl-NL", { minimumFractionDigits: 2 })} excl. btw
+            </Text>
+          </View>
+        )}
         {data.subsidieIndicatie && data.subsidieIndicatie > 0 ? (
           <View style={styles.specRow}>
             <Text style={styles.specLabel}>ISDE subsidie-indicatie</Text>
-            <Text style={styles.specValueBold}>
-              ≈ € {data.subsidieIndicatie.toLocaleString("nl-NL")}
-            </Text>
+            <Text style={styles.specValueBold}>≈ € {data.subsidieIndicatie.toLocaleString("nl-NL")}</Text>
           </View>
         ) : null}
-
-        {/* ── Technische tekening ── */}
-        {kozijnPng && (
-          <View style={styles.drawingWrapper}>
-            <Image src={kozijnPng} style={styles.drawingImage} />
-            <Text style={styles.drawingCaption}>Schematische weergave — niet op schaal</Text>
-          </View>
-        )}
 
         {/* ── Inclusief montage ── */}
         <Text style={styles.sectionTitle}>In de prijs inbegrepen</Text>

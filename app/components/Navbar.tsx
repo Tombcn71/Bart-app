@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { CartButton } from "./CartButton";
 
 const NAV_ITEMS = [
   {
@@ -119,6 +120,7 @@ const Navbar = () => {
         )}
 
         <div className="flex items-center gap-2 md:gap-4">
+          {isOfferte && <CartButton />}
           {isOfferte && (
             <button
               onClick={() => setIsOpen(!isOpen)}

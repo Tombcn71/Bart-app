@@ -70,6 +70,76 @@ export async function saveMatrix(key: string, data: any) {
   }
 }
 
+// Subsidie per item: triple glas 111/m², overig 25/m²
+function berekenSubsidie(item: any): number {
+  const b = Number(item.specs?.breedte ?? 0);
+  const h = Number(item.specs?.hoogte ?? 0);
+  const aantal = Number(item.specs?.aantal ?? 1);
+  const glas = String(item.specs?.glas ?? item.specs?.glasType ?? "");
+  const m2 = (b / 1000) * (h / 1000) * aantal;
+  const perM2 = /triple/i.test(glas) ? 111 : 25;
+  return Math.round(m2 * perM2);
+}
+
+// Meerdere producten in één offerte (winkelmand)
+export async function saveOffertes(
+  klant: { naam: string; email: string; woonplaats?: string; telefoon?: string },
+  items: any[]
+) {
+  try {
+    const totaalPrijs = items.reduce((s, i) => s + Number(i.prijs ?? 0), 0);
+    const totaalSubsidie = items.reduce((s, i) => s + berekenSubsidie(i), 0);
+
+    const data = {
+      naam: klant.naam,
+      woonplaats: klant.woonplaats,
+      telefoon: klant.telefoon,
+      items,
+      prijs: totaalPrijs,
+      subsidieIndicatie: totaalSubsidie,
+      product: items.length === 1 ? items[0].product : `${items.length} producten`,
+    };
+
+    const inserted = await db.insert(offertes).values({ email: klant.email, data }).returning({ id: offertes.id });
+    const offerteId = inserted[0]?.id ?? "";
+
+    const pdfBuffer = await generateOffertePdf(klant.email, { ...data, offerteId });
+
+    const { error } = await resend.emails.send({
+      from: "Bart Mooi <info@offerte-bartmooi.nl>",
+      to: [klant.email],
+      replyTo: "info@offerte-bartmooi.nl",
+      subject: `Uw offerte — BartMooi`,
+      text: `Geachte ${klant.naam},\n\nHartelijk dank voor uw aanvraag. In de bijlage vindt u uw offerte met ${items.length} product(en).\n\nMet vriendelijke groet,\nBartMooi`,
+      html: `
+        <div style="font-family: Arial, sans-serif; line-height: 1.7; color: #333; max-width: 600px; margin: 0 auto;">
+          <div style="background: white; padding: 32px; border: 1px solid #e8edf2; border-radius: 8px;">
+            <p style="font-size: 16px; font-weight: bold; color: #1a1a1a; margin: 0 0 8px;">Geachte ${klant.naam},</p>
+            <p style="color: #555; margin: 0 0 20px;">Hartelijk dank voor uw aanvraag. Wij hebben uw aanvraag voor <strong>${items.length} product${items.length !== 1 ? "en" : ""}</strong> in goede orde ontvangen.</p>
+            <p style="color: #555; margin: 0 0 32px;">In de <strong>bijlage</strong> vindt u uw persoonlijke offerte met alle specificaties, technische tekeningen, de betalingsvoorwaarden en onze garanties.</p>
+            <p style="color: #555; margin: 0 0 32px;">Wij nemen zo spoedig mogelijk contact met u op om de offerte samen door te nemen.</p>
+            <p style="color: #333; margin: 0;">Met vriendelijke groet,<br/>
+            <strong style="color: #1066a3;">BartMooi B.V.</strong><br/>
+            <span style="color: #999; font-size: 12px;">info@offerte-bartmooi.nl · Den Haag</span></p>
+          </div>
+          <p style="font-size: 10px; color: #bbb; text-align: center; margin-top: 16px;">BARTMOOI B.V. · Burgemeester Hovylaan 157 · 2552 XB Den Haag</p>
+        </div>`,
+      attachments: [{ filename: `Offerte-BartMooi-${klant.naam?.replace(/\s+/g, "-") || "aanvraag"}.pdf`, content: pdfBuffer }],
+    });
+
+    if (error) {
+      console.error("Resend error:", error);
+      return { success: false, error: "E-mail kon niet worden verzonden." };
+    }
+
+    revalidatePath("/admin/offertes");
+    return { success: true };
+  } catch (error) {
+    console.error("Server Action error:", error);
+    return { success: false, error: "Kon offerte niet verwerken" };
+  }
+}
+
 // 3. Functie voor offerte aanvragen
 export async function saveOfferte(email: string, data: any) {
   try {
