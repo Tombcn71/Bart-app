@@ -1,6 +1,27 @@
 "use client";
-import React, { useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
+
+function FaqBlok({ items }: { items: { q: string; a: string }[] }) {
+  const [open, setOpen] = useState<number | null>(null);
+  return (
+    <div>
+      <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-6">Veelgestelde vragen</h3>
+      <div className="divide-y divide-slate-100 border border-slate-100 rounded-xl overflow-hidden">
+        {items.map((item, i) => (
+          <div key={i}>
+            <button onClick={() => setOpen(open === i ? null : i)}
+              className="w-full flex justify-between items-center px-6 py-4 text-left hover:bg-slate-50 transition-colors">
+              <span className="text-sm font-semibold text-[#1a1a1a] pr-4">{item.q}</span>
+              <span className="text-[#1066a3] font-bold text-lg shrink-0">{open === i ? "−" : "+"}</span>
+            </button>
+            {open === i && <div className="px-6 pb-5 text-sm text-slate-600 leading-relaxed bg-slate-50">{item.a}</div>}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 import { InmeetServiceCard } from "@/app/components/InmeetServiceCard";
 import {
   SingleDoorBase, DoubleDoorBase,
@@ -106,6 +127,45 @@ export default function BartMooiDeurenConfigurator() {
           ))}
         <div className="col-span-full border-t border-slate-100 mt-4" />
         <InmeetServiceCard />
+      </div>
+
+      {/* ── Info & FAQ ── */}
+      <div className="max-w-[1200px] mx-auto px-6 pb-20 mt-16">
+        <div className="border-t border-slate-100 pt-14">
+          <div className="max-w-3xl mb-12">
+            <h2 className="text-2xl font-bold text-[#1a1a1a] mb-4 leading-tight">Kunststof deuren — De ideale balans: Stijl, Veiligheid &amp; Comfort</h2>
+            <p className="text-slate-600 leading-relaxed">Een huis dat niet alleen fantastisch oogt, maar ook je maandlasten structureel verlaagt. Investeren in nieuwe kunststof deuren is een keuze waar je elke dag plezier van hebt. Wij ontzorgen je hierin volledig: van inmeten tot de vakkundige montage op locatie.</p>
+          </div>
+          <div className="mb-14">
+            <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-5">Waarom onze deuren de slimste keuze zijn</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {[
+                { icon: "🛠", title: "Vakkundige Montage", text: "Geen gedoe of zorgen over technische details. Onze ervaren monteurs zorgen voor een perfecte installatie, waardoor je verzekerd bent van een naadloos resultaat en optimale isolatie." },
+                { icon: "🛡", title: "Maximale Inbraakveiligheid", text: "Je huis is je veilige haven. Daarom zijn onze deuren standaard uitgerust met hoogwaardige meerpuntsluitingen en versterkte profielen, vakkundig geplaatst voor maximale inbraakwering." },
+                { icon: "💰", title: "Directe Energiebesparing", text: "Dankzij onze hoogwaardige profielen en de tochtvrije montage blijft de warmte binnen en de kou buiten. Je merkt het direct aan een structureel lagere energierekening." },
+                { icon: "✨", title: "Onderhoudsvrij Genieten", text: "Zeg vaarwel tegen schuurpapier en verfkwasten. Kunststof is ongevoelig voor vocht, rot niet en behoudt jarenlang zijn kleur. Een doekje erover is alles wat je nodig hebt." },
+              ].map((b, i) => (
+                <div key={i} className="flex gap-4 bg-slate-50 rounded-xl p-5 border border-slate-100">
+                  <span className="text-2xl flex-shrink-0">{b.icon}</span>
+                  <div>
+                    <p className="font-semibold text-[#1a1a1a] text-sm mb-1">{b.title}</p>
+                    <p className="text-slate-500 text-sm leading-relaxed">{b.text}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <FaqBlok items={[
+            { q: "Wat houdt een kunststof deur precies in?", a: "Dit zijn hoogwaardige deuren van duurzaam kunststof. Ze bieden optimale isolatie, veiligheid en een jarenlange levensduur zonder dat er ooit schilderwerk nodig is." },
+            { q: "Wat houdt de montage in?", a: "Wij nemen het volledige traject uit handen. Van de eerste inmeting tot de definitieve plaatsing door onze vakkundige monteurs; wij zorgen ervoor dat jouw nieuwe deur perfect functioneert." },
+            { q: "Waarom is kunststof de populairste keuze?", a: "Het is de ideale combinatie van gemak en comfort. Ze isoleren uitstekend tegen temperatuur en geluid, zijn weerbestendig en vergen nagenoeg geen onderhoud." },
+            { q: "Is glas in mijn nieuwe deur mogelijk?", a: "Zeker. Je kunt kiezen uit diverse soorten isolatieglas. Dit vergroot de lichtinval en verhoogt de energie-efficiëntie van je woning aanzienlijk." },
+            { q: "Uit welke kleuren kan ik kiezen?", a: "Naast standaard wit en crème, zijn er vele mogelijkheden met folieafwerkingen, zoals stijlvolle houtnerfstructuren of moderne antracietkleuren." },
+            { q: "Hoe veilig zijn de deuren?", a: "Veiligheid staat voorop. Onze deuren worden standaard geleverd met een robuuste 3-puntsluiting en degelijk beslag. Onze vakkundige montage garandeert dat deze inbraakwerendheid optimaal benut wordt." },
+            { q: "Is er veel onderhoud nodig?", a: "Integendeel. Een kunststof deur is extreem onderhoudsarm. Een regelmatige poetsbeurt met water en een mild reinigingsmiddel is meestal voldoende om de deur in topconditie te houden." },
+            { q: "Hoe verloopt het proces na mijn bestelling?", a: "Zodra je de bestelling bevestigt, wordt de deur op maat geproduceerd. Vervolgens nemen we contact met je op voor het inplannen van de vakkundige montage op jouw locatie." },
+          ]} />
+        </div>
       </div>
     </div>
   );

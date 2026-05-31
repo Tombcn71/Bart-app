@@ -2,6 +2,27 @@
 import { useState } from "react";
 import Link from "next/link";
 import { InmeetServiceCard } from "@/app/components/InmeetServiceCard";
+
+function FaqBlok({ items }: { items: { q: string; a: string }[] }) {
+  const [open, setOpen] = useState<number | null>(null);
+  return (
+    <div>
+      <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-6">Veelgestelde vragen</h3>
+      <div className="divide-y divide-slate-100 border border-slate-100 rounded-xl overflow-hidden">
+        {items.map((item, i) => (
+          <div key={i}>
+            <button onClick={() => setOpen(open === i ? null : i)}
+              className="w-full flex justify-between items-center px-6 py-4 text-left hover:bg-slate-50 transition-colors">
+              <span className="text-sm font-semibold text-[#1a1a1a] pr-4">{item.q}</span>
+              <span className="text-[#1066a3] font-bold text-lg shrink-0">{open === i ? "−" : "+"}</span>
+            </button>
+            {open === i && <div className="px-6 pb-5 text-sm text-slate-600 leading-relaxed bg-slate-50">{item.a}</div>}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 import {
   GlassVast, GlassDK, GlassKiep, GlassVastBovenlichtKiep, GlassDkBovenlichtVast,
   GlassDkBovenlichtKiep, GlassDkBorstweringVast, GlassKiepKiep, GlassDkDkStolpBovenlichtVast,
@@ -94,6 +115,44 @@ export default function AluKozijnenOverzicht() {
         ))}
         <div className="col-span-full border-t border-slate-100 mt-4" />
         <InmeetServiceCard />
+      </div>
+
+      <div className="max-w-[1200px] mx-auto px-6 pb-20 mt-16">
+        <div className="border-t border-slate-100 pt-14">
+          <div className="max-w-3xl mb-12">
+            <h2 className="text-2xl font-bold text-[#1a1a1a] mb-4 leading-tight">Aluminium kozijnen — De ideale combinatie van design en duurzaamheid</h2>
+            <p className="text-slate-600 leading-relaxed">Een woning die niet alleen een luxe uitstraling heeft, maar ook uitstekend geïsoleerd is. Investeren in nieuwe aluminium kozijnen is een keuze waar je elke dag van geniet. Wij regelen alles voor je: van nauwkeurig inmeten tot de vakkundige montage op locatie.</p>
+          </div>
+          <div className="mb-14">
+            <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-5">Waarom onze aluminium kozijnen de slimste keuze zijn</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {[
+                { icon: "🛠", title: "Vakkundige Montage", text: "Geen gedoe met technische details. Onze ervaren monteurs zorgen voor een perfecte installatie, waardoor je verzekerd bent van een strak resultaat en optimale isolatie." },
+                { icon: "🛡", title: "Maximale Inbraakveiligheid", text: "Aluminium is van nature extreem sterk. Onze kozijnen zijn standaard voorzien van inbraakwerende meerpuntsluitingen en vakkundig geplaatst voor een optimaal veiligheidsniveau." },
+                { icon: "💰", title: "Duurzame Energiebesparing", text: "Aluminium kozijnen zijn uitstekend bestand tegen wisselende weersomstandigheden en bieden een hoge isolatiewaarde. Dit houdt je woning comfortabel en helpt je direct te besparen op je energierekening." },
+                { icon: "✨", title: "Onderhoudsvriendelijk & Stijlvol", text: "Aluminium oogt modern en strak. Het materiaal is kleurvast, rot niet en trekt geen vuil aan. Even afnemen met een vochtige doek is voldoende om de kozijnen in topconditie te houden." },
+              ].map((b, i) => (
+                <div key={i} className="flex gap-4 bg-slate-50 rounded-xl p-5 border border-slate-100">
+                  <span className="text-2xl shrink-0">{b.icon}</span>
+                  <div>
+                    <p className="font-semibold text-[#1a1a1a] text-sm mb-1">{b.title}</p>
+                    <p className="text-slate-500 text-sm leading-relaxed">{b.text}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <FaqBlok items={[
+            { q: "Wat maakt aluminium kozijnen zo duurzaam?", a: "Aluminium is een zeer sterk, vormvast materiaal dat tientallen jaren meegaat. Bovendien is het 100% recyclebaar, wat het een verantwoorde keuze maakt voor de toekomst." },
+            { q: "Wat houdt de montage in?", a: "Wij nemen het volledige traject uit handen. Van de eerste inmeting tot de definitieve plaatsing door onze vakkundige monteurs; wij zorgen ervoor dat alles naadloos aansluit." },
+            { q: "Waarom kiezen voor aluminium in plaats van andere materialen?", a: "Aluminium biedt een unieke combinatie van een slank, modern design en enorme structurele kracht. Het is onderhoudsarm, weerbestendig en geeft je woning direct een industriële, luxe uitstraling." },
+            { q: "Is glas in mijn nieuwe aluminium kozijnen mogelijk?", a: "Zeker. Je kunt kiezen uit diverse soorten isolatieglas. Dit vergroot de lichtinval en verhoogt de energie-efficiëntie en het wooncomfort aanzienlijk." },
+            { q: "Uit welke kleuren en stijlen kan ik kiezen?", a: "Aluminium is beschikbaar in talloze kleuren en afwerkingen. Of je nu kiest voor een matte structuurcoating of een glanzende afwerking, wij stemmen de look perfect af op jouw woning." },
+            { q: "Hoe veilig zijn deze kozijnen?", a: "Veiligheid is bij aluminium de standaard. Het materiaal is van zichzelf al zeer robuust, en in combinatie met hoogwaardige meerpuntsluitingen en vakkundige montage ben je optimaal beschermd." },
+            { q: "Is er veel onderhoud nodig?", a: "Nee, aluminium is een van de meest onderhoudsvriendelijke materialen. In tegenstelling tot hout hoef je het niet te schilderen. Regelmatig reinigen met water en een mild schoonmaakmiddel volstaat." },
+            { q: "Hoe verloopt het proces na mijn bestelling?", a: "Zodra je de bestelling bevestigt, worden de kozijnen specifiek voor jouw woning op maat gemaakt. Vervolgens nemen we contact met je op om de vakkundige montage op locatie in te plannen." },
+          ]} />
+        </div>
       </div>
     </div>
   );

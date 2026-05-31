@@ -2,6 +2,27 @@
 import { useState } from "react";
 import Link from "next/link";
 import { InmeetServiceCard } from "@/app/components/InmeetServiceCard";
+
+function FaqBlok({ items }: { items: { q: string; a: string }[] }) {
+  const [open, setOpen] = useState<number | null>(null);
+  return (
+    <div>
+      <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-6">Veelgestelde vragen</h3>
+      <div className="divide-y divide-slate-100 border border-slate-100 rounded-xl overflow-hidden">
+        {items.map((item, i) => (
+          <div key={i}>
+            <button onClick={() => setOpen(open === i ? null : i)}
+              className="w-full flex justify-between items-center px-6 py-4 text-left hover:bg-slate-50 transition-colors">
+              <span className="text-sm font-semibold text-[#1a1a1a] pr-4">{item.q}</span>
+              <span className="text-[#1066a3] font-bold text-lg shrink-0">{open === i ? "−" : "+"}</span>
+            </button>
+            {open === i && <div className="px-6 pb-5 text-sm text-slate-600 leading-relaxed bg-slate-50">{item.a}</div>}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 import {
   SingleDoorBase, DoubleDoorBase, AchterdeurBovenlicht, VoordeurBovenlicht,
   AchterdeurBorstwering, AchterdeurBorstweringBovenlicht, DeurZijlicht,
@@ -94,6 +115,44 @@ export default function AluDeurenOverzicht() {
         ))}
         <div className="col-span-full border-t border-slate-100 mt-4" />
         <InmeetServiceCard />
+      </div>
+
+      <div className="max-w-[1200px] mx-auto px-6 pb-20 mt-16">
+        <div className="border-t border-slate-100 pt-14">
+          <div className="max-w-3xl mb-12">
+            <h2 className="text-2xl font-bold text-[#1a1a1a] mb-4 leading-tight">Aluminium deuren — De perfecte combinatie van design en duurzaamheid</h2>
+            <p className="text-slate-600 leading-relaxed">Aluminium deuren zijn de ideale keuze voor wie op zoek is naar een strakke, moderne uitstraling gecombineerd met ongekende onderhoudsvriendelijkheid. Of je nu in een moderne nieuwbouwwoning woont of een klassiek pand bezit; aluminium geeft elke woning een karaktervolle en tijdloze look.</p>
+          </div>
+          <div className="mb-14">
+            <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-5">Waarom kiezen voor onze aluminium deuren</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {[
+                { icon: "♻", title: "Duurzaam & Milieubewust", text: "Aluminium is een 100% recyclebaar materiaal. Mocht je in de toekomst je deur willen vervangen, dan kan het materiaal gemakkelijk opnieuw worden gebruikt, wat het een verantwoorde keuze maakt." },
+                { icon: "🎨", title: "Stijlvol Maatwerk", text: "Aluminium deuren zijn verkrijgbaar in uiteenlopende kleuren en stijlen. Hierdoor stem je de deur moeiteloos af op de architectuur van je woning, of dit nu gaat om een voordeur, achterdeur of tuindeur." },
+                { icon: "🏢", title: "Modern & Industrieel Design", text: "Dankzij de strakke profielen hebben deze deuren een moderne uitstraling die perfect past bij nieuwbouw, maar ook een prachtig industrieel contrast biedt bij klassieke of landelijke woningen." },
+                { icon: "✨", title: "Minimaal Onderhoud", text: "Aluminium deuren hoeven niet te worden geverfd. Omdat het materiaal nauwelijks vuil aantrekt, volstaat een vochtige doek om de deur weer te laten stralen." },
+              ].map((b, i) => (
+                <div key={i} className="flex gap-4 bg-slate-50 rounded-xl p-5 border border-slate-100">
+                  <span className="text-2xl shrink-0">{b.icon}</span>
+                  <div>
+                    <p className="font-semibold text-[#1a1a1a] text-sm mb-1">{b.title}</p>
+                    <p className="text-slate-500 text-sm leading-relaxed">{b.text}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <FaqBlok items={[
+            { q: "Wat maakt een aluminium deur zo duurzaam?", a: "Aluminium is volledig recyclebaar, waardoor het materiaal eindeloos kan worden hergebruikt zonder kwaliteitsverlies." },
+            { q: "Waar kan ik een aluminium deur plaatsen?", a: "Vanwege de veelzijdigheid in stijlen en kleuren is een aluminium deur geschikt voor elk type opening, zoals je voordeur of achterdeur." },
+            { q: "Past een moderne aluminium deur wel bij mijn klassieke huis?", a: "Absoluut. De strakke profielen zorgen voor een stijlvol contrast dat een uniek en modern industrieel effect geeft aan zowel klassieke als landelijke woningen." },
+            { q: "Hoe onderhoud ik een aluminium deur?", a: "Onderhoud is nauwelijks nodig. Je hoeft de deur niet te verven en voor een schone uitstraling is afnemen met een vochtige doek voldoende." },
+            { q: "Zijn er veel kleurkeuzes mogelijk?", a: "Ja, de aluminium profielen zijn beschikbaar in een breed scala aan kleuren, zodat je altijd een uitstraling creëert die naadloos aansluit bij jouw specifieke woonstijl." },
+            { q: "Is een aluminium deur bestand tegen weersinvloeden?", a: "Zeker, aluminium is uitermate goed bestand tegen vocht en vuil, waardoor de deur in uitstekende conditie blijft." },
+            { q: "Is een aluminium deur ook geschikt voor nieuwbouw?", a: "Dankzij de moderne en strakke uitstraling vormen aluminium deuren een uitstekende match met de architectuur van moderne nieuwbouwwoningen." },
+            { q: "Waarom is aluminium onderhoudsvriendelijker dan hout?", a: "In tegenstelling tot hout, waarbij regelmatig schilderwerk vereist is, is aluminium kleurvast en trekt het vrijwel geen vuil aan, waardoor intensief onderhoud verleden tijd is." },
+          ]} />
+        </div>
       </div>
     </div>
   );
