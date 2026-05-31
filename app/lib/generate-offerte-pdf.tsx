@@ -331,17 +331,23 @@ const SPEC_LABELS: Record<string, string> = {
   materiaal: "Materiaal",
   glas: "Type glas",
   glasType: "Type glas",
-  kleur: "Kleur binnenkant",
-  kleurBuitenkant: "Kleur buitenkant",
-  paneel: "Paneel",
   profiel: "Profiel",
+  typeLak: "Type lak",
+  kleur: "Kleur binnenkant",
+  kleurBinnenzijde: "Kleur binnenzijde",
+  kleurBinnen: "Kleur binnenzijde",
+  kleurBuitenkant: "Kleur buitenkant",
+  kleurBuitenzijde: "Kleur buitenzijde",
+  kleurBuiten: "Kleur buitenzijde",
+  paneel: "Paneel",
   beslag: "Beslag",
   onderdorpel: "Onderdorpel",
+  aanslag: "Aanslag",
   draairichting: "Draairichting",
+  volgorde: "Volgorde",
   afstandshouder: "Afstandshouder",
   roeden: "Roeden",
   bediening: "Bediening",
-  aanslag: "Aanslag",
   ventilatieRooster: "Ventilatieroosters",
   voorboren: "Voorboren",
 };
@@ -349,7 +355,8 @@ const SPEC_LABELS: Record<string, string> = {
 // Bouwt nette spec-regels uit een cart-item specs object
 function buildItemSpecs(specs: Record<string, string | number>): [string, string][] {
   const out: [string, string][] = [];
-  if (specs.breedte && specs.hoogte) out.push(["Maat (B × H)", `${specs.breedte} mm × ${specs.hoogte} mm`]);
+  if (specs.breedte && specs.hoogte) out.push(["Buitenwerks (B × H)", `${specs.breedte} mm × ${specs.hoogte} mm`]);
+  if (specs.binnenwerksBreedte && specs.binnenwerkseHoogte) out.push(["Binnenwerks (B × H)", `${specs.binnenwerksBreedte} mm × ${specs.binnenwerkseHoogte} mm`]);
   for (const [key, label] of Object.entries(SPEC_LABELS)) {
     const v = specs[key];
     if (v !== undefined && v !== null && v !== "") out.push([label, clean(String(v)) || String(v)]);
