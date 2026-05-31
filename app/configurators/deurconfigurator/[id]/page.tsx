@@ -1,10 +1,10 @@
 "use client";
-import { showToast } from "@/app/components/CenterToast";
 import { FormField } from "@/app/components/FormField";
+import { CartAddedModal } from "@/app/components/CartAddedModal";
 import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { saveOfferte } from "@/app/actions";
+import { addToCart, getCart } from "@/lib/cart";
 import { getMatrix } from "@/lib/data";
 import {
   SingleDoorBase, DoubleDoorBase, AchterdeurBovenlicht, VoordeurBovenlicht,
@@ -84,11 +84,17 @@ export default function DeurConfiguratorDetail() {
   const [roeden, setRoeden] = useState("");
   const [glasType, setGlasType] = useState("");
   const [aantal, setAantal] = useState(1);
-  const [naam, setNaam] = useState("");
-  const [woonplaats, setWoonplaats] = useState("");
-  const [telefoon, setTelefoon] = useState("");
-  const [email, setEmail] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
+
+  function handleAdd() {
+    addToCart({
+      slug, product: deur.name, prijs: berekendePrijs,
+      specs: { breedte, hoogte, kleur, kleurBuitenkant, beslag, paneel, profiel, onderdorpel, draairichting, afstandshouder, roeden, glasType, aantal },
+    });
+    setCartCount(getCart().length);
+    setModalOpen(true);
+  }
 
   useEffect(() => {
     getMatrix("deur_matrix").then((data: any) => {
@@ -224,40 +230,32 @@ export default function DeurConfiguratorDetail() {
                     <button type="button" onClick={() => setAantal(aantal + 1)} className="w-10 h-10 rounded-lg border text-xl font-bold text-slate-500 hover:bg-slate-50">+</button>
                   </div>
                 </FormField>
-                <FormField label="Uw gegevens" value={naam || "invullen"}>
-                  <div className="space-y-2">
-                    <input type="text" placeholder="Naam" value={naam} onChange={e => setNaam(e.target.value)} className="w-full border rounded-lg px-3 py-2 text-sm" />
-                    <input type="text" placeholder="Woonplaats" value={woonplaats} onChange={e => setWoonplaats(e.target.value)} className="w-full border rounded-lg px-3 py-2 text-sm" />
-                    <input type="tel" placeholder="Telefoonnummer" value={telefoon} onChange={e => setTelefoon(e.target.value)} className="w-full border rounded-lg px-3 py-2 text-sm" />
-                    <input type="email" placeholder="E-mailadres" value={email} onChange={e => setEmail(e.target.value)} className="w-full border rounded-lg px-3 py-2 text-sm" />
-                  </div>
-                </FormField>
               </div>
 
               <div className="px-5 pb-5 pt-2">
                 <button
-                  disabled={isSubmitting}
-                  onClick={async () => {
-                    const emailOk = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email);
-                    if (!naam || !emailOk) { showToast("Vul a.u.b. uw naam en e-mailadres in om verder te gaan.", "error"); return; }
-                    setIsSubmitting(true);
-                    await saveOfferte(email, {
-                      naam, deurNaam: deur.name, slug, breedte, hoogte,
-                      kleur, kleurBuitenkant, beslag, paneel, profiel,
-                      onderdorpel, draairichting, afstandshouder, roeden,
-                      glasType, aantal, prijs: berekendePrijs,
-                    });
-                    showToast(`Bedankt, uw offerte is succesvol verstuurd naar ${email}`);
-                    setIsSubmitting(false);
-                  }}
-                  className="w-full bg-[#1066a3] text-white py-4 rounded-xl font-bold text-sm tracking-wide">
-                  {isSubmitting ? "Bezig..." : "Offerte aanvragen"}
+                  onClick={handleAdd}
+                  className="w-full bg-[#1066a3] text-white py-4 rounded-xl font-bold text-sm tracking-wide hover:bg-[#0d5491] transition-colors">
+                  Toevoegen aan offerte
                 </button>
+                <p className="text-center text-[11px] text-slate-400 mt-2">Ontvang uw subsidie-indicatie bij de offerte</p>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      <CartAddedModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        product={deur.name}
+        breedte={breedte}
+        hoogte={hoogte}
+        aantal={aantal}
+        prijs={berekendePrijs}
+        cartCount={cartCount}
+        onAddAnother={() => setModalOpen(false)}
+      />
     </div>
   );
 }

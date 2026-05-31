@@ -1,9 +1,9 @@
 "use client";
-import { showToast } from "@/app/components/CenterToast";
+import { CartAddedModal } from "@/app/components/CartAddedModal";
 import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { saveOfferte } from "@/app/actions";
+import { addToCart, getCart } from "@/lib/cart";
 import { getMatrix } from "@/lib/data";
 import {
   SingleDoorBase, DoubleDoorBase, AchterdeurBovenlicht, VoordeurBovenlicht,
@@ -83,11 +83,17 @@ export default function AluDeurConfiguratorDetail() {
   const [roeden, setRoeden] = useState("");
   const [glasType, setGlasType] = useState("");
   const [aantal, setAantal] = useState(1);
-  const [naam, setNaam] = useState("");
-  const [woonplaats, setWoonplaats] = useState("");
-  const [telefoon, setTelefoon] = useState("");
-  const [email, setEmail] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
+
+  function handleAdd() {
+    addToCart({
+      slug, product: `Aluminium ${deur.name}`, prijs: berekendePrijs,
+      specs: { breedte, hoogte, kleur, kleurBuitenkant, beslag, paneel, profiel, onderdorpel, draairichting, afstandshouder, roeden, glasType, aantal },
+    });
+    setCartCount(getCart().length);
+    setModalOpen(true);
+  }
 
   useEffect(() => {
     getMatrix("alu_deur_matrix").then((data: any) => {
@@ -190,38 +196,28 @@ export default function AluDeurConfiguratorDetail() {
                 <input type="number" min={1} value={aantal} onChange={(e) => setAantal(Number(e.target.value))} className="w-full border p-2.5 rounded-lg text-sm" />
               </div>
 
-              <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl">
-                <h3 className="text-sm font-bold text-slate-800">Check uw subsidie</h3>
-                <label className="block text-[10px] mt-2 font-bold text-slate-500 uppercase">Naam</label>
-                <input type="text" placeholder="Uw naam" value={naam} onChange={(e) => setNaam(e.target.value)} className="w-full p-2 rounded-lg border text-sm" />
-                <input type="text" placeholder="Woonplaats" value={woonplaats} onChange={(e) => setWoonplaats(e.target.value)} className="w-full p-2 rounded-lg border text-sm mt-2" />
-                <input type="tel" placeholder="Telefoonnummer" value={telefoon} onChange={(e) => setTelefoon(e.target.value)} className="w-full p-2 rounded-lg border text-sm mt-2" />
-                <label className="block text-[10px] mt-2 font-bold text-slate-500 uppercase">E-mailadres</label>
-                <input type="email" placeholder="Uw e-mailadres" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full p-2 rounded-lg border text-sm" />
-              </div>
-
               <button
-                disabled={isSubmitting}
-                onClick={async () => {
-                  const emailOk = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email);
-                  if (!naam || !emailOk) { showToast("Vul a.u.b. uw naam en e-mailadres in om verder te gaan.", "error"); return; }
-                  setIsSubmitting(true);
-                  await saveOfferte(email, {
-                    naam, deurNaam: `Aluminium ${deur.name}`, slug, breedte, hoogte,
-                    kleur, kleurBuitenkant, beslag, paneel, profiel,
-                    onderdorpel, draairichting, afstandshouder, roeden,
-                    glasType, aantal, prijs: berekendePrijs,
-                  });
-                  showToast(`Bedankt, uw offerte is succesvol verstuurd naar ${email}`);
-                  setIsSubmitting(false);
-                }}
-                className="w-full bg-[#1066a3] text-white py-4 rounded-lg font-bold uppercase text-[11px] tracking-widest">
-                {isSubmitting ? "Bezig..." : "Bereken subsidie & Vraag offerte aan"}
+                onClick={handleAdd}
+                className="w-full bg-[#1066a3] text-white py-4 rounded-lg font-bold uppercase text-[11px] tracking-widest hover:bg-[#0d5491] transition-colors">
+                Toevoegen aan offerte
               </button>
+              <p className="text-center text-[11px] text-slate-400">Ontvang uw subsidie-indicatie bij de offerte</p>
             </div>
           </div>
         </div>
       </div>
+
+      <CartAddedModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        product={`Aluminium ${deur.name}`}
+        breedte={breedte}
+        hoogte={hoogte}
+        aantal={aantal}
+        prijs={berekendePrijs}
+        cartCount={cartCount}
+        onAddAnother={() => setModalOpen(false)}
+      />
     </div>
   );
 }
