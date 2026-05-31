@@ -402,8 +402,9 @@ export async function generateOffertePdf(_email: string, data: OfferteData): Pro
   const producten = await Promise.all(rawItems.map(async (item) => {
     let png: string | null = null;
     const glas = String(item.specs.glas ?? item.specs.glasType ?? "");
+    const materiaal = String(item.specs.materiaal ?? "");
     const svgStr = item.slug
-      ? getSvgString(item.slug, Number(item.specs.breedte) || undefined, Number(item.specs.hoogte) || undefined, glas || undefined)
+      ? getSvgString(item.slug, Number(item.specs.breedte) || undefined, Number(item.specs.hoogte) || undefined, glas || undefined, materiaal || undefined)
       : null;
     if (svgStr) {
       const pngBuf = await svgToPng(svgStr, 900);
