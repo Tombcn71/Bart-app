@@ -124,8 +124,8 @@ export function CartAddedModal({ open, onClose, product, breedte, hoogte, aantal
 
         {/* Subsidie hook */}
         {!klaar && (
-          <div className="bg-slate-50 border-t border-slate-100 px-6 py-4">
-            <p className="text-xs text-slate-500 leading-relaxed">
+          <div className="bg-green-50 border-t border-green-100 px-6 py-4">
+            <p className="text-xs text-green-800 leading-relaxed">
               💰 Vraag uw offerte aan en ontvang direct uw persoonlijke <strong>ISDE subsidie-indicatie</strong> en complete offerte met technische tekening per e-mail.
             </p>
           </div>
