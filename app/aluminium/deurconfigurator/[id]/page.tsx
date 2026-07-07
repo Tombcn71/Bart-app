@@ -1,5 +1,6 @@
 "use client";
 import { CartAddedModal } from "@/app/components/CartAddedModal";
+import { NumberInput } from "@/app/components/NumberInput";
 import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -113,7 +114,7 @@ export default function AluDeurConfiguratorDetail() {
   }, []);
 
   const berekendePrijs = useMemo(() => {
-    if (!matrix) return 0;
+    if (!matrix || breedte <= 0 || hoogte <= 0) return 0;
     const m2 = (breedte / 1000) * (hoogte / 1000);
     return (
       (matrix.basisPrijs +
@@ -167,11 +168,11 @@ export default function AluDeurConfiguratorDetail() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-[10px] font-bold text-slate-500 uppercase">Breedte (mm)</label>
-                  <input type="number" value={breedte} onChange={(e) => setBreedte(Number(e.target.value))} className="w-full border p-2.5 rounded-lg text-sm" />
+                  <NumberInput value={breedte} onChange={setBreedte} className="w-full border p-2.5 rounded-lg text-sm" />
                 </div>
                 <div>
                   <label className="text-[10px] font-bold text-slate-500 uppercase">Hoogte (mm)</label>
-                  <input type="number" value={hoogte} onChange={(e) => setHoogte(Number(e.target.value))} className="w-full border p-2.5 rounded-lg text-sm" />
+                  <NumberInput value={hoogte} onChange={setHoogte} className="w-full border p-2.5 rounded-lg text-sm" />
                 </div>
               </div>
 
@@ -193,7 +194,7 @@ export default function AluDeurConfiguratorDetail() {
 
               <div>
                 <label className="text-[10px] font-bold text-slate-500 uppercase">Aantal</label>
-                <input type="number" min={1} value={aantal} onChange={(e) => setAantal(Number(e.target.value))} className="w-full border p-2.5 rounded-lg text-sm" />
+                <NumberInput min={1} value={aantal} onChange={setAantal} className="w-full border p-2.5 rounded-lg text-sm" />
               </div>
 
               <button

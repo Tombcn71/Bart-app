@@ -1,5 +1,6 @@
 "use client";
 import { CartAddedModal } from "@/app/components/CartAddedModal";
+import { NumberInput } from "@/app/components/NumberInput";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -60,7 +61,7 @@ export default function RolluikConfigurator() {
   }, [info.matrixKey]);
 
   const m2 = (breedte / 1000) * (hoogte / 1000);
-  const prijs = matrix
+  const prijs = matrix && breedte > 0 && hoogte > 0
     ? Math.round(
         ((matrix.basisPrijs ?? 0) +
           m2 * (matrix.m2Tarief ?? 0) +
@@ -121,12 +122,11 @@ export default function RolluikConfigurator() {
               <label className="block text-sm font-semibold text-slate-700 mb-2">
                 Breedte (mm)
               </label>
-              <input
-                type="number"
+              <NumberInput
                 min={400}
                 max={4000}
                 value={breedte}
-                onChange={(e) => setBreedte(Number(e.target.value))}
+                onChange={setBreedte}
                 className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1066a3]"
               />
             </div>
@@ -134,12 +134,11 @@ export default function RolluikConfigurator() {
               <label className="block text-sm font-semibold text-slate-700 mb-2">
                 Hoogte (mm)
               </label>
-              <input
-                type="number"
+              <NumberInput
                 min={400}
                 max={3000}
                 value={hoogte}
-                onChange={(e) => setHoogte(Number(e.target.value))}
+                onChange={setHoogte}
                 className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1066a3]"
               />
             </div>
@@ -187,12 +186,11 @@ export default function RolluikConfigurator() {
               <label className="block text-sm font-semibold text-slate-700 mb-2">
                 Aantal
               </label>
-              <input
-                type="number"
+              <NumberInput
                 min={1}
                 max={50}
                 value={aantal}
-                onChange={(e) => setAantal(Number(e.target.value))}
+                onChange={setAantal}
                 className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1066a3]"
               />
             </div>

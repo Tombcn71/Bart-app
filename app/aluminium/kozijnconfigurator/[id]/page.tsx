@@ -1,6 +1,7 @@
 "use client";
 import { FormField } from "@/app/components/FormField";
 import { CartAddedModal } from "@/app/components/CartAddedModal";
+import { NumberInput } from "@/app/components/NumberInput";
 import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -17,7 +18,7 @@ import {
 const FRAME_COLOR = "#2d3748";
 
 const DEFAULT_MATRIX = {
-  basisPrijs: 0, m2Tarief: 0,
+  basisPrijs: 0, m2Tarief: { vast: 0, dk: 0, kiep: 0 },
   kleurToeslag: { wit: 0, "creme-wit": 0, antraciet: 0, "ral-kleur": 0 },
   kleurBuitenkantToeslag: { wit: 0, "creme-wit": 0, antraciet: 0, "basalt-grijs": 0, "kwarts-grijs": 0, zwart: 0 },
   glasToeslag: { "hr-plus-plus": 0, "triple-glas": 0 },
@@ -96,6 +97,10 @@ export default function AluKozijnConfiguratorDetail() {
       m.glasToeslag = Object.fromEntries(
         Object.keys(DEFAULT_MATRIX.glasToeslag).map(k => [k, data?.glasToeslag?.[k] ?? 0])
       );
+      // Oude data had m2Tarief als los getal; migreer naar per-type tarief.
+      m.m2Tarief = typeof data?.m2Tarief === "number"
+        ? { vast: data.m2Tarief, dk: data.m2Tarief, kiep: data.m2Tarief }
+        : { ...DEFAULT_MATRIX.m2Tarief, ...(data?.m2Tarief || {}) };
       setMatrix(m);
       setKleur(Object.keys(m.kleurToeslag || {})[0] || "");
       setKleurBuitenkant(Object.keys(m.kleurBuitenkantToeslag || {})[0] || "");
@@ -113,13 +118,13 @@ export default function AluKozijnConfiguratorDetail() {
   const binnenwerkseHoogte = Math.max(0, hoogte - 54);
 
   const berekendePrijs = useMemo(() => {
-    if (!matrix || !kozijn) return 0;
+    if (!matrix || !kozijn || breedte <= 0 || hoogte <= 0) return 0;
     const breedtePerSectie = breedte / kozijn.v;
     let totaal = matrix.basisPrijs ?? 0;
-    kozijn.types.forEach(() => {
+    kozijn.types.forEach((type: string) => {
       const m2 = (breedtePerSectie / 1000) * (hoogte / 1000);
       totaal +=
-        m2 * (matrix.m2Tarief ?? 0) +
+        m2 * (matrix.m2Tarief?.[type] ?? 0) +
         m2 * (matrix.glasToeslag?.[glas] ?? 0) +
         (matrix.kleurToeslag?.[kleur] ?? 0) +
         (matrix.kleurBuitenkantToeslag?.[kleurBuitenkant] ?? 0) +
@@ -171,11 +176,11 @@ export default function AluKozijnConfiguratorDetail() {
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">Breedte (mm)</label>
-                      <input type="number" value={breedte} onChange={e => setBreedte(Number(e.target.value))} className="w-full border rounded-lg p-2.5 text-sm" />
+                      <NumberInput value={breedte} onChange={setBreedte} className="w-full border rounded-lg p-2.5 text-sm" />
                     </div>
                     <div>
                       <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">Hoogte (mm)</label>
-                      <input type="number" value={hoogte} onChange={e => setHoogte(Number(e.target.value))} className="w-full border rounded-lg p-2.5 text-sm" />
+                      <NumberInput value={hoogte} onChange={setHoogte} className="w-full border rounded-lg p-2.5 text-sm" />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-3 mt-2 bg-slate-50 rounded-lg px-3 py-2 text-xs text-slate-400">

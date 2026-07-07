@@ -1,6 +1,7 @@
 "use client";
 import { FormField } from "@/app/components/FormField";
 import { CartAddedModal } from "@/app/components/CartAddedModal";
+import { NumberInput } from "@/app/components/NumberInput";
 import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -239,7 +240,7 @@ export default function DeurConfiguratorDetail() {
   }, []);
 
   const berekendePrijs = useMemo(() => {
-    if (!matrix) return 0;
+    if (!matrix || breedte <= 0 || hoogte <= 0) return 0;
     const m2 = (breedte / 1000) * (hoogte / 1000);
     return (
       (matrix.basisPrijs +
@@ -343,10 +344,9 @@ export default function DeurConfiguratorDetail() {
                       <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">
                         Breedte (mm)
                       </label>
-                      <input
-                        type="number"
+                      <NumberInput
                         value={breedte}
-                        onChange={(e) => setBreedte(Number(e.target.value))}
+                        onChange={setBreedte}
                         className="w-full border rounded-lg p-2.5 text-sm"
                       />
                     </div>
@@ -354,10 +354,9 @@ export default function DeurConfiguratorDetail() {
                       <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">
                         Hoogte (mm)
                       </label>
-                      <input
-                        type="number"
+                      <NumberInput
                         value={hoogte}
-                        onChange={(e) => setHoogte(Number(e.target.value))}
+                        onChange={setHoogte}
                         className="w-full border rounded-lg p-2.5 text-sm"
                       />
                     </div>

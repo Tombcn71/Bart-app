@@ -1,5 +1,6 @@
 "use client";
 import { CartAddedModal } from "@/app/components/CartAddedModal";
+import { NumberInput } from "@/app/components/NumberInput";
 import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -83,7 +84,7 @@ export default function HarmonicadeurConfiguratorDetail() {
   const binnenwerkseHoogte = Math.max(0, hoogte - 40);
 
   const berekendePrijs = useMemo(() => {
-    if (!matrix) return 0;
+    if (!matrix || breedte <= 0 || hoogte <= 0) return 0;
     const m2 = (breedte / 1000) * (hoogte / 1000);
     return (
       (matrix.basisPrijs +
@@ -227,10 +228,9 @@ export default function HarmonicadeurConfiguratorDetail() {
                   <label className="text-[10px] font-bold text-slate-500 uppercase">
                     Buitenwerkse breedte (mm)
                   </label>
-                  <input
-                    type="number"
+                  <NumberInput
                     value={breedte}
-                    onChange={(e) => setBreedte(Number(e.target.value))}
+                    onChange={setBreedte}
                     className="w-full border p-2.5 rounded-lg text-sm"
                   />
                 </div>
@@ -238,10 +238,9 @@ export default function HarmonicadeurConfiguratorDetail() {
                   <label className="text-[10px] font-bold text-slate-500 uppercase">
                     Buitenwerkse hoogte (mm)
                   </label>
-                  <input
-                    type="number"
+                  <NumberInput
                     value={hoogte}
-                    onChange={(e) => setHoogte(Number(e.target.value))}
+                    onChange={setHoogte}
                     className="w-full border p-2.5 rounded-lg text-sm"
                   />
                 </div>

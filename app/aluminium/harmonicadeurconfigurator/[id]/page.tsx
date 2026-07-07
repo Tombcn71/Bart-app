@@ -1,5 +1,6 @@
 "use client";
 import { showToast } from "@/app/components/CenterToast";
+import { NumberInput } from "@/app/components/NumberInput";
 import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -70,7 +71,7 @@ export default function AluHarmonicadeurConfiguratorDetail() {
   const binnenwerkseHoogte = Math.max(0, hoogte - 40);
 
   const berekendePrijs = useMemo(() => {
-    if (!matrix) return 0;
+    if (!matrix || breedte <= 0 || hoogte <= 0) return 0;
     const m2 = (breedte / 1000) * (hoogte / 1000);
     return (
       (matrix.basisPrijs +
@@ -124,11 +125,11 @@ export default function AluHarmonicadeurConfiguratorDetail() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-[10px] font-bold text-slate-500 uppercase">Buitenwerkse breedte (mm)</label>
-                  <input type="number" value={breedte} onChange={(e) => setBreedte(Number(e.target.value))} className="w-full border p-2.5 rounded-lg text-sm" />
+                  <NumberInput value={breedte} onChange={setBreedte} className="w-full border p-2.5 rounded-lg text-sm" />
                 </div>
                 <div>
                   <label className="text-[10px] font-bold text-slate-500 uppercase">Buitenwerkse hoogte (mm)</label>
-                  <input type="number" value={hoogte} onChange={(e) => setHoogte(Number(e.target.value))} className="w-full border p-2.5 rounded-lg text-sm" />
+                  <NumberInput value={hoogte} onChange={setHoogte} className="w-full border p-2.5 rounded-lg text-sm" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3 bg-slate-50 rounded-lg px-3 py-2 text-xs text-slate-500">

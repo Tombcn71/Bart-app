@@ -1,5 +1,6 @@
 "use client";
 import { CartAddedModal } from "@/app/components/CartAddedModal";
+import { NumberInput } from "@/app/components/NumberInput";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -34,7 +35,7 @@ export default function HorConfigurator() {
   }, [info.matrixKey]);
 
   const m2 = (breedte / 1000) * (hoogte / 1000);
-  const prijs = matrix
+  const prijs = matrix && breedte > 0 && hoogte > 0
     ? Math.round(
         ((matrix.basisPrijs ?? 0)
           + m2 * (matrix.m2Tarief ?? 0)
@@ -70,14 +71,14 @@ export default function HorConfigurator() {
           <div className="bg-white border p-6 rounded-xl shadow-sm space-y-5">
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">Breedte (mm)</label>
-              <input type="number" min={300} max={2500} value={breedte}
-                onChange={e => setBreedte(Number(e.target.value))}
+              <NumberInput min={300} max={2500} value={breedte}
+                onChange={setBreedte}
                 className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1066a3]" />
             </div>
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">Hoogte (mm)</label>
-              <input type="number" min={300} max={3000} value={hoogte}
-                onChange={e => setHoogte(Number(e.target.value))}
+              <NumberInput min={300} max={3000} value={hoogte}
+                onChange={setHoogte}
                 className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1066a3]" />
             </div>
             <div>
@@ -93,8 +94,8 @@ export default function HorConfigurator() {
             </div>
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">Aantal</label>
-              <input type="number" min={1} max={50} value={aantal}
-                onChange={e => setAantal(Number(e.target.value))}
+              <NumberInput min={1} max={50} value={aantal}
+                onChange={setAantal}
                 className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1066a3]" />
             </div>
             <div className="bg-[#f4f7f9] rounded-lg p-4">

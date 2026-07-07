@@ -5,7 +5,7 @@ import { saveMatrix } from "@/app/actions";
 import { getMatrix } from "@/lib/data";
 
 const BASE_DEFAULTS = {
-  basisPrijs: 0, m2Tarief: 0,
+  basisPrijs: 0, m2Tarief: { vast: 0, dk: 0, kiep: 0 },
   kleurToeslag: { wit: 0, "creme-wit": 0, antraciet: 0, "ral-kleur": 0 },
   kleurBuitenkantToeslag: { wit: 0, "creme-wit": 0, antraciet: 0, "basalt-grijs": 0, "kwarts-grijs": 0, zwart: 0 },
   glasToeslag: { "hr-plus-plus": 0, "triple-glas": 0 },
@@ -15,6 +15,12 @@ const BASE_DEFAULTS = {
   roedenToeslag: { geen: 0, "6-vaks-18mm": 0, "8-vaks-18mm": 0, "6-vaks-26mm": 0, "8-vaks-26mm": 0 },
   ventilatieRoosterToeslag: { nee: 0, ja: 0 },
   voorborenToeslag: { "niet-voorboren": 0, voorboren: 0 },
+};
+
+const KOZIJN_TYPE_LABELS: Record<string, string> = {
+  vast: "Vast",
+  dk: "Draai-kiep",
+  kiep: "Kiep",
 };
 
 type Materiaal = "kunststof" | "aluminium";
@@ -39,6 +45,10 @@ export default function KozijnenPrijzen() {
         m.glasToeslag = Object.fromEntries(
           Object.keys(BASE_DEFAULTS.glasToeslag).map(k => [k, data?.glasToeslag?.[k] ?? 0])
         );
+        // Oude data had m2Tarief als los getal; migreer naar per-type tarief.
+        m.m2Tarief = typeof data?.m2Tarief === "number"
+          ? { vast: data.m2Tarief, dk: data.m2Tarief, kiep: data.m2Tarief }
+          : { ...BASE_DEFAULTS.m2Tarief, ...(data?.m2Tarief || {}) };
         return m;
       };
       setPrijzen({ kunststof: fixGlas(kData), aluminium: fixGlas(aData) });
@@ -124,7 +134,7 @@ export default function KozijnenPrijzen() {
                     {Object.entries(value).map(([subKey, subValue]: [string, any]) => (
                       <tr key={`${key}-${subKey}`}>
                         <td className="py-2 px-6 text-slate-600 capitalize pl-10 text-sm">
-                          - {subKey.replace(/-/g, " ").replace(/creon /gi, "").trim()}
+                          - {key === "m2Tarief" ? KOZIJN_TYPE_LABELS[subKey] ?? subKey : subKey.replace(/-/g, " ").replace(/creon /gi, "").trim()}
                         </td>
                         <td className="py-2 px-6">
                           <input
