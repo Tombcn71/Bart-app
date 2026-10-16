@@ -9,6 +9,9 @@ import { cookies } from "next/headers";
 import { generateOffertePdf } from "@/app/lib/generate-offerte-pdf";
 
 export async function adminLogin(password: string) {
+  if (!process.env.ADMIN_PASSWORD || !process.env.ADMIN_TOKEN) {
+    return { success: false, error: "ADMIN_PASSWORD of ADMIN_TOKEN ontbreekt op de server" };
+  }
   if (password === process.env.ADMIN_PASSWORD) {
     (await cookies()).set("admin_token", process.env.ADMIN_TOKEN!, {
       httpOnly: true,
@@ -25,7 +28,8 @@ export async function adminLogout() {
   (await cookies()).delete("admin_token");
 }
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy aanmaken: zonder RESEND_API_KEY crasht anders het hele actions-bestand (ook de login)
+const getResend = () => new Resend(process.env.RESEND_API_KEY);
 
 // Verwijder een offerte
 export async function deleteOfferte(id: string) {
@@ -96,7 +100,7 @@ async function stuurInterneNotificatie(opts: {
   const { klant, items, totaalPrijs, totaalSubsidie, offerteId } = opts;
   const regels = items.map(itemRegel);
   try {
-    await resend.emails.send({
+    await getResend().emails.send({
       from: "Bart Mooi <info@offerte-bartmooi.nl>",
       to: [INTERN_NOTIFICATIE_ADRES],
       replyTo: klant.email,
@@ -169,7 +173,7 @@ export async function saveOffertes(
 
     const pdfBuffer = await generateOffertePdf(klant.email, { ...data, offerteId });
 
-    const { error } = await resend.emails.send({
+    const { error } = await getResend().emails.send({
       from: "Bart Mooi <info@offerte-bartmooi.nl>",
       to: [klant.email],
       replyTo: "info@offerte-bartmooi.nl",
@@ -233,7 +237,7 @@ export async function saveOfferte(email: string, data: any) {
     const pdfBuffer = await generateOffertePdf(email, { ...dataMetSubsidie, offerteId });
 
     // 4. E-mail verzenden
-    const { data: emailData, error } = await resend.emails.send({
+    const { data: emailData, error } = await getResend().emails.send({
       from: "Bart Mooi <info@offerte-bartmooi.nl>",
       to: [email],
       replyTo: "info@offerte-bartmooi.nl",

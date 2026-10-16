@@ -1,25 +1,28 @@
 "use client";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { adminLogin } from "@/app/actions";
 
 export default function AdminLoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
-    const result = await adminLogin(password);
-    if (result.success) {
-      router.push("/admin");
-    } else {
-      setError("Ongeldig wachtwoord");
-      setLoading(false);
+    try {
+      const result = await adminLogin(password);
+      if (result.success) {
+        // Volledige reload zodat de middleware de nieuwe cookie zeker meekrijgt
+        window.location.href = "/admin";
+        return;
+      }
+      setError(result.error ?? "Ongeldig wachtwoord");
+    } catch {
+      setError("Serverfout bij inloggen — controleer de environment variables");
     }
+    setLoading(false);
   };
 
   return (
