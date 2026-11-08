@@ -25,8 +25,11 @@ export type ProductConfiguratorProps = {
   beginmaten: Record<string, [number, number]>;
   /** Kleinste en grootste maat per type. */
   grenzen?: Record<string, Maatgrenzen>;
-  /** De tekening van een type. */
-  tekening: (slug: string) => ReactNode;
+  /**
+   * De tekening van een type. Met `opties` (maat in mm) kan een product de technische tekening in de echte
+   * verhoudingen tonen; zonder opties tekent het zijn eigen standaardplaatje.
+   */
+  tekening: (slug: string, opties?: { breedte: number; hoogte: number; maten?: boolean }) => ReactNode;
   /** Hoeveel vakken en draaiende delen een type heeft (voor toeslagen per raam of per vleugel). */
   info?: Record<string, { vakken: number; vleugels: number }>;
   /** Waar de prijzen van het bedrijf staan, bijvoorbeeld "schuifpui_matrix". */
@@ -100,6 +103,11 @@ export function ProductConfigurator({
 
   const grens = grenzen?.[slug];
   const buitenMaat = !!grens && (breedte < grens.minB || breedte > grens.maxB || hoogte < grens.minH || hoogte > grens.maxH);
+  // De tekening blijft altijd de technische tekening, ook bij een leeg veld of een maat die je nog aan het typen bent:
+  // hij tekent dan binnen de toegestane maten van dit type.
+  const klem = (v: number, min = 300, max = 6000) => Math.min(max, Math.max(min, v || 0));
+  const tekenB = klem(breedte, grens?.minB, grens?.maxB);
+  const tekenH = klem(hoogte, grens?.minH, grens?.maxH);
   const btwPct = model ? btwPercentage(model) : 21;
   const metBtw = klantType === "particulier";
   const prijs = metBtw ? Math.round(opbouw.totaal * (1 + btwPct / 100) * 100) / 100 : opbouw.totaal;
@@ -146,7 +154,7 @@ export function ProductConfigurator({
           <div className={voorbeeld ? "min-w-0 space-y-3" : "min-w-0 space-y-3 lg:col-span-7"}>
             <div className={`flex items-center justify-center overflow-hidden rounded-xl bg-slate-50 ${voorbeeld ? "h-48 p-3" : "h-40 p-3 sm:aspect-video sm:h-auto sm:p-5"}`}>
               {/* De tekeningen zetten zelf width 100% en height auto; dat dwingen we binnen het vak. */}
-              <div className="flex h-full max-w-full items-center justify-center [&>svg]:h-full! [&>svg]:max-h-full! [&>svg]:w-auto! [&>svg]:max-w-full!">{tekening(slug)}</div>
+              <div className="flex h-full max-w-full items-center justify-center [&>svg]:h-full! [&>svg]:max-h-full! [&>svg]:w-auto! [&>svg]:max-w-full!">{tekening(slug, { breedte: tekenB, hoogte: tekenH, maten: !voorbeeld })}</div>
             </div>
 
             {slugs.length > 1 && (
@@ -161,7 +169,7 @@ export function ProductConfigurator({
                       onClick={() => kiesType(s)}
                       className={`${kaart(s === slug)} w-24 shrink-0 p-1.5 text-center text-[11px] leading-tight sm:w-28`}>
                       <span className="mb-1 flex h-10 items-center justify-center sm:h-14 [&>svg]:h-full! [&>svg]:max-h-full! [&>svg]:w-auto! [&>svg]:max-w-full! **:[vector-effect:non-scaling-stroke]">
-                        {tekening(s)}
+                        {tekening(s, { breedte: (beginmaten[s] ?? [1000, 1000])[0], hoogte: (beginmaten[s] ?? [1000, 1000])[1] })}
                       </span>
                       {namen[s] ?? s}
                     </button>

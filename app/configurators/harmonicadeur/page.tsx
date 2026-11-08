@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { InmeetServiceCard } from "@/app/components/InmeetServiceCard";
+import { KozijnTechnisch, TECHNISCH } from "@/app/components/KozijnTechnisch";
 import { HarmonicadeurDriedelig, HarmonicadeurVierdelig, HarmonicadeurVijfdelig } from "@/lib/harmonicadeur-svgs";
 
 const deuren = [
@@ -50,16 +51,21 @@ export default function HarmonicadeurOverzicht() {
             href={`/harmonicadeurconfigurator/${item.slug}`}
             key={item.id}
             className="group flex flex-col h-full">
-            <div className="relative bg-white border border-slate-100 rounded-2xl flex items-center justify-center p-6 md:p-8 shadow-sm group-hover:shadow-md transition-shadow overflow-hidden min-h-[220px]">
+            <div className="relative bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-center p-6 md:p-8 shadow-sm group-hover:shadow-md transition-shadow overflow-hidden min-h-[220px]">
               {item.best && (
                 <div className="absolute top-3 left-3 md:top-4 md:left-4 bg-brand text-white text-[8px] md:text-[9px] font-black px-2 py-1 md:px-3 md:py-1.5 rounded-full tracking-widest z-10 uppercase">
                   POPULAIR
                 </div>
               )}
-              <div className="w-full flex items-center justify-center">
-                <div style={{ width: item.sections > 3 ? "100%" : "80%" }}>
-                  {item.component}
-                </div>
+              <div className="flex h-56 w-full items-center justify-center">
+                <KozijnTechnisch
+                  // Op het kaartje alle drie dezelfde vorm, zodat ze even groot zijn.
+                  breedte={3300}
+                  hoogte={2250}
+                  spec={TECHNISCH[`aluminium-harmonicadeur-${item.sections}delig`]}
+                  maten={false}
+                  className="h-full max-w-full"
+                />
               </div>
             </div>
 

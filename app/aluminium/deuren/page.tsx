@@ -24,34 +24,20 @@ function FaqBlok({ items }: { items: { q: string; a: string }[] }) {
     </div>
   );
 }
-import {
-  SingleDoorBase, DoubleDoorBase, AchterdeurBovenlicht, VoordeurBovenlicht,
-  AchterdeurBorstwering, AchterdeurBorstweringBovenlicht, DeurZijlicht,
-  VoordeurZijlicht, DeurZijlichtBovenlicht, VoordeurZijlichtBovenlicht,
-  DeurZijlichtBorstwering, DeurZijlichten, DubbeleDeurBovenlicht,
-  DubbeleDeurZijlicht, DubbeleDeurZijlichtenBovenlichten, DubbeleDeurBorstweringBovenlicht,
-} from "@/lib/deur-svgs";
+import { KozijnTechnisch, TECHNISCH } from "@/app/components/KozijnTechnisch";
+import { DEUR_ALU_BEGINMATEN } from "@/lib/deuren-alu";
 
+// De aluminium deuren zoals Creon ze aanbiedt: negen typen.
 const deuren = [
-  { id: 1,  category: "Enkele deur",  slug: "voordeur",                          name: "Voordeur",                                    best: true,  v: 1,   components: <SingleDoorBase type="voordeur" /> },
-  { id: 2,  category: "Enkele deur",  slug: "achterdeur",                        name: "Achterdeur",                                  best: true,  v: 1,   components: <SingleDoorBase type="achterdeur" /> },
-  { id: 3,  category: "Enkele deur",  slug: "voordeur-bovenlicht",               name: "Voordeur met bovenlicht",                     best: true,  v: 1,   components: <VoordeurBovenlicht /> },
-  { id: 4,  category: "Enkele deur",  slug: "achterdeur-bovenlicht",             name: "Achterdeur met bovenlicht",                   best: true,  v: 1,   components: <AchterdeurBovenlicht /> },
-  { id: 5,  category: "Enkele deur",  slug: "achterdeur-borstwering",            name: "Achterdeur met borstwering",                  best: false, v: 1,   components: <AchterdeurBorstwering /> },
-  { id: 6,  category: "Enkele deur",  slug: "achterdeur-borstwering-bovenlicht", name: "Achterdeur met borstwering en bovenlicht",    best: false, v: 1,   components: <AchterdeurBorstweringBovenlicht /> },
-  { id: 7,  category: "Enkele deur",  slug: "deur-zijlicht",                     name: "Deur met zijlicht",                           best: true,  v: 1.5, components: <DeurZijlicht /> },
-  { id: 8,  category: "Enkele deur",  slug: "voordeur-zijlicht",                 name: "Voordeur met zijlicht",                       best: true,  v: 1.5, components: <VoordeurZijlicht /> },
-  { id: 9,  category: "Enkele deur",  slug: "deur-zijlicht-bovenlicht",          name: "Deur met zijlicht en bovenlicht",             best: false, v: 1.5, components: <DeurZijlichtBovenlicht /> },
-  { id: 10, category: "Enkele deur",  slug: "voordeur-zijlicht-bovenlicht",      name: "Voordeur met zijlicht en bovenlicht",         best: false, v: 1.5, components: <VoordeurZijlichtBovenlicht /> },
-  { id: 11, category: "Enkele deur",  slug: "deur-zijlicht-borstwering",         name: "Deur met zijlicht en borstwering",            best: false, v: 1.5, components: <DeurZijlichtBorstwering /> },
-  { id: 12, category: "Enkele deur",  slug: "deur-zijlichten",                   name: "Deur met twee zijlichten",                    best: false, v: 1.8, components: <DeurZijlichten /> },
-  { id: 13, category: "Dubbele deur", slug: "dubbele-deur",                      name: "Dubbele deur",                                best: true,  v: 1,   components: <DoubleDoorBase /> },
-  { id: 14, category: "Dubbele deur", slug: "dubbele-deur-zijlichten",           name: "Dubbele deur met zijlichten",                 best: true,  v: 1.8, components: <DoubleDoorBase hasSideLights /> },
-  { id: 15, category: "Dubbele deur", slug: "dubbele-deur-borstwering",          name: "Dubbele deur met borstwering",                best: true,  v: 1,   components: <DoubleDoorBase hasPlinth /> },
-  { id: 16, category: "Dubbele deur", slug: "dubbele-deur-bovenlicht",           name: "Dubbele deur met bovenlicht",                 best: true,  v: 1,   components: <DubbeleDeurBovenlicht /> },
-  { id: 17, category: "Dubbele deur", slug: "dubbele-deur-zijlicht",             name: "Dubbele deur met zijlicht",                   best: false, v: 1.5, components: <DubbeleDeurZijlicht /> },
-  { id: 18, category: "Dubbele deur", slug: "dubbele-deur-zijlichten-bovenlichten", name: "Dubbele deur met zijlichten en bovenlichten", best: false, v: 1.8, components: <DubbeleDeurZijlichtenBovenlichten /> },
-  { id: 19, category: "Dubbele deur", slug: "dubbele-deur-borstwering-bovenlicht",  name: "Dubbele deur met borstwering en bovenlicht",  best: false, v: 1,   components: <DubbeleDeurBorstweringBovenlicht /> },
+  { id: 1, category: "Enkele deur", slug: "aluminium-deur", name: "Deur", best: true },
+  { id: 2, category: "Enkele deur", slug: "aluminium-deur-met-zijlicht", name: "Deur met zijlicht", best: true },
+  { id: 3, category: "Enkele deur", slug: "aluminium-deur-met-zijlichten", name: "Deur met twee zijlichten", best: false },
+  { id: 4, category: "Enkele deur", slug: "aluminium-deur-2-vaks", name: "Deur met borstwering (2 vaks)", best: false },
+  { id: 5, category: "Enkele deur", slug: "aluminium-deur-3vaks", name: "Deur, 3 vaks", best: false },
+  { id: 6, category: "Enkele deur", slug: "aluminium-deur-met-zijlicht-met-borstwering", name: "Deur met zijlicht en borstwering", best: false },
+  { id: 7, category: "Dubbele deur", slug: "aluminium-dubbele-deur", name: "Dubbele deur", best: true },
+  { id: 8, category: "Dubbele deur", slug: "aluminium-dubbele-deur-2-vaks", name: "Dubbele deur met borstwering (2 vaks)", best: false },
+  { id: 9, category: "Dubbele deur", slug: "aluminium-dubbele-deur-met-zijlichten", name: "Dubbele deur met zijlichten", best: false },
 ];
 
 export default function AluDeurenOverzicht() {
@@ -90,18 +76,20 @@ export default function AluDeurenOverzicht() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
         {deuren.filter((d) => d.category === activeType).map((item) => (
           <Link href={`/aluminium/deurconfigurator/${item.slug}`} key={item.id} className="group flex flex-col h-full">
-            <div className="relative bg-white border border-slate-100 rounded-2xl flex items-center justify-center p-6 md:p-8 shadow-sm group-hover:shadow-md transition-shadow overflow-hidden min-h-[220px]">
+            <div className="relative bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-center p-6 md:p-8 shadow-sm group-hover:shadow-md transition-shadow overflow-hidden min-h-[220px]">
               {item.best && (
                 <div className="absolute top-3 left-3 md:top-4 md:left-4 bg-brand text-white text-[8px] md:text-[9px] font-black px-2 py-1 md:px-3 md:py-1.5 rounded-full tracking-widest z-10 uppercase">
                   POPULAIR
                 </div>
               )}
-              <div className="w-full flex items-center justify-center">
-                <div style={{ width: item.v > 1.4 ? "100%" : "55%" }}>
-                  <svg viewBox={`0 0 ${item.v * 100} 160`} className="w-full h-auto">
-                    {item.components}
-                  </svg>
-                </div>
+              <div className="flex h-56 w-full items-center justify-center">
+                <KozijnTechnisch
+                  breedte={(DEUR_ALU_BEGINMATEN[item.slug] ?? [900, 2200])[0]}
+                  hoogte={(DEUR_ALU_BEGINMATEN[item.slug] ?? [900, 2200])[1]}
+                  spec={TECHNISCH[item.slug]}
+                  maten={false}
+                  className="h-full max-w-full"
+                />
               </div>
             </div>
             <div className="mt-4 md:mt-6 text-center">

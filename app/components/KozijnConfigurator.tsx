@@ -11,6 +11,7 @@ import { ALU_BEGINMATEN, ALU_CATALOGUS } from "@/lib/aluminium";
 import { EXTRA_MAAT, MAATGRENZEN_ALU, MAATGRENZEN_KUNSTSTOF } from "@/lib/maatgrenzen";
 import { berekenStandaard, btwPercentage, eersteKeuze, isStandaardModel, keuzeNaam, nieuwStandaardModel, KOZIJN_CATALOGUS } from "@/lib/prijsmodel";
 import { GevelFoto, GevelKeuze, type GevelId, KOZIJN_KLEUREN, heeftGevelFoto } from "@/app/components/GevelFoto";
+import { KozijnTechnisch, TECHNISCH } from "@/app/components/KozijnTechnisch";
 import {
   GlassVast,
   GlassDK,
@@ -307,16 +308,35 @@ const getKozijnData = (slug: string) => KOZIJNEN.find((k) => k.slug === slug) ||
 /** De tekening van een kozijntype, voor het prijsscherm. */
 export function kozijnTekening(slug: string) {
   const k = getKozijnData(slug);
-  return k ? <KozijnTekening kozijn={k} className="h-full max-w-full" /> : null;
+  const [b, h] = BEGINMATEN[slug] ?? [1000, 1000];
+  return k ? <KozijnTekening kozijn={k} className="h-full max-w-full" breedte={b} hoogte={h} maten={false} /> : null;
 }
 
+/**
+ * De tekening van een kozijntype. Met breedte en hoogte (mm) krijgt het type de nieuwe technische tekening
+ * in de echte verhoudingen; zonder die maten, of voor een type zonder technische tekening, blijft de oude SVG.
+ */
 function KozijnTekening({
   kozijn,
   className,
+  breedte,
+  hoogte,
+  maten = false,
+  aanzicht = "binnen",
 }: {
   kozijn: (typeof KOZIJNEN)[number];
   className?: string;
+  breedte?: number;
+  hoogte?: number;
+  maten?: boolean;
+  aanzicht?: "binnen" | "buiten";
 }) {
+  const spec = TECHNISCH[kozijn.slug];
+  if (spec && breedte && hoogte) {
+    // Kleine kaartjes gaven de oude SVG een vaste lijndikte mee; de nieuwe tekening schaalt zijn lijnen zelf.
+    const klasse = className?.replace("**:[vector-effect:non-scaling-stroke]", "").trim();
+    return <KozijnTechnisch breedte={breedte} hoogte={hoogte} spec={spec} aanzicht={aanzicht} maten={maten} className={klasse} />;
+  }
   return (
     <svg viewBox={`0 0 ${kozijn.v * 100} 100`} className={className} aria-hidden="true">
       <rect
@@ -420,6 +440,8 @@ export function KozijnConfigurator({
   const [aantal, setAantal] = useState(1);
   // Het preview-venster met de foto op een gevel.
   const [previewOpen, setPreviewOpen] = useState(false);
+  // Binnen- of buitenaanzicht van de technische tekening.
+  const [aanzicht, setAanzicht] = useState<"binnen" | "buiten">("binnen");
   // De gekozen gevel voor de foto; telt niet mee in de prijs.
   const [gevel, setGevel] = useState<GevelId>("rood");
   // Extra maat bij een bovenlicht of borstwering (hoogte in mm).
@@ -632,6 +654,11 @@ export function KozijnConfigurator({
   // Buiten de maten die de fabriek standaard maakt kan niet besteld worden.
   const grenzen = (alu ? MAATGRENZEN_ALU : MAATGRENZEN_KUNSTSTOF)[slug];
   const buitenMaat = !!grenzen && (breedte < grenzen.minB || breedte > grenzen.maxB || hoogte < grenzen.minH || hoogte > grenzen.maxH);
+  // De tekening blijft altijd de nieuwe tekening, ook bij een leeg veld of een maat die je nog aan het typen bent:
+  // hij tekent dan binnen de toegestane maten van dit type.
+  const klem = (v: number, min = 300, max = 6000) => Math.min(max, Math.max(min, v || 0));
+  const tekenB = klem(breedte, grenzen?.minB, grenzen?.maxB);
+  const tekenH = klem(hoogte, grenzen?.minH, grenzen?.maxH);
   const extraBuiten = !!extra && ((extra.min !== undefined && extraMaat < extra.min) || (extra.max !== undefined && extraMaat > extra.max));
   const btwPct = isStandaardModel(matrix) ? btwPercentage(matrix) : alu ? 21 : 0;
   const metBtw = standaard && klantType === "particulier";
@@ -736,8 +763,22 @@ export function KozijnConfigurator({
         <div className={voorbeeld ? "grid grid-cols-1 gap-4" : "grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-12"}>
           <div className={voorbeeld ? "min-w-0 space-y-3" : "lg:col-span-7 min-w-0 space-y-3"}>
             {/* Bovenaan de tekening van het gekozen kozijn; de foto op een gevel komt pas bij het formulier */}
-            <div className={`bg-slate-50 rounded-xl flex items-center justify-center ${voorbeeld ? "h-28 p-3" : "h-40 p-3 sm:h-auto sm:aspect-video sm:p-5"}`}>
-              <KozijnTekening kozijn={kozijn} className="h-full max-w-full" />
+            {!voorbeeld && TECHNISCH[kozijn.slug] && (
+              <div role="group" aria-label="Aanzicht van de tekening" className="flex w-fit rounded-lg bg-slate-100 p-0.5 text-xs font-semibold">
+                {(["binnen", "buiten"] as const).map((a) => (
+                  <button
+                    key={a}
+                    type="button"
+                    aria-pressed={aanzicht === a}
+                    onClick={() => setAanzicht(a)}
+                    className={`rounded-md px-3 py-1.5 ${aanzicht === a ? "bg-white text-slate-900 shadow-sm" : "text-slate-500"}`}>
+                    {a === "binnen" ? "Binnenaanzicht" : "Buitenaanzicht"}
+                  </button>
+                ))}
+              </div>
+            )}
+            <div className={`bg-slate-50 rounded-xl flex items-center justify-center ${voorbeeld ? "h-28 p-3" : "h-56 p-3 sm:h-auto sm:aspect-video sm:p-5"}`}>
+              <KozijnTekening kozijn={kozijn} className="h-full max-w-full" breedte={tekenB} hoogte={tekenH} maten={!voorbeeld} aanzicht={aanzicht} />
             </div>
 
             <div role="group" aria-label="Hoeveel ramen naast elkaar?">
@@ -773,7 +814,7 @@ export function KozijnConfigurator({
                     onClick={() => kiesType(k.slug)}
                     className={`${keuze(k.slug === slug)} w-24 shrink-0 p-1.5 text-[11px] leading-tight sm:w-28`}>
                     <span className="mb-1 flex h-10 items-center justify-center sm:h-14">
-                      <KozijnTekening kozijn={k} className="h-full max-w-full **:[vector-effect:non-scaling-stroke]" />
+                      <KozijnTekening kozijn={k} className="h-full max-w-full **:[vector-effect:non-scaling-stroke]" breedte={beginmaat(k.slug)[0]} hoogte={beginmaat(k.slug)[1]} />
                     </span>
                     {k.name}
                   </button>
@@ -1035,12 +1076,12 @@ export function KozijnConfigurator({
             {!alu ? (
               <GevelFoto slug={slug} kozijnNaam={kozijn.name} kleur={kleurBuitenkant} gevel={gevel}>
                 <div className="flex aspect-video items-center justify-center rounded-xl bg-slate-50 p-5">
-                  <KozijnTekening kozijn={kozijn} className="h-full max-w-full" />
+                  <KozijnTekening kozijn={kozijn} className="h-full max-w-full" breedte={tekenB} hoogte={tekenH} />
                 </div>
               </GevelFoto>
             ) : (
               <div className="flex aspect-video items-center justify-center rounded-xl bg-slate-50 p-5">
-                <KozijnTekening kozijn={kozijn} className="h-full max-w-full" />
+                <KozijnTekening kozijn={kozijn} className="h-full max-w-full" breedte={tekenB} hoogte={tekenH} />
               </div>
             )}
             {!alu && heeftGevelFoto(slug, kleurBuitenkant) ? (

@@ -2,6 +2,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { InmeetServiceCard } from "@/app/components/InmeetServiceCard";
+import { KozijnTechnisch, TECHNISCH } from "@/app/components/KozijnTechnisch";
+import { ALU_BEGINMATEN } from "@/lib/aluminium";
+import { beginmaat } from "@/lib/beginmaten";
 import { Wrench, ShieldCheck, Zap, Sparkles } from "lucide-react";
 
 function FaqBlok({ items }: { items: { q: string; a: string }[] }) {
@@ -88,13 +91,23 @@ export default function AluKozijnenOverzicht() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
         {kozijnen.filter((k) => k.v === activeTab).map((item) => (
           <Link href={`/aluminium/kozijnconfigurator/${item.slug}`} key={item.id} className="group">
-            <div className="relative h-[280px] bg-white border border-slate-100 rounded-2xl flex items-center justify-center p-8 shadow-sm">
+            <div className={`relative h-[280px] ${TECHNISCH[item.slug] ? "bg-slate-50" : "bg-white"} border border-slate-100 rounded-2xl flex items-center justify-center p-8 shadow-sm`}>
               {item.best && (
                 <div className="absolute top-4 left-4 bg-brand text-white text-[9px] font-black px-3 py-1.5 rounded-full tracking-widest z-10 uppercase">
                   POPULAIR
                 </div>
               )}
               <div className="w-full h-full flex items-center justify-center">
+                {TECHNISCH[item.slug] ? (
+                  // De nieuwe technische tekening, in de verhoudingen van de aluminium beginmaat van dit type.
+                  <KozijnTechnisch
+                    breedte={(ALU_BEGINMATEN[item.slug] ?? beginmaat(item.slug))[0]}
+                    hoogte={(ALU_BEGINMATEN[item.slug] ?? beginmaat(item.slug))[1]}
+                    spec={TECHNISCH[item.slug]}
+                    maten={false}
+                    className="h-full max-w-full"
+                  />
+                ) : (
                 <div style={{ width: `${item.v * 20 + 20}%`, maxWidth: "100%" }}>
                   <svg viewBox={`0 0 ${item.v * 100} 100`} className="w-full h-auto">
                     <rect x="0.5" y="0.5" width={item.v * 100 - 1} height="99" fill="none" stroke={COLORS.textDark} strokeWidth="1" />
@@ -104,6 +117,7 @@ export default function AluKozijnenOverzicht() {
                     {item.components}
                   </svg>
                 </div>
+                )}
               </div>
             </div>
             <h3 className="mt-6 text-center font-bold text-[#1a1a1a] text-base group-hover:text-brand-text transition-colors uppercase tracking-tight">

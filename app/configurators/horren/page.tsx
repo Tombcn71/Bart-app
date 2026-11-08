@@ -2,6 +2,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { InmeetServiceCard } from "@/app/components/InmeetServiceCard";
+import { KozijnTechnisch, TECHNISCH } from "@/app/components/KozijnTechnisch";
+import { HOR_BEGINMATEN } from "@/lib/horren";
 import { InzethorSVG, KlemhorSVG, PlisseHordeurSVG } from "@/lib/hor-svgs";
 
 const horren = [
@@ -64,12 +66,18 @@ export default function HorrenOverzicht() {
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
         {zichtbaar.map((item) => (
           <Link href={`/horrenconfigurateur/${item.slug}`} key={item.id} className="group flex flex-col h-full">
-            <div className="relative aspect-[3/4] bg-white border border-slate-100 rounded-2xl flex items-center justify-center p-6 md:p-8 shadow-sm group-hover:shadow-md transition-shadow overflow-hidden">
+            <div className="relative aspect-[3/4] bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-center p-6 md:p-8 shadow-sm group-hover:shadow-md transition-shadow overflow-hidden">
               {item.best && (
                 <div className="absolute top-3 left-3 bg-brand text-white text-[9px] font-black px-3 py-1.5 rounded-full tracking-widest z-10 uppercase">POPULAIR</div>
               )}
-              <div style={{ width: "60%" }}>
-                {item.component}
+              <div className="flex h-full w-full items-center justify-center">
+                <KozijnTechnisch
+                  breedte={HOR_BEGINMATEN[item.slug][0]}
+                  hoogte={HOR_BEGINMATEN[item.slug][1]}
+                  spec={TECHNISCH[item.slug]}
+                  maten={false}
+                  className="max-h-full max-w-full"
+                />
               </div>
             </div>
             <div className="mt-3 px-1">

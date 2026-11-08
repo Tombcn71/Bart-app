@@ -1,3 +1,5 @@
+import { technischSvg, TECHNISCH } from "../app/components/KozijnTechnisch";
+import { jsxNaarSvg } from "./jsx-naar-svg";
 import { buildDeurSvgString } from "./deur-svg-strings";
 import { buildKozijnSvgString } from "./kozijn-svg-strings";
 import { buildSchuifpuiSvgString } from "./schuifpui-svg-strings";
@@ -29,8 +31,31 @@ function injectLabel(svg: string, slug: string, glas?: string, materiaal?: strin
   return svg.replace(/<\/svg>/, `${label}</svg>`);
 }
 
+/**
+ * De technische tekening van de site, als svg-tekst voor de pdf: dezelfde tekening als in de calculator, met de maten.
+ * Het glas en het materiaal komen als regel onder de tekening.
+ */
+function technischeSvg(slug: string, breedte: number, hoogte: number, glas?: string, materiaal?: string): string {
+  const html = jsxNaarSvg(technischSvg({ breedte, hoogte, spec: TECHNISCH[slug], maten: true }, "pdf"));
+  // De losse stijlregel is voor de browser; de pdf-omzetter heeft hem niet nodig.
+  let svg = html.replace(/<style>[\s\S]*?<\/style>/, "").replace("<svg ", '<svg xmlns="http://www.w3.org/2000/svg" ');
+  const vb = svg.match(/viewBox="(-?[\d.]+) (-?[\d.]+) ([\d.]+) ([\d.]+)"/);
+  if (!vb) return svg;
+  const [x, y, w, h] = vb.slice(1).map(Number);
+  const regel = [materiaal, glas ? glas.replace(/-/g, " ") : ""].filter(Boolean).join(" · ");
+  const extra = regel ? h * 0.07 : 0;
+  svg = svg.replace(vb[0], `viewBox="${x} ${y} ${w} ${h + extra}" width="${w}" height="${h + extra}"`);
+  if (regel) {
+    const label = `<text x="${x + w / 2}" y="${y + h + extra * 0.7}" text-anchor="middle" font-family="Arial,sans-serif" font-size="${extra * 0.55}" fill="#9ca3af">${regel}</text>`;
+    svg = svg.replace("</svg>", `${label}</svg>`);
+  }
+  // Witte achtergrond onder de hele tekening.
+  return svg.replace(/(<svg[^>]*>)/, `$1<rect x="${x}" y="${y}" width="${w}" height="${h + extra}" fill="white"/>`);
+}
+
 export function getSvgString(slug: string, breedte = 1000, hoogte = 1200, glas?: string, materiaal?: string): string | null {
   if (!slug) return null;
+  if (TECHNISCH[slug]) return technischeSvg(slug, breedte, hoogte, glas, materiaal);
   let svg: string;
   if (slug === "inzethor" || slug === "klemhor" || slug === "plisse-hordeur") svg = buildHorSvgString(slug, breedte, hoogte);
   else if (slug === "rolluik" || slug === "inbouw-rolluik" || slug === "screen") svg = buildRolluikSvgString(slug, breedte, hoogte);

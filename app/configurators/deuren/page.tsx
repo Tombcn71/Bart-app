@@ -24,6 +24,9 @@ function FaqBlok({ items }: { items: { q: string; a: string }[] }) {
   );
 }
 import { InmeetServiceCard } from "@/app/components/InmeetServiceCard";
+import { KozijnTechnisch, TECHNISCH } from "@/app/components/KozijnTechnisch";
+import { OUD } from "@/app/components/DeurCalculator";
+import { DEUR_KUNSTSTOF_BEGINMATEN } from "@/lib/deuren-kunststof";
 import {
   SingleDoorBase, DoubleDoorBase,
   AchterdeurBovenlicht, VoordeurBovenlicht,
@@ -103,17 +106,30 @@ export default function BartMooiDeurenConfigurator() {
               href={`/deurconfigurator/${item.slug}`}
               key={item.id}
               className="group flex flex-col h-full">
-              <div className="relative bg-white border border-slate-100 rounded-2xl flex items-center justify-center p-6 md:p-8 shadow-sm group-hover:shadow-md transition-shadow overflow-hidden min-h-[220px]">
+              <div className={`relative ${TECHNISCH[OUD[item.slug] ?? item.slug] ? "bg-slate-50" : "bg-white"} border border-slate-100 rounded-2xl flex items-center justify-center p-6 md:p-8 shadow-sm group-hover:shadow-md transition-shadow overflow-hidden min-h-[220px]`}>
                 {item.best && (
                   <div className="absolute top-3 left-3 md:top-4 md:left-4 bg-brand text-white text-[8px] md:text-[9px] font-black px-2 py-1 md:px-3 md:py-1.5 rounded-full tracking-widest z-10 uppercase">
                     POPULAIR
                   </div>
                 )}
+                {TECHNISCH[OUD[item.slug] ?? item.slug] ? (
+                  // De technische tekening, in de verhoudingen van de beginmaat van dit type.
+                  <div className="flex h-56 w-full items-center justify-center">
+                    <KozijnTechnisch
+                      breedte={(DEUR_KUNSTSTOF_BEGINMATEN[OUD[item.slug] ?? item.slug] ?? [1000, 2200])[0]}
+                      hoogte={(DEUR_KUNSTSTOF_BEGINMATEN[OUD[item.slug] ?? item.slug] ?? [1000, 2200])[1]}
+                      spec={TECHNISCH[OUD[item.slug] ?? item.slug]}
+                      maten={false}
+                      className="h-full max-w-full"
+                    />
+                  </div>
+                ) : (
                 <div className="w-full flex justify-center">
                   <svg viewBox={`0 0 ${item.v * 100} 160`} className="w-full h-auto" style={{ maxWidth: item.v > 1.4 ? "100%" : "60%" }}>
                     {item.comp}
                   </svg>
                 </div>
+                )}
               </div>
 
               <div className="mt-4 md:mt-6 text-center">

@@ -3,6 +3,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { InmeetServiceCard } from "@/app/components/InmeetServiceCard";
 import { SchuifpuiTweevaks, SchuifpuiViervaks } from "@/lib/schuifpui-svgs";
+import { KozijnTechnisch, TECHNISCH } from "@/app/components/KozijnTechnisch";
+import { PUI_KUNSTSTOF_BEGINMATEN } from "@/lib/schuifpui";
 
 export default function SchuifpuiOverview() {
   const [activeType, setActiveType] = useState("2-vaks");
@@ -71,20 +73,31 @@ export default function SchuifpuiOverview() {
               href={`/schuifpuiconfigurator/${item.slug}`}
               key={item.id}
               className="group flex flex-col h-full">
-              <div className="relative aspect-[4/3] bg-white border border-slate-100 rounded-2xl flex items-center justify-center p-6 md:p-8 shadow-sm group-hover:shadow-md transition-shadow overflow-hidden">
+              <div className={`relative aspect-[4/3] ${TECHNISCH[item.slug] ? "bg-slate-50" : "bg-white"} border border-slate-100 rounded-2xl flex items-center justify-center p-6 md:p-8 shadow-sm group-hover:shadow-md transition-shadow overflow-hidden`}>
                 {item.best && (
                   <div className="absolute top-3 left-3 md:top-4 md:left-4 bg-brand text-white text-[8px] md:text-[9px] font-black px-2 py-1 md:px-3 md:py-1.5 rounded-full tracking-widest z-10 uppercase">
                     POPULAIR
                   </div>
                 )}
                 <div className="w-full h-full flex items-center justify-center">
-                  <div style={{ width: item.v > 1.5 ? "100%" : "70%" }}>
-                    <svg
-                      viewBox={`0 0 ${item.v * 100} 160`}
-                      className="w-full h-auto drop-shadow-sm">
-                      {item.components}
-                    </svg>
-                  </div>
+                  {TECHNISCH[item.slug] ? (
+                    // De nieuwe technische tekening, in de verhoudingen van de beginmaat van dit type.
+                    <KozijnTechnisch
+                      breedte={(PUI_KUNSTSTOF_BEGINMATEN[item.slug] ?? [2500, 2200])[0]}
+                      hoogte={(PUI_KUNSTSTOF_BEGINMATEN[item.slug] ?? [2500, 2200])[1]}
+                      spec={TECHNISCH[item.slug]}
+                      maten={false}
+                      className="h-full max-w-full"
+                    />
+                  ) : (
+                    <div style={{ width: item.v > 1.5 ? "100%" : "70%" }}>
+                      <svg
+                        viewBox={`0 0 ${item.v * 100} 160`}
+                        className="w-full h-auto drop-shadow-sm">
+                        {item.components}
+                      </svg>
+                    </div>
+                  )}
                 </div>
               </div>
 

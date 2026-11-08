@@ -1,6 +1,7 @@
 "use client";
 import { ProductConfigurator } from "@/app/components/ProductConfigurator";
 import { HarmonicadeurSVG } from "@/lib/harmonicadeur-svgs";
+import { KozijnTechnisch, TECHNISCH } from "@/app/components/KozijnTechnisch";
 import { HARMONICA_BEGINMATEN, HARMONICA_CATALOGUS, HARMONICA_GRENZEN, HARMONICA_INFO } from "@/lib/harmonicadeuren";
 
 export const HARMONICA_NAMEN: Record<string, string> = {
@@ -9,7 +10,17 @@ export const HARMONICA_NAMEN: Record<string, string> = {
   "aluminium-harmonicadeur-5delig": "Vijfdelig",
 };
 const secties = (slug: string): 3 | 4 | 5 => (slug.includes("5") ? 5 : slug.includes("4") ? 4 : 3);
-export const harmonicaTekening = (slug: string) => <HarmonicadeurSVG sections={secties(slug)} />;
+export const harmonicaTekening = (slug: string, opties?: { breedte: number; hoogte: number; maten?: boolean }) => {
+  // Met een maat de technische tekening, zoals Creon de harmonicadeur toont; zonder maat het oude plaatje.
+  const spec = TECHNISCH[slug];
+  // Zonder maat (het prijsscherm in het dashboard) de beginmaat van het type.
+  const [b0, h0] = HARMONICA_BEGINMATEN[slug] ?? [3000, 2250];
+  const maat = opties ?? { breedte: b0, hoogte: h0 };
+  if (spec) {
+    return <KozijnTechnisch breedte={maat.breedte} hoogte={maat.hoogte} spec={spec} maten={opties?.maten ?? false} className="h-full max-w-full" />;
+  }
+  return <HarmonicadeurSVG sections={secties(slug)} />;
+};
 // Oude links gebruikten driedelig, vierdelig en vijfdelig.
 const naarSlug = (id?: string) =>
   id?.includes("vijf") || id?.includes("5") ? "aluminium-harmonicadeur-5delig" : id?.includes("vier") || id?.includes("4") ? "aluminium-harmonicadeur-4delig" : id ? "aluminium-harmonicadeur-3delig" : undefined;

@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { InmeetServiceCard } from "@/app/components/InmeetServiceCard";
+import { KozijnTechnisch, TECHNISCH } from "@/app/components/KozijnTechnisch";
 import { HarmonicadeurDriedelig, HarmonicadeurVierdelig, HarmonicadeurVijfdelig } from "@/lib/harmonicadeur-svgs";
 
 const deuren = [
@@ -20,11 +21,20 @@ export default function AluHarmonicadeurOverzicht() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
         {deuren.map((item) => (
           <Link href={`/aluminium/harmonicadeurconfigurator/${item.slug}`} key={item.id} className="group flex flex-col h-full">
-            <div className="relative bg-white border border-slate-100 rounded-2xl flex items-center justify-center p-6 md:p-8 shadow-sm group-hover:shadow-md transition-shadow overflow-hidden min-h-[220px]">
+            <div className="relative bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-center p-6 md:p-8 shadow-sm group-hover:shadow-md transition-shadow overflow-hidden min-h-[220px]">
               {item.best && (
                 <div className="absolute top-3 left-3 bg-brand text-white text-[9px] font-black px-3 py-1.5 rounded-full tracking-widest z-10 uppercase">POPULAIR</div>
               )}
-              <div style={{ width: item.sections > 3 ? "100%" : "80%" }}>{item.component}</div>
+              <div className="flex h-56 w-full items-center justify-center">
+                <KozijnTechnisch
+                  // Op het kaartje alle drie dezelfde vorm, zodat ze even groot zijn.
+                  breedte={3300}
+                  hoogte={2250}
+                  spec={TECHNISCH[`aluminium-harmonicadeur-${item.sections}delig`]}
+                  maten={false}
+                  className="h-full max-w-full"
+                />
+              </div>
             </div>
             <div className="mt-4 md:mt-6 text-center">
               <h3 className="font-bold text-[#1a1a1a] text-sm md:text-base uppercase tracking-tight">{item.name}</h3>

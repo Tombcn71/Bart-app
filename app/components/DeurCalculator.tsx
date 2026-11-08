@@ -1,6 +1,9 @@
 "use client";
 import type { ReactNode } from "react";
 import { ProductConfigurator } from "@/app/components/ProductConfigurator";
+import { KozijnTechnisch, TECHNISCH } from "@/app/components/KozijnTechnisch";
+import { DEUR_KUNSTSTOF_BEGINMATEN as DEUR_KBM } from "@/lib/deuren-kunststof";
+import { DEUR_ALU_BEGINMATEN as DEUR_ABM } from "@/lib/deuren-alu";
 import {
   SingleDoorBase, DoubleDoorBase, AchterdeurBovenlicht, VoordeurBovenlicht, AchterdeurBorstwering, AchterdeurBorstweringBovenlicht,
   DeurZijlicht, VoordeurZijlicht, DeurZijlichtBovenlicht, VoordeurZijlichtBovenlicht, DeurZijlichtBorstwering, DeurZijlichten,
@@ -65,19 +68,19 @@ const NAMEN_KUNSTSTOF: Record<string, string> = {
 };
 const NAMEN_ALU: Record<string, string> = {
   "aluminium-deur": "Deur",
-  "aluminium-deur-2-vaks": "Deur, 2 vaks",
+  "aluminium-deur-2-vaks": "Deur met borstwering (2 vaks)",
   "aluminium-deur-3vaks": "Deur, 3 vaks",
   "aluminium-deur-met-zijlicht": "Deur met zijlicht",
   "aluminium-deur-met-zijlicht-met-borstwering": "Deur met zijlicht en borstwering",
   "aluminium-deur-met-zijlichten": "Deur met twee zijlichten",
   "aluminium-dubbele-deur": "Dubbele deur",
-  "aluminium-dubbele-deur-2-vaks": "Dubbele deur, 2 vaks",
+  "aluminium-dubbele-deur-2-vaks": "Dubbele deur met borstwering (2 vaks)",
   "aluminium-dubbele-deur-met-zijlichten": "Dubbele deur met zijlichten",
 };
 export const DEUR_NAMEN: Record<"kunststof" | "aluminium", Record<string, string>> = { kunststof: NAMEN_KUNSTSTOF, aluminium: NAMEN_ALU };
 
 // Oude links (voordeur-bovenlicht, deur-zijlichten, ...) wijzen naar de nieuwe typen.
-const OUD: Record<string, string> = {
+export const OUD: Record<string, string> = {
   "voordeur-bovenlicht": "voordeur-met-bovenlicht",
   "achterdeur-bovenlicht": "achterdeur-met-bovenlicht",
   "achterdeur-borstwering": "achterdeur-met-borstwering",
@@ -109,7 +112,15 @@ const ALU_VAN_KUNSTSTOF: Record<string, string> = {
 };
 
 /** De tekening van een deur, voor de calculator en het prijsscherm. */
-export function deurTekening(slug: string) {
+export function deurTekening(slug: string, opties?: { breedte: number; hoogte: number; maten?: boolean }) {
+  // Met een maat de technische tekening, zoals Creon de deur toont; zonder maat het oude plaatje.
+  const spec = TECHNISCH[slug];
+  // Zonder maat (het prijsscherm in het dashboard) de beginmaat van het type.
+  const [b0, h0] = DEUR_KBM[slug] ?? DEUR_ABM[slug] ?? [1000, 2200];
+  const maat = opties ?? { breedte: b0, hoogte: h0 };
+  if (spec) {
+    return <KozijnTechnisch breedte={maat.breedte} hoogte={maat.hoogte} spec={spec} maten={opties?.maten ?? false} className="h-full max-w-full" />;
+  }
   const [breed, deel] = TEKENING[slug] ?? [100, <SingleDoorBase key="a" type="voordeur" />];
   return (
     <svg viewBox={`0 0 ${breed} 160`} className="h-full max-w-full">
