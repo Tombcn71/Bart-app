@@ -21,7 +21,6 @@ const NAV_ITEMS = [
   {
     label: "Harmonicadeur",
     items: [
-      { label: "Kunststof harmonicadeur", href: "/harmonicadeur" },
       { label: "Aluminium harmonicadeur", href: "/aluminium/harmonicadeur" },
     ],
   },
