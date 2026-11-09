@@ -445,8 +445,7 @@ export function KozijnConfigurator({
   const [aantal, setAantal] = useState(1);
   // Het preview-venster met de foto op een gevel.
   const [previewOpen, setPreviewOpen] = useState(false);
-  // Binnen- of buitenaanzicht van de technische tekening.
-  const [aanzicht, setAanzicht] = useState<"binnen" | "buiten">("binnen");
+  const aanzicht = "binnen" as const;
   // De gekozen gevel voor de foto; telt niet mee in de prijs.
   const [gevel, setGevel] = useState<GevelId>("rood");
   // Extra maat bij een bovenlicht of borstwering (hoogte in mm).
@@ -766,20 +765,6 @@ export function KozijnConfigurator({
         <div className={voorbeeld ? "grid grid-cols-1 gap-4" : "grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-12"}>
           <div className={voorbeeld ? "min-w-0 space-y-3" : "lg:col-span-7 min-w-0 space-y-3"}>
             {/* Bovenaan de tekening van het gekozen kozijn; de foto op een gevel komt pas bij het formulier */}
-            {!voorbeeld && TECHNISCH[kozijn.slug] && (
-              <div role="group" aria-label="Aanzicht van de tekening" className="flex w-fit rounded-lg bg-slate-100 p-0.5 text-xs font-semibold">
-                {(["binnen", "buiten"] as const).map((a) => (
-                  <button
-                    key={a}
-                    type="button"
-                    aria-pressed={aanzicht === a}
-                    onClick={() => setAanzicht(a)}
-                    className={`rounded-md px-3 py-1.5 ${aanzicht === a ? "bg-white text-slate-900 shadow-sm" : "text-slate-500"}`}>
-                    {a === "binnen" ? "Binnenaanzicht" : "Buitenaanzicht"}
-                  </button>
-                ))}
-              </div>
-            )}
             <div className={`bg-slate-50 rounded-xl flex items-center justify-center ${voorbeeld ? "h-28 p-3" : "h-56 p-3 sm:h-auto sm:aspect-video sm:p-5"}`}>
               <KozijnTekening kozijn={kozijn} className="h-full max-w-full" breedte={tekenB} hoogte={tekenH} maten={!voorbeeld} aanzicht={aanzicht} />
             </div>
