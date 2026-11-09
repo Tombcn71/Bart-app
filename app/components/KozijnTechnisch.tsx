@@ -209,6 +209,8 @@ export type KozijnTechnischProps = {
   aanzicht?: "binnen" | "buiten";
   /** Maatlijnen en vaknummers tonen; uit voor kleine kaartjes. */
   maten?: boolean;
+  /** Duidelijke versie (standaard): donkere lijnen en lichtblauw glas. Met false de oude, vage versie. */
+  scherp?: boolean;
   className?: string;
 };
 
@@ -219,14 +221,14 @@ export function KozijnTechnisch(props: KozijnTechnischProps) {
 
 /** De tekening zelf, zonder hooks: ook te gebruiken buiten de browser (de offerte-pdf). */
 export function technischSvg(
-  { breedte, hoogte, spec, aanzicht = "binnen", maten = true, className }: KozijnTechnischProps,
+  { breedte, hoogte, spec, aanzicht = "binnen", maten = true, scherp = true, className }: KozijnTechnischProps,
   uid: string,
 ) {
   const B = breedte;
   const H = hoogte;
   const groot = Math.max(B, H);
   const fs = groot * 0.034; // lettergrootte voor maten
-  const lijn = groot * 0.0016; // standaard lijndikte
+  const lijn = groot * (scherp ? 0.0022 : 0.0016); // standaard lijndikte
   const buiten = aanzicht === "buiten";
 
   // Kolommen van links naar rechts zoals ze op het scherm staan (buitenaanzicht = gespiegeld).
@@ -322,7 +324,12 @@ export function technischSvg(
 
   const glasKleur = `url(#${uid}g)`;
   const stroke = "#3a3f44";
-  const kader = "#c2c3bf";
+  const kader = scherp ? "#2b3036" : "#c2c3bf";
+  const binnenRand = scherp ? "#4a5259" : "#dedfdb";
+  const vleugelRand = scherp ? "#3a4148" : "#cfd0cc";
+  const stippelKleur = scherp ? "#59636b" : "#a7adb2";
+  const glasRand = scherp ? "#2b3036" : "#8b9399";
+  const profielVul = "#ffffff";
 
   const pijl = (x: number, y: number, richting: "l" | "r" | "o" | "b") => {
     const l = fs * 0.7;
@@ -366,8 +373,8 @@ export function technischSvg(
           <path d={`M0 0H${groot * 0.012}M0 0V${groot * 0.012}`} stroke="#7f8890" strokeWidth={lijn * 0.75} fill="none" />
         </pattern>
         <linearGradient id={`${uid}g`} x1="0" y1="0" x2="0.35" y2="1">
-          <stop offset="0" stopColor="#e2eef4" />
-          <stop offset="1" stopColor="#fcfdfe" />
+          <stop offset="0" stopColor={scherp ? "#dbedf9" : "#e2eef4"} />
+          <stop offset="1" stopColor={scherp ? "#eaf5fc" : "#fcfdfe"} />
         </linearGradient>
         <filter id={`${uid}sh`} x="-10%" y="-10%" width="125%" height="125%">
           <feGaussianBlur stdDeviation={groot * 0.0018} />
@@ -375,17 +382,17 @@ export function technischSvg(
       </defs>
 
       {/* kozijn: recht en vlak, met een dun randje */}
-      <rect x={0} y={0} width={B} height={H} fill="#ffffff" stroke={kader} strokeWidth={lijn * 1.3} />
-      <rect x={PROFIEL * 0.3} y={PROFIEL * 0.3} width={B - PROFIEL * 0.6} height={H - PROFIEL * 0.6} fill="none" stroke="#dedfdb" strokeWidth={lijn} />
-      <rect x={PROFIEL} y={PROFIEL} width={B - 2 * PROFIEL} height={hi} fill="#ffffff" stroke={kader} strokeWidth={lijn} />
+      <rect x={0} y={0} width={B} height={H} fill={profielVul} stroke={kader} strokeWidth={lijn * 1.3} />
+      <rect x={PROFIEL * 0.3} y={PROFIEL * 0.3} width={B - PROFIEL * 0.6} height={H - PROFIEL * 0.6} fill="none" stroke={binnenRand} strokeWidth={lijn} />
+      <rect x={PROFIEL} y={PROFIEL} width={B - 2 * PROFIEL} height={hi} fill={profielVul} stroke={kader} strokeWidth={lijn} />
       {spec.drempel && <rect x={0} y={H - DREMPEL} width={B} height={DREMPEL} fill="#1f2327" />}
 
       {/* middenstijlen en tussenregels */}
       {stijlen.map((s, i) => (
-        <rect key={`st${i}`} x={s.x} y={s.y} width={STIJL} height={s.h} fill="#ffffff" stroke={kader} strokeWidth={lijn} />
+        <rect key={`st${i}`} x={s.x} y={s.y} width={STIJL} height={s.h} fill={profielVul} stroke={kader} strokeWidth={lijn} />
       ))}
       {regels.map((rg, i) => (
-        <rect key={`rg${i}`} x={rg.x} y={rg.y} width={rg.w} height={TRAVERSE} fill="#ffffff" stroke={kader} strokeWidth={lijn} />
+        <rect key={`rg${i}`} x={rg.x} y={rg.y} width={rg.w} height={TRAVERSE} fill={profielVul} stroke={kader} strokeWidth={lijn} />
       ))}
 
       {/* cellen */}
@@ -430,8 +437,8 @@ export function technischSvg(
         if (cel.kind === "paneel") {
           return (
             <g key={sleutel}>
-              <rect x={x0} y={y} width={w} height={ch} fill="#ffffff" stroke={kader} strokeWidth={lijn * 1.1} />
-              <rect x={x0 + LAT} y={y + LAT} width={w - 2 * LAT} height={ch - 2 * LAT} fill="#ffffff" stroke="#cfd0cc" strokeWidth={lijn} />
+              <rect x={x0} y={y} width={w} height={ch} fill={profielVul} stroke={kader} strokeWidth={lijn * 1.1} />
+              <rect x={x0 + LAT} y={y + LAT} width={w - 2 * LAT} height={ch - 2 * LAT} fill={profielVul} stroke={vleugelRand} strokeWidth={lijn} />
             </g>
           );
         }
@@ -444,10 +451,10 @@ export function technischSvg(
           const stap = soort === "screen" ? 0 : 56;
           return (
             <g key={sleutel}>
-              <rect x={x0} y={y} width={w} height={ch} fill="#ffffff" stroke="#7d868d" strokeWidth={lijn * 1.1} />
+              <rect x={x0} y={y} width={w} height={ch} fill={profielVul} stroke="#7d868d" strokeWidth={lijn * 1.1} />
               {/* geleiders links en rechts */}
-              <rect x={x0} y={py} width={geleider} height={ch - kastH} fill="#ffffff" stroke="#7d868d" strokeWidth={lijn} />
-              <rect x={x0 + w - geleider} y={py} width={geleider} height={ch - kastH} fill="#ffffff" stroke="#7d868d" strokeWidth={lijn} />
+              <rect x={x0} y={py} width={geleider} height={ch - kastH} fill={profielVul} stroke="#7d868d" strokeWidth={lijn} />
+              <rect x={x0 + w - geleider} y={py} width={geleider} height={ch - kastH} fill={profielVul} stroke="#7d868d" strokeWidth={lijn} />
               {/* het doek: lamellen of fijn gaas */}
               <rect x={px} y={py} width={pw} height={ph} fill="#eef0f2" stroke="#5f686f" strokeWidth={lijn * 1.2} />
               {soort === "screen" ? (
@@ -458,16 +465,13 @@ export function technischSvg(
                 ))
               )}
               {/* onderlat */}
-              <rect x={px} y={y + ch - 36} width={pw} height={36} fill="#ffffff" stroke="#7d868d" strokeWidth={lijn * 1.1} />
+              <rect x={px} y={y + ch - 36} width={pw} height={36} fill={profielVul} stroke="#7d868d" strokeWidth={lijn * 1.1} />
               {/* kast bovenaan */}
               {kastH > 0 && (
                 <g>
-                  <rect x={x0} y={y} width={w} height={kastH} fill="#ffffff" stroke="#7d868d" strokeWidth={lijn * 1.3} />
+                  <rect x={x0} y={y} width={w} height={kastH} fill={profielVul} stroke="#7d868d" strokeWidth={lijn * 1.3} />
                   <rect x={x0 + 14} y={y + 14} width={w - 28} height={kastH - 28} fill="none" stroke="#b4bbc1" strokeWidth={lijn} />
                 </g>
-              )}
-              {maten && nr && (
-                <text x={px + pw / 2} y={py + fs * 1.7} textAnchor="middle" fontSize={fs * 0.95} fill="#3f4348" fontFamily="system-ui, sans-serif">{nr}</text>
               )}
             </g>
           );
@@ -478,7 +482,7 @@ export function technischSvg(
           const mx = x0 + f, my = y + f, mw = w - 2 * f, mh = ch - 2 * f;
           return (
             <g key={sleutel}>
-              <rect x={x0} y={y} width={w} height={ch} fill="#ffffff" stroke="#7d868d" strokeWidth={lijn * 1.1} />
+              <rect x={x0} y={y} width={w} height={ch} fill={profielVul} stroke="#7d868d" strokeWidth={lijn * 1.1} />
               <rect x={x0 + f * 0.4} y={y + f * 0.4} width={w - f * 0.8} height={ch - f * 0.8} fill="none" stroke="#b4bbc1" strokeWidth={lijn} />
               <rect x={mx} y={my} width={mw} height={mh} fill="#eef0f2" stroke="#5f686f" strokeWidth={lijn * 1.2} />
               <rect x={mx} y={my} width={mw} height={mh} fill={`url(#${uid}m)`} />
@@ -497,13 +501,10 @@ export function technischSvg(
                     return <line key={k} x1={px} y1={my} x2={px} y2={my + mh} stroke="#59626a" strokeWidth={lijn * 1.3} />;
                   })}
                   {/* greepprofiel rechts met een greep, en een rail onderaan */}
-                  <rect x={x0 + w - f - 36} y={my} width={36} height={mh} fill="#ffffff" stroke="#7d868d" strokeWidth={lijn} />
+                  <rect x={x0 + w - f - 36} y={my} width={36} height={mh} fill={profielVul} stroke="#7d868d" strokeWidth={lijn} />
                   <rect x={x0 + w - f - 22} y={y + ch / 2 - 60} width={8} height={120} rx={4} fill="#e4e6e8" stroke="#6f757a" strokeWidth={lijn * 0.8} />
                   <rect x={x0} y={y + ch - f * 0.6} width={w} height={f * 0.6} fill="#e9eaeb" stroke="#7d868d" strokeWidth={lijn} />
                 </g>
-              )}
-              {maten && nr && (
-                <text x={mx + mw / 2} y={my + fs * 1.7} textAnchor="middle" fontSize={fs * 0.95} fill="#3f4348" fontFamily="system-ui, sans-serif">{nr}</text>
               )}
             </g>
           );
@@ -513,15 +514,15 @@ export function technischSvg(
         return (
           <g key={sleutel}>
             {/* vleugel of glaslat: vlak, met een dunne binnenlijn */}
-            <rect x={x0} y={y} width={w} height={ch} fill="#ffffff" stroke={kader} strokeWidth={lijn * 1.1} />
-            <rect x={x0 + rand * 0.45} y={y + rand * 0.45} width={w - rand * 0.9} height={ch - rand * 0.9} fill="none" stroke="#dedfdb" strokeWidth={lijn} />
+            <rect x={x0} y={y} width={w} height={ch} fill={profielVul} stroke={kader} strokeWidth={lijn * 1.1} />
+            <rect x={x0 + rand * 0.45} y={y + rand * 0.45} width={w - rand * 0.9} height={ch - rand * 0.9} fill="none" stroke={binnenRand} strokeWidth={lijn} />
             {/* glas en dichte panelen, met een dun zwart lijntje boven en links bij het glas */}
             {velden.map((v, vi) =>
               v.soort === "paneel" ? (
-                <rect key={`v${vi}`} x={v.x} y={v.y} width={v.w} height={v.h} fill="#ffffff" stroke="#cfd0cc" strokeWidth={lijn} />
+                <rect key={`v${vi}`} x={v.x} y={v.y} width={v.w} height={v.h} fill={profielVul} stroke={vleugelRand} strokeWidth={lijn} />
               ) : (
                 <g key={`v${vi}`}>
-                  <rect x={v.x} y={v.y} width={v.w} height={v.h} fill={glasKleur} stroke="#8b9399" strokeWidth={lijn * 0.8} />
+                  <rect x={v.x} y={v.y} width={v.w} height={v.h} fill={glasKleur} stroke={glasRand} strokeWidth={lijn * 0.8} />
                   <g strokeLinecap="square">
                     <line x1={v.x} y1={v.y} x2={v.x + v.w} y2={v.y} stroke="#1f2327" strokeWidth={lijn * 1.8} />
                     <line x1={v.x} y1={v.y} x2={v.x} y2={v.y + v.h} stroke="#1f2327" strokeWidth={lijn * 1.8} />
@@ -533,13 +534,13 @@ export function technischSvg(
             )}
             {/* openingslijnen */}
             {(cel.kind === "dk" || isDeur) && (
-              <g fill="none" stroke="#a7adb2" strokeWidth={lijn * 0.8} strokeDasharray={stippel}>
+              <g fill="none" stroke={stippelKleur} strokeWidth={lijn * 0.8} strokeDasharray={stippel}>
                 <path d={links ? `M${gx} ${gy} L${gx + gw} ${gy + gh / 2} L${gx} ${gy + gh}` : `M${gx + gw} ${gy} L${gx} ${gy + gh / 2} L${gx + gw} ${gy + gh}`} />
                 {cel.kind !== "deur" && <path d={`M${gx} ${gy + gh} L${gx + gw / 2} ${gy} L${gx + gw} ${gy + gh}`} />}
               </g>
             )}
             {cel.kind === "kiep" && (
-              <path d={`M${gx} ${gy + gh} L${gx + gw / 2} ${gy} L${gx + gw} ${gy + gh}`} fill="none" stroke="#a7adb2" strokeWidth={lijn * 0.8} strokeDasharray={stippel} />
+              <path d={`M${gx} ${gy + gh} L${gx + gw / 2} ${gy} L${gx + gw} ${gy + gh}`} fill="none" stroke={stippelKleur} strokeWidth={lijn * 0.8} strokeDasharray={stippel} />
             )}
             {/* scharnieren: bij draai-kiep aan de zijkant, bij kiep onderaan */}
             {(cel.kind === "dk" || isDeur) && kant && (
@@ -565,7 +566,7 @@ export function technischSvg(
                 <circle cx={0} cy={36} r={3.2} fill="#c3c6c9" stroke="#6f757a" strokeWidth={(lijn * 0.4) / greepSchaal} />
                 <rect x={-8} y={-10} width={17} height={104} rx={8.5} fill="#000" opacity={0.22} transform="translate(2.5 3.5)" filter={`url(#${uid}sh)`} />
                 <rect x={-9} y={-12} width={18} height={104} rx={9} fill="#e4e6e8" stroke="#6f757a" strokeWidth={(lijn * 0.6) / greepSchaal} />
-                <rect x={-9} y={-12} width={8} height={104} rx={4} fill="#ffffff" />
+                <rect x={-9} y={-12} width={8} height={104} rx={4} fill={profielVul} />
                 <circle cx={0} cy={0} r={12} fill="#f1f2f3" stroke="#6f757a" strokeWidth={(lijn * 0.6) / greepSchaal} />
                 <circle cx={0} cy={0} r={4.5} fill="#9ca1a6" />
               </g>
@@ -579,7 +580,7 @@ export function technischSvg(
                 <circle cx={0} cy={62} r={3.4} fill="#c3c6c9" stroke="#6f757a" strokeWidth={(lijn * 0.4) / (greepSchaal * 1.1)} />
                 <rect x={links ? -112 : -6} y={-9} width={118} height={18} rx={9} fill="#000" opacity={0.2} transform="translate(2.5 3.5)" filter={`url(#${uid}sh)`} />
                 <rect x={links ? -112 : -6} y={-9} width={118} height={18} rx={9} fill="#e4e6e8" stroke="#6f757a" strokeWidth={(lijn * 0.6) / (greepSchaal * 1.1)} />
-                <rect x={links ? -112 : -6} y={-9} width={118} height={7} rx={3.5} fill="#ffffff" />
+                <rect x={links ? -112 : -6} y={-9} width={118} height={7} rx={3.5} fill={profielVul} />
                 <circle cx={0} cy={0} r={13} fill="#f1f2f3" stroke="#6f757a" strokeWidth={(lijn * 0.6) / (greepSchaal * 1.1)} />
                 <circle cx={0} cy={0} r={4.5} fill="#9ca1a6" />
               </g>
@@ -598,12 +599,9 @@ export function technischSvg(
                 {!cel.zonderGreep && <g transform={`translate(${richting === "r" ? x0 + rand / 2 : x0 + w - rand / 2}, ${y + ch / 2})`}>
                   <rect x={-9} y={-80} width={20} height={160} rx={7} fill="#000" opacity={0.18} transform="translate(2.5 3.5)" filter={`url(#${uid}sh)`} />
                   <rect x={-10} y={-80} width={20} height={160} rx={7} fill="#e4e6e8" stroke="#6f757a" strokeWidth={lijn * 0.8} />
-                  <rect x={-10} y={-80} width={8} height={160} rx={4} fill="#ffffff" />
+                  <rect x={-10} y={-80} width={8} height={160} rx={4} fill={profielVul} />
                 </g>}
               </g>
-            )}
-            {maten && nr && (
-              <text x={gx + gw / 2} y={gy + fs * 1.7} textAnchor="middle" fontSize={fs * 0.95} fill="#3f4348" fontFamily="system-ui, sans-serif">{nr}</text>
             )}
           </g>
         );
