@@ -152,7 +152,7 @@ export function ProductConfigurator({
         )}
         <div className={voorbeeld ? "grid grid-cols-1 gap-4" : "grid grid-cols-1 gap-4 lg:grid-cols-12 lg:gap-12"}>
           <div className={voorbeeld ? "min-w-0 space-y-3" : "min-w-0 space-y-3 lg:col-span-7"}>
-            <div className={`flex items-center justify-center overflow-hidden rounded-xl bg-slate-50 ${voorbeeld ? "h-48 p-3" : "h-40 p-3 sm:aspect-video sm:h-auto sm:p-5"}`}>
+            <div className={`flex items-center justify-center overflow-hidden rounded-xl bg-slate-50 ${voorbeeld ? "h-48 p-3" : tekenH > tekenB * 1.15 ? "mx-auto aspect-4/5 w-full max-w-[34rem] p-3 sm:p-5" : "h-40 p-3 sm:aspect-video sm:h-auto sm:p-5"}`}>
               {/* De tekeningen zetten zelf width 100% en height auto; dat dwingen we binnen het vak. */}
               <div className="flex h-full max-w-full items-center justify-center [&>svg]:h-full! [&>svg]:max-h-full! [&>svg]:w-auto! [&>svg]:max-w-full!">{tekening(slug, { breedte: tekenB, hoogte: tekenH, maten: !voorbeeld })}</div>
             </div>

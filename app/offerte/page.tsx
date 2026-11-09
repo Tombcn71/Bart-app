@@ -69,7 +69,7 @@ export default function OffertePagina() {
   );
 
   return (
-    <div className="max-w-[1000px] mx-auto px-4 sm:px-6 py-8 md:py-12">
+    <div className="max-w-[1000px] mx-auto px-4 sm:px-6 py-8 md:py-12 pb-32 lg:pb-12">
       <h1 className="text-2xl md:text-3xl font-bold text-[#1a1a1a] mb-1">Uw offerte</h1>
       <p className="text-slate-500 text-sm mb-8">{items.length} product{items.length !== 1 ? "en" : ""} in uw aanvraag</p>
 
@@ -128,10 +128,16 @@ export default function OffertePagina() {
                 className="w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
             </div>
 
-            <button disabled={bezig} onClick={handleSubmit}
-              className="w-full bg-brand text-white font-bold py-3.5 rounded-xl hover:bg-brand-dark transition-colors disabled:opacity-50">
-              {bezig ? "Verzenden..." : "Offerte aanvragen"}
-            </button>
+            {/* Op de telefoon zweeft de knop onderaan, zodat de klant niet denkt dat hij klaar is bij het zien van de prijs. */}
+            <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white px-4 py-3 shadow-[0_-4px_12px_rgba(0,0,0,0.08)] lg:static lg:z-auto lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
+              {!email.trim() && (
+                <p className="mb-1.5 text-center text-xs font-semibold text-slate-700 lg:hidden">Vul uw e-mailadres in om de offerte te ontvangen</p>
+              )}
+              <button disabled={bezig} onClick={handleSubmit}
+                className="w-full bg-brand text-white font-bold py-3.5 rounded-xl hover:bg-brand-dark transition-colors disabled:opacity-50">
+                {bezig ? "Verzenden..." : "Offerte aanvragen"}
+              </button>
+            </div>
             <p className="text-xs text-slate-400 text-center">Vrijblijvend · u ontvangt de offerte per e-mail</p>
           </div>
         </div>
