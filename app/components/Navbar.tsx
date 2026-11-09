@@ -101,36 +101,29 @@ const Navbar = () => {
   return (
     <nav className="w-full bg-white border-b border-gray-100 shadow-sm sticky top-0 z-50">
       <div className="max-w-[1400px] mx-auto px-4 md:px-6 h-20 md:h-24 flex items-center justify-between">
-        {/* Logo gaat naar de hoofdsite */}
-        <a href="https://bartmooi.nl" className="flex items-center h-full py-4 shrink-0">
-          <img
-            src="/bartmooi-logo-1.png"
-            alt="BartMooi Logo"
-            className="h-full max-h-[40px] md:max-h-[60px] w-auto object-contain"
-          />
-        </a>
-
-        {/* Desktop menu */}
-        {isOfferte && (
-          <div className="hidden md:flex items-center gap-8 text-sm font-bold text-[#2d3748] uppercase tracking-tight">
-            {NAV_ITEMS.map((item) => (
-              <DropdownItem key={item.label} label={item.label} items={item.items} />
-            ))}
-          </div>
-        )}
-
-        <div className="flex items-center gap-2 md:gap-4">
-          {isOfferte && <CartButton />}
+        {/* Links: het hamburgermenu (telefoon) of het menu (computer). Geen logo. */}
+        <div className="flex items-center gap-2 md:gap-8">
           {isOfferte && (
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="md:hidden p-2 text-brand-text">
+              aria-label="Menu"
+              className="md:hidden p-2 -ml-2 text-brand-text">
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 {isOpen ? <path d="M18 6L6 18M6 6l12 12" /> : <path d="M3 12h18M3 6h18M3 18h18" />}
               </svg>
             </button>
           )}
+          {isOfferte && (
+            <div className="hidden md:flex items-center gap-8 text-sm font-bold text-[#2d3748] uppercase tracking-tight">
+              {NAV_ITEMS.map((item) => (
+                <DropdownItem key={item.label} label={item.label} items={item.items} />
+              ))}
+            </div>
+          )}
         </div>
+
+        {/* Rechts: de offerte */}
+        <div className="flex items-center gap-2 md:gap-4">{isOfferte && <CartButton />}</div>
       </div>
 
       {/* Mobiel menu */}
