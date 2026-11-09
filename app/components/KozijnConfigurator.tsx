@@ -394,6 +394,7 @@ function maakMatrix(data: any) {
  */
 export function KozijnConfigurator({
   startSlug = "vast-kozijn",
+  startMatrix,
   matrix: matrixProp,
   voorbeeld = false,
   product = "kunststof",
@@ -401,6 +402,8 @@ export function KozijnConfigurator({
   preview = true,
 }: {
   startSlug?: string;
+  /** De opgeslagen prijzen, op de server opgehaald (dan hoeft de browser ze niet meer te halen). */
+  startMatrix?: unknown;
   /** Aluminium heeft eigen kozijntypes, keuzes en prijzen. */
   product?: "kunststof" | "aluminium";
   /** Zet het gekozen type in de adresbalk (op de eigen pagina van het type). Uit op het startscherm. */
@@ -421,7 +424,9 @@ export function KozijnConfigurator({
   // Aluminium: de keuzes per groep (profiel, kleur, lak, glas, ...) in één lijst.
   const [aluKeuzes, setAluKeuzes] = useState<Record<string, string>>({});
 
-  const [opgehaald, setOpgehaald] = useState<any>(null);
+  // Dezelfde omzetting als altijd: aluminium rekent met de standaardprijzen of het model, kunststof met de prijstabel van Bart.
+  const normaliseer = (data: any) => (alu ? (isStandaardModel(data) ? data : nieuwStandaardModel()) : maakMatrix(data));
+  const [opgehaald, setOpgehaald] = useState<any>(() => (startMatrix !== undefined ? normaliseer(startMatrix) : null));
   const matrix = matrixProp ?? opgehaald;
   const standaard = alu || isStandaardModel(matrix);
   // Per kozijntype een eigen beginmaat, zoals de markt die gebruikt. Zonder bekende maat: 1000 mm per raam, 1000 hoog.
@@ -521,12 +526,10 @@ export function KozijnConfigurator({
 
   // Zonder prijzen van buiten: de opgeslagen prijzen van het bedrijf.
   useEffect(() => {
-    if (matrixProp) return;
-    getMatrix(alu ? "alu_kozijn_matrix" : "kozijn_matrix").then((data: any) =>
-      // Aluminium rekent alleen met de standaardprijzen of het model van het bedrijf.
-      setOpgehaald(alu ? (isStandaardModel(data) ? data : nieuwStandaardModel()) : maakMatrix(data)),
-    );
-  }, [matrixProp, alu]);
+    if (matrixProp || startMatrix !== undefined) return; // prijzen zijn er al (van buiten of van de server)
+    getMatrix(alu ? "alu_kozijn_matrix" : "kozijn_matrix").then((data: any) => setOpgehaald(normaliseer(data)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [matrixProp, startMatrix, alu]);
 
   // Zodra er prijzen zijn: de eerste keuze uit elke lijst (één keer).
   const geinit = useRef(false);

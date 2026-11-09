@@ -1,31 +1,10 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { InmeetServiceCard } from "@/app/components/InmeetServiceCard";
 import { KozijnTechnisch, TECHNISCH } from "@/app/components/KozijnTechnisch";
 import { beginmaat } from "@/lib/beginmaten";
 import { Wrench, ShieldCheck, Zap, Sparkles } from "lucide-react";
 
-function FaqBlok({ items }: { items: { q: string; a: string }[] }) {
-  const [open, setOpen] = useState<number | null>(null);
-  return (
-    <div>
-      <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-6">Veelgestelde vragen</h3>
-      <div className="divide-y divide-slate-100 border border-slate-100 rounded-xl overflow-hidden">
-        {items.map((item, i) => (
-          <div key={i}>
-            <button onClick={() => setOpen(open === i ? null : i)}
-              className="w-full flex justify-between items-center px-6 py-4 text-left hover:bg-slate-50 transition-colors">
-              <span className="text-sm font-semibold text-[#1a1a1a] pr-4">{item.q}</span>
-              <span className="text-brand-text font-bold text-lg shrink-0">{open === i ? "−" : "+"}</span>
-            </button>
-            {open === i && <div className="px-6 pb-5 text-sm text-slate-600 leading-relaxed bg-slate-50">{item.a}</div>}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
 // 🛠️ Alle benodigde SVG componenten centraal importeren uit je lib:
 import {
   GlassVast,
@@ -391,30 +370,30 @@ export default function KozijnConfigurator() {
   ];
 
   return (
-    <div className="max-w-[1200px] mx-auto p-8 md:p-16 font-sans bg-white min-h-screen">
-      <div className="mb-12 border-l-4 border-brand pl-6">
-        <h1 className="text-4xl font-bold text-[#1a1a1a] mb-3 tracking-tight">
+    <div className="max-w-[1200px] mx-auto p-4 sm:p-8 md:p-16 font-sans bg-white min-h-screen">
+      <div className="mb-6 md:mb-12 border-l-4 border-brand pl-4 md:pl-6">
+        <h1 className="text-2xl md:text-4xl font-bold text-[#1a1a1a] mb-2 md:mb-3 tracking-tight">
           Kunststof kozijnen
         </h1>
-        <p className="text-brand-text font-medium text-xl uppercase tracking-tighter">
+        <p className="text-brand-text font-medium text-sm md:text-xl uppercase tracking-tighter">
           Kies uw gewenste indeling{" "}
         </p>
       </div>
 
-      <div className="flex justify-start mb-12">
-        <div className="flex bg-[#f4f7f9] p-1.5 rounded-xl">
+      <div className="flex justify-start mb-6 md:mb-12">
+        <div className="flex bg-[#f4f7f9] p-1 md:p-1.5 rounded-lg md:rounded-xl">
           {[1, 2, 3, 4].map((n) => (
             <button
               key={n}
               onClick={() => setActiveTab(n)}
-              className={`px-8 py-3 text-sm font-bold rounded-lg transition-colors ${activeTab === n ? "bg-brand text-white shadow-md" : "text-[#666666] hover:text-brand-text"}`}>
+              className={`px-3 py-1.5 text-xs md:px-8 md:py-3 md:text-sm font-semibold md:font-bold rounded-md md:rounded-lg transition-colors ${activeTab === n ? "bg-brand text-white shadow-md" : "text-[#666666] hover:text-brand-text"}`}>
               {n} {n === 1 ? "vak" : "vakken"}
             </button>
           ))}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-10">
         {kozijnen
           .filter((k) => k.v === activeTab)
           .map((item) => (
@@ -422,9 +401,9 @@ export default function KozijnConfigurator() {
               href={`/kozijnconfigurator/${item.slug}`}
               key={item.id}
               className="group">
-              <div className={`relative h-[280px] ${TECHNISCH[item.slug] ? "bg-slate-50" : "bg-white"} border border-slate-100 rounded-2xl flex items-center justify-center p-8 shadow-sm`}>
+              <div className={`relative h-[210px] md:h-[280px] ${TECHNISCH[item.slug] ? "bg-slate-50" : "bg-white"} border border-slate-100 rounded-2xl flex items-center justify-center p-5 md:p-8 shadow-sm`}>
                 {item.best && (
-                  <div className="absolute top-4 left-4 bg-brand text-white text-[9px] font-black px-3 py-1.5 rounded-full tracking-widest z-10 uppercase">
+                  <div className="absolute top-3 left-3 md:top-4 md:left-4 bg-brand text-white text-[8px] md:text-[9px] font-bold md:font-black px-2 py-1 md:px-3 md:py-1.5 rounded-full tracking-widest z-10 uppercase">
                     POPULAIR
                   </div>
                 )}
@@ -478,46 +457,6 @@ export default function KozijnConfigurator() {
               </div>
             </Link>
           ))}
-        <div className="col-span-full border-t border-slate-100 mt-4" />
-        <InmeetServiceCard />
-      </div>
-
-      <div className="max-w-[1200px] mx-auto px-6 pb-20 mt-16">
-        <div className="border-t border-slate-100 pt-14">
-          <div className="max-w-3xl mb-12">
-            <h2 className="text-2xl font-bold text-[#1a1a1a] mb-4 leading-tight">Kunststof kozijnen — Investeren in wooncomfort en energiebesparing</h2>
-            <p className="text-slate-600 leading-relaxed">Een huis dat niet alleen fantastisch oogt, maar ook je maandlasten structureel verlaagt. Investeren in nieuwe kunststof kozijnen is een keuze waar je elke dag plezier van hebt. Wij ontzorgen je hierin volledig: van inmeten tot de vakkundige montage op locatie.</p>
-          </div>
-          <div className="mb-14">
-            <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-5">Waarom onze kunststof kozijnen de slimste keuze zijn</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {[
-                { icon: <Wrench size={20} />, title: "Vakkundige Montage", text: "Geen gedoe of zorgen over technische details. Onze ervaren monteurs zorgen voor een perfecte installatie, waardoor je verzekerd bent van een naadloos resultaat en optimale isolatie." },
-                { icon: <ShieldCheck size={20} />, title: "Maximale Inbraakveiligheid", text: "Je huis is je veilige haven. Daarom zijn onze kozijnen standaard uitgerust met hoogwaardige meerpuntsluitingen en sterk, duurzaam materiaal voor maximale inbraakwering." },
-                { icon: <Zap size={20} />, title: "Directe Energiebesparing", text: "Dankzij onze hoogwaardige profielen en de tochtvrije montage blijft de warmte binnen en de kou buiten. Je merkt het direct aan een structureel lagere energierekening." },
-                { icon: <Sparkles size={20} />, title: "Onderhoudsvrij Genieten", text: "Zeg vaarwel tegen schuurpapier en verfkwasten. Kunststof is ongevoelig voor vocht, rot niet en behoudt jarenlang zijn kleur. Een doekje erover is alles wat je nodig hebt." },
-              ].map((b, i) => (
-                <div key={i} className="flex gap-4 bg-slate-50 rounded-xl p-5 border border-slate-100">
-                  <div className="text-brand-text shrink-0 mt-0.5">{b.icon}</div>
-                  <div>
-                    <p className="font-semibold text-[#1a1a1a] text-sm mb-1">{b.title}</p>
-                    <p className="text-slate-500 text-sm leading-relaxed">{b.text}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-          <FaqBlok items={[
-            { q: "Wat zijn kunststof kozijnen precies?", a: "Dit zijn kozijnen vervaardigd uit duurzaam hoogwaardig kunststof. Ze bieden uitstekende isolatie, vragen minimaal onderhoud en hebben een zeer lange levensduur zonder dat schilderwerk nodig is." },
-            { q: "Wat houdt de montage in?", a: "Wij nemen het volledige traject uit handen. Van de eerste inmeting tot de definitieve plaatsing door onze vakkundige monteurs; wij zorgen ervoor dat jouw nieuwe kozijnen perfect functioneren." },
-            { q: "Waarom kiezen voor kunststof in plaats van hout of aluminium?", a: "Kunststof is vaak prijstechnisch aantrekkelijker, volledig recyclebaar en combineert een moderne uitstraling met uitmuntende isolatiewaarden." },
-            { q: "Is glas in mijn nieuwe kozijnen mogelijk?", a: "Zeker. Je kunt kiezen uit diverse soorten isolatieglas. Dit vergroot de lichtinval en verhoogt de energie-efficiëntie van je woning aanzienlijk." },
-            { q: "Uit welke kleuren en stijlen kan ik kiezen?", a: "Naast standaard wit en crème, zijn er vele mogelijkheden met folieafwerkingen, zoals stijlvolle houtnerfstructuren of moderne antracietkleuren die aansluiten bij jouw interieur." },
-            { q: "Wat is het verschil tussen een profiel met of zonder aanslag?", a: "Een profiel met aanslag heeft een extra rand, waardoor de binnen- en buitenmaat verschillen. Bij een profiel zonder aanslag zijn de binnen- en buitenmaten gelijk." },
-            { q: "Welke profieltypes zijn er beschikbaar?", a: "Je hebt de keuze uit een verdiept profiel met een robuuste uitstraling (eventueel met HVL-verbinding) of een vlak profiel met een slank, modern uiterlijk." },
-            { q: "Hoe verloopt het proces na mijn bestelling?", a: "Zodra je de bestelling bevestigt, worden de kozijnen op maat geproduceerd. Vervolgens nemen we contact met je op voor het inplannen van de vakkundige montage op jouw locatie." },
-          ]} />
-        </div>
       </div>
     </div>
   );

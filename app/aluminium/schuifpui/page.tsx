@@ -1,7 +1,6 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { InmeetServiceCard } from "@/app/components/InmeetServiceCard";
 import { KozijnTechnisch, TECHNISCH } from "@/app/components/KozijnTechnisch";
 
 // Alleen de aluminium schuifpui die er in de prijzen echt is.
@@ -54,8 +53,6 @@ export default function AluSchuifpuiOverzicht() {
             </div>
           </Link>
         ))}
-        <div className="col-span-full border-t border-slate-100 mt-4" />
-        <InmeetServiceCard />
       </div>
     </div>
   );

@@ -1,8 +1,8 @@
-"use client";
-import { useParams } from "next/navigation";
 import { KozijnConfigurator } from "@/app/components/KozijnConfigurator";
+import { ruwePrijzenVoor } from "@/lib/server-prijzen";
 
-export default function ConfiguratorDetail() {
-  const { id } = useParams();
-  return <KozijnConfigurator preview={false} startSlug={typeof id === "string" ? id : "vast-kozijn"} />;
+export default async function Pagina({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const prijzen = await ruwePrijzenVoor("kozijn_matrix");
+  return <KozijnConfigurator preview={false} startSlug={id} startMatrix={prijzen} />;
 }

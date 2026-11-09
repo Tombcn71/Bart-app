@@ -1,7 +1,6 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { InmeetServiceCard } from "@/app/components/InmeetServiceCard";
 import { KozijnTechnisch, TECHNISCH } from "@/app/components/KozijnTechnisch";
 import { HOR_BEGINMATEN } from "@/lib/horren";
 import { InzethorSVG, KlemhorSVG, PlisseHordeurSVG } from "@/lib/hor-svgs";
@@ -89,7 +88,6 @@ export default function HorrenOverzicht() {
       </div>
 
       <div className="mt-16">
-        <InmeetServiceCard />
       </div>
     </div>
   );

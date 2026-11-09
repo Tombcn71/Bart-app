@@ -1,8 +1,8 @@
-"use client";
-import { useParams } from "next/navigation";
 import { HorCalculator } from "@/app/components/HorCalculator";
+import { prijzenVoor } from "@/lib/server-prijzen";
 
-export default function HorDetailPage() {
-  const { id } = useParams();
-  return <HorCalculator startSlug={typeof id === "string" ? id : undefined} />;
+export default async function Pagina({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const prijzen = await prijzenVoor("horren_matrix");
+  return <HorCalculator startSlug={id} matrix={prijzen} />;
 }

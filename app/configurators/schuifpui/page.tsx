@@ -1,7 +1,6 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { InmeetServiceCard } from "@/app/components/InmeetServiceCard";
 import { SchuifpuiTweevaks, SchuifpuiViervaks } from "@/lib/schuifpui-svgs";
 import { KozijnTechnisch, TECHNISCH } from "@/app/components/KozijnTechnisch";
 import { PUI_KUNSTSTOF_BEGINMATEN } from "@/lib/schuifpui";
@@ -111,8 +110,6 @@ export default function SchuifpuiOverview() {
               </div>
             </Link>
           ))}
-        <div className="col-span-full border-t border-slate-100 mt-4" />
-        <InmeetServiceCard />
       </div>
     </div>
   );
