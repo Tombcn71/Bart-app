@@ -7,6 +7,7 @@ import { Resend } from "resend";
 import { desc, eq } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { generateOffertePdf } from "@/app/lib/generate-offerte-pdf";
+import { SITE_URL } from "@/lib/site";
 
 export async function adminLogin(password: string) {
   if (!process.env.ADMIN_PASSWORD || !process.env.ADMIN_TOKEN) {
@@ -173,20 +174,23 @@ export async function saveOffertes(
     const inserted = await db.insert(offertes).values({ email: klant.email, data }).returning({ id: offertes.id });
     const offerteId = inserted[0]?.id ?? "";
 
-    const pdfBuffer = await generateOffertePdf(klant.email, { ...data, offerteId });
+    // Geen bijlage: de klant opent de offerte online (daar kan hij hem delen, akkoord geven en de pdf downloaden).
+    const offerteUrl = `${SITE_URL}/offerte/${offerteId}`;
+    const aantalTekst = `${items.length} product${items.length !== 1 ? "en" : ""}`;
 
     const { error } = await getResend().emails.send({
       from: "Bart Mooi <info@offerte.bartmooi.nl>",
       to: [klant.email],
       replyTo: "info@bartmooi.nl",
       subject: `Uw offerte — BartMooi`,
-      text: `Geachte ${klant.naam},\n\nHartelijk dank voor uw aanvraag. In de bijlage vindt u uw offerte met ${items.length} product(en).\n\nMet vriendelijke groet,\nBartMooi`,
+      text: `Geachte ${klant.naam},\n\nHartelijk dank voor uw aanvraag. Wij hebben uw aanvraag voor ${aantalTekst} in goede orde ontvangen.\nUw offerte staat online klaar: ${offerteUrl}\nDaar kunt u hem bekijken, delen en als pdf downloaden.\n\nMet vriendelijke groet,\nBartMooi`,
       html: `
         <div style="font-family: Arial, sans-serif; line-height: 1.7; color: #333; max-width: 600px; margin: 0 auto;">
           <div style="background: white; padding: 32px; border: 1px solid #e8edf2; border-radius: 8px;">
             <p style="font-size: 16px; font-weight: bold; color: #1a1a1a; margin: 0 0 8px;">Geachte ${klant.naam},</p>
-            <p style="color: #555; margin: 0 0 20px;">Hartelijk dank voor uw aanvraag. Wij hebben uw aanvraag voor <strong>${items.length} product${items.length !== 1 ? "en" : ""}</strong> in goede orde ontvangen.</p>
-            <p style="color: #555; margin: 0 0 32px;">In de <strong>bijlage</strong> vindt u uw persoonlijke offerte met alle specificaties, technische tekeningen, de betalingsvoorwaarden en onze garanties.</p>
+            <p style="color: #555; margin: 0 0 20px;">Hartelijk dank voor uw aanvraag. Wij hebben uw aanvraag voor <strong>${aantalTekst}</strong> in goede orde ontvangen.</p>
+            <p style="color: #555; margin: 0 0 24px;">Uw persoonlijke offerte staat online klaar. Daar kunt u hem bekijken, delen en als pdf downloaden.</p>
+            <p style="margin: 0 0 24px;"><a href="${offerteUrl}" style="background: #1E5079; color: #fff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block;">Bekijk uw offerte online</a></p>
             <p style="color: #555; margin: 0 0 32px;">Wij nemen zo spoedig mogelijk contact met u op om de offerte samen door te nemen.</p>
             <p style="color: #333; margin: 0;">Met vriendelijke groet,<br/>
             <strong style="color: #10649E;">BartMooi B.V.</strong><br/>
@@ -194,7 +198,6 @@ export async function saveOffertes(
           </div>
           <p style="font-size: 10px; color: #bbb; text-align: center; margin-top: 16px;">BARTMOOI B.V. · Burgemeester Hovylaan 157 · 2552 XB Den Haag</p>
         </div>`,
-      attachments: [{ filename: `Offerte-BartMooi-${klant.naam?.replace(/\s+/g, "-") || "aanvraag"}.pdf`, content: pdfBuffer }],
     });
 
     if (error) {
@@ -211,7 +214,7 @@ export async function saveOffertes(
     });
 
     revalidatePath("/admin/offertes");
-    return { success: true };
+    return { success: true, offerteId };
   } catch (error) {
     console.error("Server Action error:", error);
     return { success: false, error: "Kon offerte niet verwerken" };

@@ -1,5 +1,3 @@
-"use server";
-
 import {
   Document,
   Font,
@@ -354,7 +352,7 @@ const SPEC_LABELS: Record<string, string> = {
 };
 
 // Bouwt nette spec-regels uit een cart-item specs object
-function buildItemSpecs(specs: Record<string, string | number>): [string, string][] {
+export function buildItemSpecs(specs: Record<string, string | number>): [string, string][] {
   const out: [string, string][] = [];
   if (specs.breedte && specs.hoogte) out.push(["Buitenwerks (B × H)", `${specs.breedte} mm × ${specs.hoogte} mm`]);
   if (specs.binnenwerksBreedte && specs.binnenwerkseHoogte) out.push(["Binnenwerks (B × H)", `${specs.binnenwerksBreedte} mm × ${specs.binnenwerkseHoogte} mm`]);
@@ -374,7 +372,7 @@ function buildItemSpecs(specs: Record<string, string | number>): [string, string
 }
 
 /** Particulieren zien de prijs inclusief btw, zakelijke klanten en oudere offertes exclusief. */
-const btwTekst = (specs: Record<string, string | number>) => (specs.klantType === "particulier" ? "incl. btw" : "excl. btw");
+export const btwTekst = (specs: Record<string, string | number>) => (specs.klantType === "particulier" ? "incl. btw" : "excl. btw");
 
 export async function generateOffertePdf(_email: string, data: OfferteData): Promise<Buffer> {
   const logoPath = path.join(process.cwd(), "public", "bartmooi-logo-1.png");

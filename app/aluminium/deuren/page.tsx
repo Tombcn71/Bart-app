@@ -5,6 +5,7 @@ import { Wrench, Recycle, Building2, Sparkles } from "lucide-react";
 
 import { KozijnTechnisch, TECHNISCH } from "@/app/components/KozijnTechnisch";
 import { DEUR_ALU_BEGINMATEN } from "@/lib/deuren-alu";
+import { DEUR_GEBRUIK } from "@/lib/deur-gebruik";
 
 // De aluminium deuren zoals Creon ze aanbiedt: negen typen.
 const deuren = [
@@ -75,6 +76,7 @@ export default function AluDeurenOverzicht() {
               <h3 className="font-bold text-[#1a1a1a] text-sm md:text-base uppercase tracking-tight leading-tight">
                 {item.name}
               </h3>
+              {DEUR_GEBRUIK[item.slug] && <p className="mt-1 text-xs text-slate-500">{DEUR_GEBRUIK[item.slug]}</p>}
               <div className="mt-1 md:mt-2 text-[10px] font-bold text-brand-text uppercase tracking-widest lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
                 Stel nu samen →
               </div>

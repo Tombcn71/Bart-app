@@ -4,6 +4,7 @@ import { ProductConfigurator } from "@/app/components/ProductConfigurator";
 import { KozijnTechnisch, TECHNISCH } from "@/app/components/KozijnTechnisch";
 import { DEUR_KUNSTSTOF_BEGINMATEN as DEUR_KBM } from "@/lib/deuren-kunststof";
 import { DEUR_ALU_BEGINMATEN as DEUR_ABM } from "@/lib/deuren-alu";
+import { DEUR_GEBRUIK } from "@/lib/deur-gebruik";
 import {
   SingleDoorBase, DoubleDoorBase, AchterdeurBovenlicht, VoordeurBovenlicht, AchterdeurBorstwering, AchterdeurBorstweringBovenlicht,
   DeurZijlicht, VoordeurZijlicht, DeurZijlichtBovenlicht, VoordeurZijlichtBovenlicht, DeurZijlichtBorstwering, DeurZijlichten,
@@ -145,6 +146,7 @@ export function DeurCalculator({ materiaal, startSlug, matrix, voorbeeld }: { ma
       matrixSleutel={alu ? "alu_deur_matrix" : "deur_matrix"}
       productNaam={alu ? "Aluminium deur" : "Kunststof deur"}
       typeTitel="Soort deur"
+      omschrijving={(s) => DEUR_GEBRUIK[s]}
       startSlug={start}
       matrix={matrix}
       voorbeeld={voorbeeld}

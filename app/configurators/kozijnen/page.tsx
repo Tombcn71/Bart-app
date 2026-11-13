@@ -37,7 +37,7 @@ const COLORS = {
 };
 
 export default function KozijnConfigurator() {
-  const [activeTab, setActiveTab] = useState(1);
+  const [activeTab, setActiveTab] = useState(2); // opent op 2 vakken, met het draai-kiepraam 1/3 - vast 2/3 als eerste
 
   const kozijnen = [
     // ==========================================

@@ -6,6 +6,7 @@ import { Wrench, ShieldCheck, Zap, Sparkles } from "lucide-react";
 import { KozijnTechnisch, TECHNISCH } from "@/app/components/KozijnTechnisch";
 import { OUD } from "@/app/components/DeurCalculator";
 import { DEUR_KUNSTSTOF_BEGINMATEN } from "@/lib/deuren-kunststof";
+import { DEUR_GEBRUIK } from "@/lib/deur-gebruik";
 import {
   SingleDoorBase, DoubleDoorBase,
   AchterdeurBovenlicht, VoordeurBovenlicht,
@@ -115,6 +116,9 @@ export default function BartMooiDeurenConfigurator() {
                 <h3 className="font-bold text-[#1a1a1a] text-sm md:text-base uppercase tracking-tight leading-tight">
                   {item.name}
                 </h3>
+                {DEUR_GEBRUIK[OUD[item.slug] ?? item.slug] && (
+                  <p className="mt-1 text-xs text-slate-500">{DEUR_GEBRUIK[OUD[item.slug] ?? item.slug]}</p>
+                )}
                 <div className="mt-1 md:mt-2 text-[10px] font-bold text-brand-text uppercase tracking-widest lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
                   Stel nu samen →
                 </div>

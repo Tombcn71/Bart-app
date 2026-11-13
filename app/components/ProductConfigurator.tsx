@@ -1,5 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
+import Image from "next/image";
+import { FOTO_TYPES, fotoKleurVan, kozijnFotoPad } from "@/lib/kozijnfotos";
 import { addToCart, getCart } from "@/lib/cart";
 import { CartAddedModal } from "@/app/components/CartAddedModal";
 import { NumberInput } from "@/app/components/NumberInput";
@@ -36,6 +38,8 @@ export type ProductConfiguratorProps = {
   matrixSleutel: string;
   /** Naam in het winkelmandje en op de offerte, bijvoorbeeld "Kunststof schuifpui". */
   productNaam: string;
+  /** Korte regel onder de titel over waar het type voor bedoeld is, indien bekend. */
+  omschrijving?: (slug: string) => string | undefined;
   /** Titel boven de typekeuze, bijvoorbeeld "Verdeling". */
   typeTitel?: string;
   startSlug?: string;
@@ -59,6 +63,7 @@ export function ProductConfigurator({
   matrixSleutel,
   productNaam,
   typeTitel = "Type",
+  omschrijving,
   startSlug,
   matrix: matrixProp,
   voorbeeld = false,
@@ -75,6 +80,7 @@ export function ProductConfigurator({
   const [opgehaald, setOpgehaald] = useState<unknown>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
+  const [weergave, setWeergave] = useState<"tekening" | "foto">("tekening");
 
   // Zonder prijzen van buiten: de opgeslagen prijzen van het bedrijf, anders de standaardprijzen.
   useEffect(() => {
@@ -144,18 +150,59 @@ export function ProductConfigurator({
         <h1 className={`font-black text-slate-800 ${voorbeeld ? "mb-2 text-base" : "mb-3 text-xl sm:text-2xl"}`}>
           {productNaam} · {namen[slug] ?? slug}
         </h1>
+        {!voorbeeld && omschrijving?.(slug) && <p className="-mt-1 mb-3 text-sm text-slate-700">{omschrijving(slug)}</p>}
         {voorbeeld && (
           <div className="sticky top-0 z-20 -mx-4 -mt-4 mb-3 border-b border-slate-100 bg-white/95 px-4 py-2 backdrop-blur">
-            <span className="text-[10px] text-slate-400 uppercase tracking-widest">Prijsindicatie · {metBtw ? "incl. btw" : "excl. btw"}</span>
+            <span className="text-[10px] text-slate-600 uppercase tracking-widest">Prijsindicatie · {metBtw ? "incl. btw" : "excl. btw"}</span>
             <div className="text-2xl font-semibold tabular-nums text-slate-800">€ {prijsTekst}</div>
           </div>
         )}
         <div className={voorbeeld ? "grid grid-cols-1 gap-4" : "grid grid-cols-1 gap-4 lg:grid-cols-12 lg:gap-12"}>
           <div className={voorbeeld ? "min-w-0 space-y-3" : "min-w-0 space-y-3 lg:col-span-7"}>
-            <div className={`flex items-center justify-center overflow-hidden rounded-xl bg-slate-50 ${voorbeeld ? "h-48 p-3" : tekenH > tekenB * 1.15 ? "mx-auto aspect-4/5 w-full max-w-[34rem] p-3 sm:p-5" : "h-40 p-3 sm:aspect-video sm:h-auto sm:p-5"}`}>
-              {/* De tekeningen zetten zelf width 100% en height auto; dat dwingen we binnen het vak. */}
-              <div className="flex h-full max-w-full items-center justify-center [&>svg]:h-full! [&>svg]:max-h-full! [&>svg]:w-auto! [&>svg]:max-w-full!">{tekening(slug, { breedte: tekenB, hoogte: tekenH, maten: !voorbeeld })}</div>
-            </div>
+            {(() => {
+              // Foto van het product op een gevel, in de gekozen kleur (wit, antraciet of zwart); anders alleen de tekening.
+              const kleurGroep = catalogus.keuzes.find((g) => /^kleur(Profiel)?Buiten|^kleurLamellen$|^kleur$/.test(g.id) && (!g.typen || g.typen.includes(slug)));
+              const fotoKleur = kleurGroep ? fotoKleurVan(keuzes[kleurGroep.id]) : "wit";
+              const heeftFoto = !voorbeeld && FOTO_TYPES.has(slug) && !!fotoKleur;
+              const toonFoto = heeftFoto && weergave === "foto";
+              // Hoge, smalle producten (deuren): een staand vak, zodat de tekening groot genoeg is.
+              const staand = tekenH > tekenB * 1.15;
+              const staandVak = "mx-auto aspect-4/5 w-full max-w-[34rem]";
+              const knop = (actief: boolean) => `min-w-28 rounded-lg px-6 py-2.5 text-sm font-bold transition-colors ${actief ? "bg-brand text-white shadow-sm" : "text-slate-600 hover:text-slate-900"}`;
+              return (
+                <>
+                  {heeftFoto && (
+                    <div role="group" aria-label="Tekening of foto" className="flex w-fit rounded-xl bg-slate-100 p-1">
+                      {(["tekening", "foto"] as const).map((w) => (
+                        <button key={w} type="button" aria-pressed={weergave === w} onClick={() => setWeergave(w)} className={knop(weergave === w)}>
+                          {w === "tekening" ? "Tekening" : "Foto"}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {toonFoto && fotoKleur ? (
+                    <div>
+                      <div className={`relative overflow-hidden rounded-xl bg-slate-100 ${staand ? staandVak : "aspect-4/3"}`}>
+                        <Image
+                          src={kozijnFotoPad("zand", slug, fotoKleur)}
+                          alt={`${namen[slug] ?? slug} op een gevel van zandkleurige steen`}
+                          fill
+                          sizes="(min-width: 1024px) 652px, calc(100vw - 32px)"
+                          priority
+                          className="object-cover"
+                        />
+                      </div>
+                      <p className="mt-1.5 text-center text-xs text-slate-700">Buitenkant</p>
+                    </div>
+                  ) : (
+                    <div className={`flex items-center justify-center overflow-hidden rounded-xl bg-slate-50 ${voorbeeld ? "h-48 p-3" : staand ? `${staandVak} p-3 sm:p-5` : heeftFoto ? "aspect-4/3 p-3 sm:p-5" : "h-40 p-3 sm:aspect-video sm:h-auto sm:p-5"}`}>
+                      {/* De tekeningen zetten zelf width 100% en height auto; dat dwingen we binnen het vak. */}
+                      <div className="flex h-full max-w-full items-center justify-center [&>svg]:h-full! [&>svg]:max-h-full! [&>svg]:w-auto! [&>svg]:max-w-full!">{tekening(slug, { breedte: tekenB, hoogte: tekenH, maten: !voorbeeld })}</div>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
 
             {slugs.length > 1 && (
               <div role="group" aria-label={typeTitel}>
@@ -182,7 +229,7 @@ export function ProductConfigurator({
           <div className={voorbeeld ? "min-w-0" : "min-w-0 lg:col-span-5"}>
             <div className={voorbeeld ? "space-y-3" : "space-y-3 lg:rounded-xl lg:border lg:border-slate-200 lg:bg-white lg:p-6 lg:shadow-sm"}>
               <div className="hidden lg:block">
-                <span className="text-[10px] tracking-widest text-slate-400 uppercase">Prijsindicatie · {metBtw ? "incl. btw" : "excl. btw"}</span>
+                <span className="text-[10px] tracking-widest text-slate-600 uppercase">Prijsindicatie · {metBtw ? "incl. btw" : "excl. btw"}</span>
                 <div className="text-3xl text-slate-800">€ {prijsTekst}</div>
               </div>
 
@@ -193,7 +240,7 @@ export function ProductConfigurator({
                     type="button"
                     aria-pressed={klantType === t}
                     onClick={() => setKlantType(t)}
-                    className={`rounded-md px-3 py-1.5 capitalize ${klantType === t ? "bg-white text-slate-900 shadow-sm" : "text-slate-500"}`}>
+                    className={`rounded-md px-3 py-1.5 capitalize ${klantType === t ? "bg-white text-slate-900 shadow-sm" : "text-slate-700"}`}>
                     {t}
                   </button>
                 ))}
@@ -204,16 +251,16 @@ export function ProductConfigurator({
                 <FormField label="Afmetingen" value={`${breedte} × ${hoogte} mm`} defaultOpen>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase">Breedte (mm)</label>
+                      <label className="text-[11px] font-bold text-slate-800 uppercase">Breedte (mm)</label>
                       <NumberInput value={breedte} onChange={setBreedte} className="w-full rounded-lg border p-2.5 text-sm" />
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase">Hoogte (mm)</label>
+                      <label className="text-[11px] font-bold text-slate-800 uppercase">Hoogte (mm)</label>
                       <NumberInput value={hoogte} onChange={setHoogte} className="w-full rounded-lg border p-2.5 text-sm" />
                     </div>
                   </div>
                   {grens && (
-                    <p className="mt-1.5 text-[11px] text-slate-500">
+                    <p className="mt-1.5 text-[11px] text-slate-700">
                       Breedte {nl(grens.minB)} tot {nl(grens.maxB)} mm, hoogte {nl(grens.minH)} tot {nl(grens.maxH)} mm.
                     </p>
                   )}
@@ -233,7 +280,7 @@ export function ProductConfigurator({
                       <div className="space-y-3">
                         {groepen.map((g) => (
                           <div key={g.id}>
-                            <label className="text-[10px] font-bold text-slate-500 uppercase">{g.titel}</label>
+                            <label className="text-[11px] font-bold text-slate-800 uppercase">{g.titel}</label>
                             <select
                               value={keuzes[g.id] ?? ""}
                               onChange={(e) => setKeuzes((k) => ({ ...k, [g.id]: e.target.value }))}
@@ -253,11 +300,11 @@ export function ProductConfigurator({
 
                 <FormField label="Aantal" value={`${aantal} stuks`}>
                   <div className="flex items-center gap-3">
-                    <button type="button" onClick={() => setAantal(Math.max(1, aantal - 1))} className="h-9 w-9 rounded-lg border text-lg font-bold text-slate-600 hover:bg-slate-50">
+                    <button type="button" onClick={() => setAantal(Math.max(1, aantal - 1))} className="h-10 w-10 rounded-lg border-2 border-slate-400 text-xl font-bold text-slate-900 hover:bg-slate-100">
                       −
                     </button>
-                    <span className="w-6 text-center text-sm font-bold">{aantal}</span>
-                    <button type="button" onClick={() => setAantal(aantal + 1)} className="h-9 w-9 rounded-lg border text-lg font-bold text-slate-600 hover:bg-slate-50">
+                    <span className="w-8 text-center text-base font-bold text-slate-900">{aantal}</span>
+                    <button type="button" onClick={() => setAantal(aantal + 1)} className="h-10 w-10 rounded-lg border-2 border-slate-400 text-xl font-bold text-slate-900 hover:bg-slate-100">
                       +
                     </button>
                   </div>
@@ -275,11 +322,11 @@ export function ProductConfigurator({
                   type="button"
                   onClick={handleAdd}
                   disabled={buitenMaat}
-                  className="hidden w-full rounded-lg bg-brand py-4 text-[11px] font-bold tracking-widest text-white uppercase transition-colors hover:bg-brand-dark disabled:opacity-40 disabled:hover:bg-brand lg:block">
+                  className="hidden w-full rounded-lg bg-brand py-4 text-[11px] font-bold tracking-widest text-white uppercase shadow-xl shadow-black/20 transition-colors hover:bg-brand-dark disabled:opacity-40 disabled:hover:bg-brand lg:sticky lg:bottom-4 lg:z-20 lg:block">
                   Toevoegen aan offerte
                 </button>
               )}
-              {!voorbeeld && <p className="text-center text-[11px] text-slate-400">Ontvang uw subsidie-indicatie bij de offerte</p>}
+              {!voorbeeld && <p className="text-center text-[11px] text-slate-600">Ontvang uw subsidie-indicatie bij de offerte</p>}
             </div>
           </div>
         </div>
@@ -295,7 +342,7 @@ export function ProductConfigurator({
                 </div>
               ))}
             </dl>
-            <p className="mt-2 text-[11px] text-slate-500">
+            <p className="mt-2 text-[11px] text-slate-700">
               Bedragen zijn exclusief btw.{metBtw ? ` Met ${btwPct}% btw: ${euro(prijs)}.` : ""}
             </p>
           </div>
@@ -306,7 +353,7 @@ export function ProductConfigurator({
         <>
           <div className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-between gap-3 border-t border-slate-200 bg-white px-4 py-3 lg:hidden">
             <div>
-              <span className="block text-[10px] tracking-widest text-slate-400 uppercase">Prijsindicatie · {metBtw ? "incl. btw" : "excl. btw"}</span>
+              <span className="block text-[10px] tracking-widest text-slate-600 uppercase">Prijsindicatie · {metBtw ? "incl. btw" : "excl. btw"}</span>
               <span className="text-xl font-semibold text-slate-800 tabular-nums">€ {prijsTekst}</span>
             </div>
             <button

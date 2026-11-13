@@ -29,13 +29,14 @@ export default async function RootLayout({
   const headersList = await headers();
   const pathname = headersList.get("x-pathname") || "";
   const isAdmin = pathname.startsWith("/admin");
+  const isOnlineOfferte = /^\/offerte\/[0-9a-f-]{36}/i.test(pathname);
 
   return (
     <html
       lang="nl"
       className={`${overpass.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
-        {!isAdmin && <Navbar />}
+        {!isAdmin && !isOnlineOfferte && <Navbar />}
 
         {/* De rest van de pagina (children) komt hieronder */}
         <main className="flex-grow">{children}</main>

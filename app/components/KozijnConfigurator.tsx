@@ -12,6 +12,8 @@ import { EXTRA_MAAT, MAATGRENZEN_ALU, MAATGRENZEN_KUNSTSTOF } from "@/lib/maatgr
 import { berekenStandaard, btwPercentage, eersteKeuze, isStandaardModel, keuzeNaam, nieuwStandaardModel, KOZIJN_CATALOGUS } from "@/lib/prijsmodel";
 import { GevelFoto, GevelKeuze, type GevelId, KOZIJN_KLEUREN, heeftGevelFoto } from "@/app/components/GevelFoto";
 import { KozijnTechnisch, TECHNISCH } from "@/app/components/KozijnTechnisch";
+import Image from "next/image";
+import { FOTO_GEVELS, FOTO_TYPES, fotoKleurVan, kozijnFotoPad, type FotoGevel } from "@/lib/kozijnfotos";
 import {
   GlassVast,
   GlassDK,
@@ -393,23 +395,20 @@ function maakMatrix(data: any) {
  * opgeslagen); zonder haalt hij de opgeslagen prijzen van het bedrijf op.
  */
 export function KozijnConfigurator({
-  startSlug = "vast-kozijn",
+  startSlug = "dk-13-vast-23",
   startMatrix,
   matrix: matrixProp,
   voorbeeld = false,
   product = "kunststof",
   urlSync = true,
-  preview = true,
 }: {
   startSlug?: string;
-  /** De opgeslagen prijzen, op de server opgehaald (dan hoeft de browser ze niet meer te halen). */
+  /** De opgeslagen prijzen van het bedrijf, op de server opgehaald (dan hoeft de browser ze niet meer te halen). */
   startMatrix?: unknown;
   /** Aluminium heeft eigen kozijntypes, keuzes en prijzen. */
   product?: "kunststof" | "aluminium";
   /** Zet het gekozen type in de adresbalk (op de eigen pagina van het type). Uit op het startscherm. */
   urlSync?: boolean;
-  /** Toon de knop 'Bekijk preview' (foto op een gevel). */
-  preview?: boolean;
   matrix?: any;
   /** Voorbeeld in het dashboard: één smalle kolom, zonder offerteknop en winkelmandje. */
   voorbeeld?: boolean;
@@ -424,8 +423,11 @@ export function KozijnConfigurator({
   // Aluminium: de keuzes per groep (profiel, kleur, lak, glas, ...) in één lijst.
   const [aluKeuzes, setAluKeuzes] = useState<Record<string, string>>({});
 
-  // Dezelfde omzetting als altijd: aluminium rekent met de standaardprijzen of het model, kunststof met de prijstabel van Bart.
-  const normaliseer = (data: any) => (alu ? (isStandaardModel(data) ? data : nieuwStandaardModel()) : maakMatrix(data));
+  // Een bedrijf zonder opgeslagen prijzen (leeg object, bijv. een nieuwe klant of de demo) rekent met de standaardprijzen.
+  const normaliseer = (data: any) =>
+    alu
+      ? isStandaardModel(data) ? data : nieuwStandaardModel()
+      : isStandaardModel(data) ? data : !data || Object.keys(data).length === 0 ? nieuwStandaardModel() : maakMatrix(data);
   const [opgehaald, setOpgehaald] = useState<any>(() => (startMatrix !== undefined ? normaliseer(startMatrix) : null));
   const matrix = matrixProp ?? opgehaald;
   const standaard = alu || isStandaardModel(matrix);
@@ -445,7 +447,12 @@ export function KozijnConfigurator({
   const [aantal, setAantal] = useState(1);
   // Het preview-venster met de foto op een gevel.
   const [previewOpen, setPreviewOpen] = useState(false);
+  // Binnen- of buitenaanzicht van de technische tekening.
+  // De tekening toont het binnenaanzicht; de foto toont de buitenkant.
   const aanzicht = "binnen" as const;
+  // Tekening of foto op een gevel bij het grote kozijn bovenaan.
+  const [weergave, setWeergave] = useState<"tekening" | "foto">("tekening");
+  const [fotoGevel, setFotoGevel] = useState<FotoGevel>("zand");
   // De gekozen gevel voor de foto; telt niet mee in de prijs.
   const [gevel, setGevel] = useState<GevelId>("rood");
   // Extra maat bij een bovenlicht of borstwering (hoogte in mm).
@@ -680,7 +687,7 @@ export function KozijnConfigurator({
     opties: Record<string, number>,
   ) => (
     <div>
-      <label className="text-[10px] font-bold text-slate-500 uppercase">
+      <label className="text-[11px] font-bold text-slate-800 uppercase">
         {label}
       </label>
       <select
@@ -703,7 +710,7 @@ export function KozijnConfigurator({
     const groep = STANDAARD_KEUZES.find((g) => g.id === groepId)!;
     return (
       <div>
-        <label className="text-[10px] font-bold text-slate-500 uppercase">{groep.titel}</label>
+        <label className="text-[11px] font-bold text-slate-800 uppercase">{groep.titel}</label>
         <select
           value={value}
           onChange={(e) => setter(e.target.value)}
@@ -725,7 +732,7 @@ export function KozijnConfigurator({
     const groep = ALU_CATALOGUS.keuzes.find((g) => g.id === groepId)!;
     return (
       <div key={groep.id}>
-        <label className="text-[10px] font-bold text-slate-500 uppercase">{groep.titel}</label>
+        <label className="text-[11px] font-bold text-slate-800 uppercase">{groep.titel}</label>
         <select
           value={aluKeuzes[groep.id] ?? ""}
           onChange={(e) => setAluKeuzes((k) => ({ ...k, [groep.id]: e.target.value }))}
@@ -755,7 +762,7 @@ export function KozijnConfigurator({
       <div className={voorbeeld ? "p-4" : "max-w-[1200px] mx-auto px-4 sm:px-6 py-4 md:py-10"}>
         {voorbeeld && (
           <div className="sticky top-0 z-20 -mx-4 -mt-4 mb-3 border-b border-slate-100 bg-white/95 px-4 py-2 backdrop-blur">
-            <span className="text-[10px] text-slate-400 uppercase tracking-widest">Prijsindicatie{standaard ? (metBtw ? " · incl. btw" : " · excl. btw") : ""}</span>
+            <span className="text-[10px] text-slate-600 uppercase tracking-widest">Prijsindicatie{standaard ? (metBtw ? " · incl. btw" : " · excl. btw") : ""}</span>
             <div className="text-2xl font-semibold tabular-nums text-slate-800">€ {prijsTekst}</div>
           </div>
         )}
@@ -765,9 +772,72 @@ export function KozijnConfigurator({
         <div className={voorbeeld ? "grid grid-cols-1 gap-4" : "grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-12"}>
           <div className={voorbeeld ? "min-w-0 space-y-3" : "lg:col-span-7 min-w-0 space-y-3"}>
             {/* Bovenaan de tekening van het gekozen kozijn; de foto op een gevel komt pas bij het formulier */}
-            <div className={`bg-slate-50 rounded-xl flex items-center justify-center ${voorbeeld ? "h-28 p-3" : "h-56 p-3 sm:h-auto sm:aspect-video sm:p-5"}`}>
-              <KozijnTekening kozijn={kozijn} className="h-full max-w-full" breedte={tekenB} hoogte={tekenH} maten={!voorbeeld} aanzicht={aanzicht} />
-            </div>
+            {/* Het kozijn bovenaan: de technische tekening, of (waar die er is) een foto op een gevel */}
+            {(() => {
+              // Kunststof: wit/antraciet/zwart uit de kleurkeuze. Aluminium: de kleur uit de aluminium-keuzes, vertaald naar de fotokleur.
+              const fotoKleur = alu ? fotoKleurVan(aluKeuzes.kleurBuiten) : KOZIJN_KLEUREN.some((k) => k.id === kleurBuitenkant) ? kleurBuitenkant : null;
+              const heeftFoto = !voorbeeld && FOTO_TYPES.has(slug) && !!fotoKleur;
+              const toonFoto = heeftFoto && weergave === "foto";
+              const knop = (actief: boolean) => `min-w-28 rounded-lg px-6 py-2.5 text-sm font-bold transition-colors ${actief ? "bg-brand text-white shadow-sm" : "text-slate-600 hover:text-slate-900"}`;
+              return (
+                <>
+                  {!voorbeeld && heeftFoto && (
+                    <div className="flex flex-wrap items-center gap-2">
+                      {heeftFoto && (
+                        <div role="group" aria-label="Tekening of foto" className="flex w-fit rounded-xl bg-slate-100 p-1">
+                          {(["tekening", "foto"] as const).map((w) => (
+                            <button key={w} type="button" aria-pressed={weergave === w} onClick={() => setWeergave(w)} className={knop(weergave === w)}>
+                              {w === "tekening" ? "Tekening" : "Foto"}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {toonFoto ? (
+                    <div>
+                      <div className="relative aspect-4/3 overflow-hidden rounded-xl bg-slate-100">
+                        <Image
+                          src={kozijnFotoPad(fotoGevel, slug, fotoKleur!)}
+                          alt={`${kozijn.name} in ${fotoKleur} op een gevel van ${FOTO_GEVELS.find((g) => g.id === fotoGevel)?.naam.toLowerCase()}`}
+                          fill
+                          sizes="(min-width: 1024px) 652px, calc(100vw - 32px)"
+                          priority
+                          className="object-cover"
+                        />
+                      </div>
+                      <p className="mt-1.5 text-center text-xs text-slate-700">Buitenkant</p>
+                      {FOTO_GEVELS.length > 1 && (
+                      <div role="group" aria-label="Gevel" className="mt-3">
+                        <p className="mb-1.5 text-xs font-bold text-slate-800">Kies je gevel</p>
+                        <div className="grid grid-cols-3 gap-2">
+                          {FOTO_GEVELS.map((g) => (
+                            <button
+                              key={g.id}
+                              type="button"
+                              aria-pressed={g.id === fotoGevel}
+                              onClick={() => setFotoGevel(g.id)}
+                              className={`rounded-lg border-2 p-0.5 text-[10px] leading-tight font-semibold text-slate-800 transition-colors sm:p-1 sm:text-[11px] ${g.id === fotoGevel ? "border-brand" : "border-slate-200 hover:border-slate-400"}`}>
+                              <span className="relative mb-1 block aspect-16/9 overflow-hidden rounded-[5px] bg-slate-100">
+                                <Image src={kozijnFotoPad(g.id, slug, fotoKleur!)} alt="" fill sizes="(min-width: 1024px) 160px, 22vw" className="object-cover" />
+                              </span>
+                              {g.naam}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      )}
+                    </div>
+                  ) : (
+                    // Zelfde vorm (4:3) als de foto, zodat het vlak niet verspringt als je wisselt.
+                    <div className={`bg-slate-50 rounded-xl flex items-center justify-center ${voorbeeld ? "h-28 p-3" : "aspect-4/3 p-3 sm:p-5"}`}>
+                      <KozijnTekening kozijn={kozijn} className="h-full max-w-full" breedte={tekenB} hoogte={tekenH} maten={!voorbeeld} aanzicht={aanzicht} />
+                    </div>
+                  )}
+                  {!toonFoto && !voorbeeld && TECHNISCH[kozijn.slug] && <p className="-mt-1 text-center text-xs text-slate-700">Binnenaanzicht</p>}
+                </>
+              );
+            })()}
 
             <div role="group" aria-label="Hoeveel ramen naast elkaar?">
               <p className={stap}>{fotoStap + 1}. Hoeveel ramen naast elkaar?</p>
@@ -815,7 +885,7 @@ export function KozijnConfigurator({
           <div className={voorbeeld ? "min-w-0" : "min-w-0 lg:col-span-5"}>
             <div className={voorbeeld ? "space-y-3" : "space-y-3 lg:bg-white lg:border lg:border-slate-200 lg:rounded-xl lg:p-6 lg:shadow-sm"}>
               <div className="hidden lg:block">
-                <span className="text-[10px] text-slate-400 uppercase tracking-widest">Prijsindicatie{standaard ? (metBtw ? " · incl. btw" : " · excl. btw") : ""}</span>
+                <span className="text-[10px] text-slate-600 uppercase tracking-widest">Prijsindicatie{standaard ? (metBtw ? " · incl. btw" : " · excl. btw") : ""}</span>
                 <div className="text-3xl text-slate-800">€ {prijsTekst}</div>
               </div>
 
@@ -827,7 +897,7 @@ export function KozijnConfigurator({
                       type="button"
                       aria-pressed={klantType === t}
                       onClick={() => setKlantType(t)}
-                      className={`rounded-md px-3 py-1.5 capitalize ${klantType === t ? "bg-white text-slate-900 shadow-sm" : "text-slate-500"}`}>
+                      className={`rounded-md px-3 py-1.5 capitalize ${klantType === t ? "bg-white text-slate-900 shadow-sm" : "text-slate-700"}`}>
                       {t}
                     </button>
                   ))}
@@ -839,22 +909,22 @@ export function KozijnConfigurator({
                 <FormField label="Afmetingen" value={`${breedte} × ${hoogte} mm`} defaultOpen>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase">Breedte (mm)</label>
+                      <label className="text-[11px] font-bold text-slate-800 uppercase">Breedte (mm)</label>
                       <NumberInput value={breedte} onChange={setBreedte} className="w-full border p-2.5 rounded-lg text-sm" />
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase">Hoogte (mm)</label>
+                      <label className="text-[11px] font-bold text-slate-800 uppercase">Hoogte (mm)</label>
                       <NumberInput value={hoogte} onChange={setHoogte} className="w-full border p-2.5 rounded-lg text-sm" />
                     </div>
                   </div>
                   {grenzen && (
-                    <p className="mt-1.5 text-[11px] text-slate-500">
+                    <p className="mt-1.5 text-[11px] text-slate-700">
                       Breedte {nl(grenzen.minB)} tot {nl(grenzen.maxB)} mm, hoogte {nl(grenzen.minH)} tot {nl(grenzen.maxH)} mm.
                     </p>
                   )}
                   {extra && (
                     <div className="mt-2">
-                      <label className="text-[10px] font-bold text-slate-500 uppercase">
+                      <label className="text-[11px] font-bold text-slate-800 uppercase">
                         {extra.label} (mm){extra.min !== undefined && extra.max !== undefined ? `, ${extra.min} tot ${extra.max}` : ""}
                       </label>
                       <NumberInput value={extraMaat} onChange={setExtraMaat} className="w-full border p-2.5 rounded-lg text-sm" />
@@ -867,7 +937,7 @@ export function KozijnConfigurator({
                         : `${extra?.label} kan niet standaard besteld worden. Kies ${extra?.min} tot ${extra?.max} mm.`}
                     </p>
                   )}
-                  <p className="mt-1.5 text-[11px] text-slate-500">
+                  <p className="mt-1.5 text-[11px] text-slate-700">
                     Buitenwerks. Binnenwerks: {binnenwerksBreedte} × {binnenwerkseHoogte} mm
                   </p>
                 </FormField>
@@ -906,7 +976,7 @@ export function KozijnConfigurator({
                     ) : (
                       <>
                         <div role="group" aria-label="Kleur buitenkant">
-                          <label className="text-[10px] font-bold text-slate-500 uppercase">Kleur buitenkant</label>
+                          <label className="text-[11px] font-bold text-slate-800 uppercase">Kleur buitenkant</label>
                           <div className="mt-1 flex flex-wrap gap-2">
                             {KOZIJN_KLEUREN.map((k) => (
                               <button
@@ -972,11 +1042,11 @@ export function KozijnConfigurator({
 
                 <FormField label="Aantal" value={`${aantal} stuks`}>
                   <div className="flex items-center gap-3">
-                    <button type="button" onClick={() => setAantal(Math.max(1, aantal - 1))} className="w-9 h-9 rounded-lg border text-lg font-bold text-slate-600 hover:bg-slate-50">
+                    <button type="button" onClick={() => setAantal(Math.max(1, aantal - 1))} className="w-10 h-10 rounded-lg border-2 border-slate-400 text-xl font-bold text-slate-900 hover:bg-slate-100">
                       −
                     </button>
-                    <span className="text-sm font-bold w-6 text-center">{aantal}</span>
-                    <button type="button" onClick={() => setAantal(aantal + 1)} className="w-9 h-9 rounded-lg border text-lg font-bold text-slate-600 hover:bg-slate-50">
+                    <span className="w-8 text-center text-base font-bold text-slate-900">{aantal}</span>
+                    <button type="button" onClick={() => setAantal(aantal + 1)} className="w-10 h-10 rounded-lg border-2 border-slate-400 text-xl font-bold text-slate-900 hover:bg-slate-100">
                       +
                     </button>
                   </div>
@@ -991,24 +1061,16 @@ export function KozijnConfigurator({
                 </div>
               )}
 
-              {!voorbeeld && preview && (
-                <button
-                  type="button"
-                  onClick={() => setPreviewOpen(true)}
-                  className="w-full rounded-lg border-2 border-brand py-3 text-sm font-bold text-brand-text transition-colors hover:bg-slate-50">
-                  Bekijk preview
-                </button>
-              )}
               {!voorbeeld && (
                 <button
                   onClick={handleAdd}
                   disabled={buitenMaat || extraBuiten}
-                  className="hidden lg:block w-full bg-brand text-white py-4 rounded-lg font-bold uppercase text-[11px] tracking-widest hover:bg-brand-dark transition-colors disabled:opacity-40 disabled:hover:bg-brand">
+                  className="hidden lg:block lg:sticky lg:bottom-4 z-20 shadow-xl shadow-black/20 w-full bg-brand text-white py-4 rounded-lg font-bold uppercase text-[11px] tracking-widest hover:bg-brand-dark transition-colors disabled:opacity-40 disabled:hover:bg-brand">
                   Toevoegen aan offerte
                 </button>
               )}
               {!voorbeeld && (
-                <p className="text-center text-[11px] text-slate-400">
+                <p className="text-center text-[11px] text-slate-600">
                   Ontvang uw subsidie-indicatie bij de offerte
                 </p>
               )}
@@ -1034,7 +1096,7 @@ export function KozijnConfigurator({
               )}
             </dl>
             {standaard && (
-              <p className="mt-2 text-[11px] text-slate-500">
+              <p className="mt-2 text-[11px] text-slate-700">
                 Bedragen zijn exclusief btw.{metBtw ? ` Met ${btwPct}% btw: ${euro(berekendePrijs)}.` : ""}
               </p>
             )}
@@ -1053,7 +1115,7 @@ export function KozijnConfigurator({
             <div className="mb-3 flex items-start justify-between gap-3">
               <div>
                 <p className="text-sm font-bold text-slate-900">{alu ? "Aluminium " : ""}{kozijn.name}</p>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-slate-700">
                   {breedte} × {hoogte} mm{!alu && KOZIJN_KLEUREN.find((k) => k.id === kleurBuitenkant) ? ` · ${KOZIJN_KLEUREN.find((k) => k.id === kleurBuitenkant)!.naam}` : ""}
                 </p>
               </div>
@@ -1077,7 +1139,7 @@ export function KozijnConfigurator({
                 <GevelKeuze slug={slug} kleur={kleurBuitenkant} gevel={gevel} onGevel={setGevel} />
               </div>
             ) : (
-              <p className="mt-3 text-xs text-slate-500">Een foto op een gevel is er nog niet voor dit kozijn. Dit is de tekening.</p>
+              <p className="mt-3 text-xs text-slate-700">Een foto op een gevel is er nog niet voor dit kozijn. Dit is de tekening.</p>
             )}
           </div>
         </div>
@@ -1088,7 +1150,7 @@ export function KozijnConfigurator({
       {/* Telefoon: prijs en knop altijd in beeld */}
       <div className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-between gap-3 border-t border-slate-200 bg-white px-4 py-3 lg:hidden">
         <div>
-          <span className="block text-[10px] text-slate-400 uppercase tracking-widest">Prijsindicatie{standaard ? (metBtw ? " · incl. btw" : " · excl. btw") : ""}</span>
+          <span className="block text-[10px] text-slate-600 uppercase tracking-widest">Prijsindicatie{standaard ? (metBtw ? " · incl. btw" : " · excl. btw") : ""}</span>
           <span className="text-xl font-semibold text-slate-800 tabular-nums">€ {prijsTekst}</span>
         </div>
         <button
