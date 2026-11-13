@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { FeedbackButton } from "../components/FeedbackButton";
 
 /** De voorkant van de web app op de telefoon van Bart: naam, icoon en kleur van BartMooi. */
 export const metadata: Metadata = {
@@ -12,5 +13,10 @@ export const metadata: Metadata = {
 export const viewport: Viewport = { themeColor: "#1E5079" };
 
 export default function MetenLayout({ children }: { children: React.ReactNode }) {
-  return <div className="flex min-h-dvh flex-col bg-white text-[#1a1a1a]">{children}</div>;
+  return (
+    <div className="flex min-h-dvh flex-col bg-white text-[#1a1a1a]">
+      {children}
+      <FeedbackButton />
+    </div>
+  );
 }

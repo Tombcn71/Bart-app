@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { Menu, X } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { SITE_URL } from "@/lib/site";
+import { FeedbackButton } from "../components/FeedbackButton";
 
 function CustomSidebarTrigger() {
   const { toggleSidebar, openMobile, isMobile, open } = useSidebar();
@@ -48,6 +49,7 @@ export default function AdminLayout({
         <div className="flex-1 p-8">{children}</div>
       </main>
       <Toaster position="top-right" richColors />
+      <FeedbackButton />
     </SidebarProvider>
   );
 }
