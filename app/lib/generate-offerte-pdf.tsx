@@ -604,7 +604,7 @@ export async function generateOffertePdf(_email: string, data: OfferteData): Pro
 
         {/* ── Footer ── */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>BartMooi B.V. · KvK 12345678 · BTW NL123456789B01</Text>
+          <Text style={styles.footerText}>BartMooi B.V. · KvK 98506560 · BTW NL123456789B01</Text>
           <Text style={styles.footerText}>info@bartmooi.nl · bartmooi.nl</Text>
         </View>
 

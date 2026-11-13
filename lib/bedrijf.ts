@@ -2,12 +2,12 @@
 export const BEDRIJF = {
   naam: "BartMooi B.V.",
   email: "info@bartmooi.nl",
-  telefoon: null as string | null,
+  telefoon: "06 14 11 23 24" as string | null,
   website: "bartmooi.nl" as string | null,
   adres: "Burgemeester Hovylaan 157" as string | null,
   postcode: "2552 XB" as string | null,
   plaats: "Den Haag" as string | null,
-  kvk: "12345678" as string | null,
+  kvk: "98506560" as string | null,
 };
 
 /** Hierheen gaan de meldingen: nieuwe offerte en akkoord. */
