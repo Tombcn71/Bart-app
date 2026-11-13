@@ -27,7 +27,7 @@ export function middleware(request: NextRequest) {
   }
 
   // 3. Accepteer + offerte pagina — direct (niet herschrijven)
-  if (pathname.startsWith("/accepteer") || pathname.startsWith("/offerte") || pathname.startsWith("/terugbellen")) {
+  if (pathname.startsWith("/accepteer") || pathname.startsWith("/offerte") || pathname.startsWith("/terugbellen") || pathname.startsWith("/meten")) {
     return withPathname(NextResponse.next(), pathname);
   }
 

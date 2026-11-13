@@ -8,6 +8,8 @@ import {
   Menu,
   X,
   LogOut,
+  Ruler,
+  Link2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { adminLogout } from "@/app/actions";
@@ -116,6 +118,25 @@ export function AppSidebar() {
                 </CollapsibleContent>
               </SidebarMenuItem>
             </Collapsible>
+
+            {/* Zoals bij kozijnsoftware: Inmeten en Link versturen staan in het menu (ook in de web app op de telefoon) */}
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild className="hover:bg-black/20 text-white">
+                <a href="/meten/inmeten">
+                  <Ruler size={20} />
+                  <span>Inmeten</span>
+                </a>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild className="hover:bg-black/20 text-white">
+                <a href="/meten/reageer">
+                  <Link2 size={20} />
+                  <span>Link versturen</span>
+                </a>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
 
             <Collapsible defaultOpen className="group/collapsible">
               <SidebarMenuItem>

@@ -15,7 +15,8 @@ export default function AdminLoginPage() {
       const result = await adminLogin(password);
       if (result.success) {
         // Volledige reload zodat de middleware de nieuwe cookie zeker meekrijgt
-        window.location.href = "/admin";
+        const next = new URLSearchParams(window.location.search).get("next");
+        window.location.href = next && /^\/(?!\/)[\w/-]*$/.test(next) ? next : "/admin";
         return;
       }
       setError(result.error ?? "Ongeldig wachtwoord");

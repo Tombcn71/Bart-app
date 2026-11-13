@@ -17,7 +17,7 @@ export async function adminLogin(password: string) {
     (await cookies()).set("admin_token", process.env.ADMIN_TOKEN!, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      maxAge: 60 * 60 * 24 * 30,
+      maxAge: 60 * 60 * 24 * 365, // één jaar: Bart logt in de web app één keer in
       path: "/",
     });
     return { success: true };
@@ -173,10 +173,15 @@ function berekenSubsidie(item: any): number {
 
 // Meerdere producten in één offerte (winkelmand)
 export async function saveOffertes(
-  klant: { naam: string; email: string; woonplaats?: string; telefoon?: string },
-  items: any[]
+  klant: { naam: string; email: string; woonplaats?: string; telefoon?: string; adres?: string },
+  items: any[],
+  bronIn?: "onspot" | "onlink"
 ) {
   try {
+    // Inmeten (Onspot) mag alleen als Bart is ingelogd; anders telt het als de klant zelf.
+    const ingelogd = !!process.env.ADMIN_TOKEN && (await cookies()).get("admin_token")?.value === process.env.ADMIN_TOKEN;
+    const bron: "onspot" | "onlink" = bronIn === "onspot" && ingelogd ? "onspot" : "onlink";
+
     const totaalPrijs = items.reduce((s, i) => s + Number(i.prijs ?? 0), 0);
     const totaalSubsidie = items.reduce((s, i) => s + berekenSubsidie(i), 0);
 
@@ -184,6 +189,8 @@ export async function saveOffertes(
       naam: klant.naam,
       woonplaats: klant.woonplaats,
       telefoon: klant.telefoon,
+      ...(klant.adres ? { adres: klant.adres } : {}),
+      bron,
       items,
       prijs: totaalPrijs,
       subsidieIndicatie: totaalSubsidie,
@@ -196,21 +203,22 @@ export async function saveOffertes(
     // Geen bijlage: de klant opent de offerte online (daar kan hij hem delen, akkoord geven en de pdf downloaden).
     const offerteUrl = `${SITE_URL}/offerte/${offerteId}`;
     const aantalTekst = `${items.length} product${items.length !== 1 ? "en" : ""}`;
+    const akkoordTekst = bron === "onspot" ? " Op die pagina kunt u ook akkoord geven." : "";
 
     const { error } = await getResend().emails.send({
       from: "Bart Mooi <info@offerte.bartmooi.nl>",
       to: [klant.email],
       replyTo: "info@bartmooi.nl",
       subject: `Uw offerte — BartMooi`,
-      text: `Geachte ${klant.naam},\n\nHartelijk dank voor uw aanvraag. Wij hebben uw aanvraag voor ${aantalTekst} in goede orde ontvangen.\nUw offerte staat online klaar: ${offerteUrl}\nDaar kunt u hem bekijken, delen en als pdf downloaden.\n\nMet vriendelijke groet,\nBartMooi`,
+      text: `Geachte ${klant.naam},\n\nHartelijk dank voor uw aanvraag. Wij hebben uw aanvraag voor ${aantalTekst} in goede orde ontvangen.\nUw offerte staat online klaar: ${offerteUrl}\nDaar kunt u hem bekijken, delen en als pdf downloaden.${akkoordTekst}\n\nMet vriendelijke groet,\nBartMooi`,
       html: `
         <div style="font-family: Arial, sans-serif; line-height: 1.7; color: #333; max-width: 600px; margin: 0 auto;">
           <div style="background: white; padding: 32px; border: 1px solid #e8edf2; border-radius: 8px;">
             <p style="font-size: 16px; font-weight: bold; color: #1a1a1a; margin: 0 0 8px;">Geachte ${klant.naam},</p>
             <p style="color: #555; margin: 0 0 20px;">Hartelijk dank voor uw aanvraag. Wij hebben uw aanvraag voor <strong>${aantalTekst}</strong> in goede orde ontvangen.</p>
-            <p style="color: #555; margin: 0 0 24px;">Uw persoonlijke offerte staat online klaar. Daar kunt u hem bekijken, delen en als pdf downloaden.</p>
+            <p style="color: #555; margin: 0 0 24px;">Uw persoonlijke offerte staat online klaar. Daar kunt u hem bekijken, delen en als pdf downloaden.${akkoordTekst}</p>
             <p style="margin: 0 0 24px;"><a href="${offerteUrl}" style="background: #1E5079; color: #fff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block;">Bekijk uw offerte online</a></p>
-            <p style="color: #555; margin: 0 0 32px;">Wij nemen zo spoedig mogelijk contact met u op om de offerte samen door te nemen.</p>
+            <p style="color: #555; margin: 0 0 32px;">${bron === "onspot" ? "Heeft u vragen? Reageer gewoon op deze mail." : "Wij nemen zo spoedig mogelijk contact met u op om de offerte samen door te nemen."}</p>
             <p style="color: #333; margin: 0;">Met vriendelijke groet,<br/>
             <strong style="color: #10649E;">BartMooi B.V.</strong><br/>
             <span style="color: #999; font-size: 12px;">info@bartmooi.nl · Den Haag</span></p>

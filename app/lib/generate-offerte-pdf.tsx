@@ -319,6 +319,7 @@ interface CartItemData {
   product: string;
   specs: Record<string, string | number>;
   prijs: number;
+  notitie?: string; // inmeten: notitie van de vakman bij dit raam
 }
 
 function clean(s?: string) {
@@ -484,6 +485,12 @@ export async function generateOffertePdf(_email: string, data: OfferteData): Pro
                 <Text style={styles.specValue}>{value}</Text>
               </View>
             ))}
+            {p.item.notitie ? (
+              <View style={styles.specRow}>
+                <Text style={styles.specLabel}>Notitie</Text>
+                <Text style={styles.specValue}>{p.item.notitie}</Text>
+              </View>
+            ) : null}
             <View style={styles.specRow}>
               <Text style={styles.specLabel}>Prijsindicatie</Text>
               <Text style={styles.specValueBold}>

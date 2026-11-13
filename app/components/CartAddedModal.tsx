@@ -4,6 +4,7 @@ import Link from "next/link";
 import { getCart, clearCart } from "@/lib/cart";
 import { saveOffertes } from "@/app/actions";
 import { showToast } from "@/app/components/CenterToast";
+import { useBron } from "@/lib/use-bron";
 import { FileCheck, PiggyBank } from "lucide-react";
 
 interface Props {
@@ -28,6 +29,7 @@ const CATEGORIEEN = [
 ];
 
 export function CartAddedModal({ open, onClose, product, breedte, hoogte, aantal = 1, prijs, cartCount }: Props) {
+  const bron = useBron();
   const [naam, setNaam] = useState("");
   const [woonplaats, setWoonplaats] = useState("");
   const [email, setEmail] = useState("");
@@ -37,6 +39,28 @@ export function CartAddedModal({ open, onClose, product, breedte, hoogte, aantal
   const [offerteId, setOfferteId] = useState<string | null>(null);
   if (!open) return null;
 
+  // Inmeten (Onspot): geen klantformulier hier; de vakman verstuurt alles vanaf de offertepagina.
+  if (bron === "onspot") return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 text-center">
+        <p className="text-lg font-bold text-slate-800">Raam toegevoegd</p>
+        <p className="text-sm text-slate-500 mt-1">
+          {product}{breedte && hoogte ? ` · ${breedte} × ${hoogte} mm` : ""} · {cartCount} {cartCount === 1 ? "raam" : "ramen"} in deze offerte
+        </p>
+        <div className="mt-6 grid grid-cols-2 gap-2">
+          <button onClick={onClose}
+            className="border border-slate-200 rounded-xl py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+            Nog een raam
+          </button>
+          <Link href="/offerte" onClick={onClose}
+            className="bg-brand text-white rounded-xl py-3 text-sm font-bold hover:bg-brand-dark">
+            Naar offerte
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+
   async function handleSubmit() {
     const emailOk = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email);
     const telOk = telefoon.replace(/\D/g, "").length >= 8;
@@ -45,7 +69,7 @@ export function CartAddedModal({ open, onClose, product, breedte, hoogte, aantal
       return;
     }
     setBezig(true);
-    const res = await saveOffertes({ naam, email, woonplaats, telefoon }, getCart());
+    const res = await saveOffertes({ naam, email, woonplaats, telefoon }, getCart(), bron);
     setBezig(false);
     if (res.success) { clearCart(); setOfferteId(("offerteId" in res && res.offerteId) || null); setKlaar(true); }
     else showToast("Er ging iets mis. Probeer opnieuw.", "error");
