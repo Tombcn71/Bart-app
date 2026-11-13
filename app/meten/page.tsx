@@ -1,46 +1,51 @@
 import NextLink from "next/link";
-import { LayoutDashboard, Link, MapPin } from "lucide-react";
+import { FileText, Link, MapPin } from "lucide-react";
 import { InstallHint } from "./install-hint";
 
-/** Voorkant van de web app van BartMooi: snel reageren op een aanvraag en inmeten bij de klant. */
+/**
+ * Voorkant van de web app van BartMooi: precies één scherm, zonder scrollen.
+ * Snel reageren op een aanvraag en inmeten bij de klant, groot genoeg om met één duim te raken.
+ */
 export default function MetenPage() {
+  const knoppen = [
+    {
+      href: "/admin/offertes",
+      Icon: FileText,
+      titel: "Offertes",
+      tekst: "Bekijk je verstuurde offertes en wie akkoord heeft gegeven.",
+    },
+    {
+      href: "/meten/reageer",
+      Icon: Link,
+      titel: "Link versturen",
+      tekst: "Stuur je klant je linkje via WhatsApp of mail, om zelf zijn prijs te berekenen.",
+    },
+    {
+      href: "/meten/inmeten",
+      Icon: MapPin,
+      titel: "Inmeten",
+      tekst: "Bij de klant: maten per raam invoeren en de offerte ter plekke mailen.",
+    },
+  ];
+
   return (
-    <main className="mx-auto flex w-full max-w-md flex-1 flex-col px-5 pt-10 pb-6">
-      <div className="flex flex-col items-center gap-3">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/webapp-logo.png" alt="BartMooi" className="size-28 object-contain" />
-        <p className="text-2xl font-bold text-brand-text">BartMooi</p>
+    <main className="mx-auto flex h-dvh w-full max-w-md flex-col gap-4 px-5 pt-[max(1.25rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))]">
+      <InstallHint />
+
+      <div className="grid min-h-0 flex-1 grid-rows-3 gap-3">
+        {knoppen.map((k) => (
+          <NextLink
+            key={k.href}
+            href={k.href}
+            className="flex min-h-0 flex-col items-center justify-center gap-2 rounded-2xl border-2 border-slate-200 px-5 text-center transition hover:border-brand active:scale-[0.98]">
+            <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-brand text-white">
+              <k.Icon className="size-6" />
+            </span>
+            <span className="text-lg font-bold">{k.titel}</span>
+            <span className="text-sm leading-snug text-slate-500">{k.tekst}</span>
+          </NextLink>
+        ))}
       </div>
-
-      <div className="mt-6">
-        <InstallHint />
-      </div>
-
-      <div className="my-auto space-y-4 py-6">
-        <NextLink
-          href="/meten/reageer"
-          className="flex flex-col items-center gap-2 rounded-2xl border-2 border-slate-200 px-6 py-8 text-center transition hover:border-brand active:scale-[0.98]">
-          <span className="flex size-14 items-center justify-center rounded-2xl bg-brand text-white">
-            <Link className="size-7" />
-          </span>
-          <span className="text-lg font-bold">Reageer op aanvraag</span>
-          <span className="text-sm text-slate-500">Aanvraag binnen? Stuur je linkje via WhatsApp of mail.</span>
-        </NextLink>
-
-        <NextLink
-          href="/meten/inmeten"
-          className="flex flex-col items-center gap-2 rounded-2xl border-2 border-slate-200 px-6 py-8 text-center transition hover:border-brand active:scale-[0.98]">
-          <span className="flex size-14 items-center justify-center rounded-2xl bg-brand text-white">
-            <MapPin className="size-7" />
-          </span>
-          <span className="text-lg font-bold">Inmeten</span>
-          <span className="text-sm text-slate-500">Bij de klant: maten per raam invoeren en de offerte ter plekke mailen.</span>
-        </NextLink>
-      </div>
-
-      <NextLink href="/admin/offertes" className="mx-auto flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800">
-        <LayoutDashboard className="size-4" /> Naar de offertes
-      </NextLink>
     </main>
   );
 }
