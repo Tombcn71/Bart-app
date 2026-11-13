@@ -3,6 +3,7 @@ import { offertes } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { markeerGemonteerd } from "@/app/actions";
 
 export default async function OfferteDetailPagina({
   params,
@@ -41,6 +42,29 @@ export default async function OfferteDetailPagina({
             Offerte {offerte.id.slice(0, 8)}
           </h1>
           <p className="text-slate-500 mb-6">Klant: {offerte.email}</p>
+
+          {(() => {
+            const d = offerte.data as Record<string, any>;
+            const gemonteerd = d.gemonteerdAt ? new Date(d.gemonteerdAt).toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" }) : null;
+            return (
+              <div className="mb-6 flex flex-wrap items-center gap-3 rounded-xl border border-slate-100 bg-slate-50 p-4">
+                {gemonteerd ? (
+                  <p className="text-sm font-semibold text-slate-700">Gemonteerd op {gemonteerd}{d.reviewAt ? " · reviewverzoek verstuurd" : ""}</p>
+                ) : (
+                  <form
+                    action={async () => {
+                      "use server";
+                      await markeerGemonteerd(offerte.id);
+                    }}>
+                    <button type="submit" className="rounded-lg bg-brand px-4 py-2 text-sm font-bold text-white hover:bg-brand-dark">
+                      Markeer als gemonteerd
+                    </button>
+                    <p className="mt-2 text-xs text-slate-500">Een dag later krijgt de klant een mail met het verzoek om een Google-review achter te laten.</p>
+                  </form>
+                )}
+              </div>
+            );
+          })()}
 
           <div className="grid grid-cols-2 gap-6 bg-slate-50 p-6 rounded-xl">
             {Object.entries(offerte.data as Record<string, any>).map(

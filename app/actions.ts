@@ -32,6 +32,25 @@ export async function adminLogout() {
 // Lazy aanmaken: zonder RESEND_API_KEY crasht anders het hele actions-bestand (ook de login)
 const getResend = () => new Resend(process.env.RESEND_API_KEY);
 
+// Markeer een offerte als gemonteerd: een dag later gaat het reviewverzoek naar de klant (als er een Google-reviewlink is).
+export async function markeerGemonteerd(id: string) {
+  if ((await cookies()).get("admin_token")?.value !== process.env.ADMIN_TOKEN || !process.env.ADMIN_TOKEN) {
+    return { success: false };
+  }
+  try {
+    const [o] = await db.select().from(offertes).where(eq(offertes.id, id));
+    if (!o) return { success: false };
+    const data = o.data as Record<string, any>;
+    if (!data.gemonteerdAt) {
+      await db.update(offertes).set({ data: { ...data, gemonteerdAt: new Date().toISOString() } }).where(eq(offertes.id, id));
+    }
+    revalidatePath(`/admin/offertes/${id}`);
+    return { success: true };
+  } catch {
+    return { success: false };
+  }
+}
+
 // Verwijder een offerte
 export async function deleteOfferte(id: string) {
   try {
