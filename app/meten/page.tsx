@@ -1,6 +1,7 @@
 import NextLink from "next/link";
 import { FileText, Link, MapPin } from "lucide-react";
 import { InstallHint } from "./install-hint";
+import { StopInmeten } from "./stop-inmeten";
 
 /**
  * Voorkant van de web app van BartMooi: precies één scherm, zonder scrollen.
@@ -30,6 +31,7 @@ export default function MetenPage() {
 
   return (
     <main className="mx-auto flex h-dvh w-full max-w-md flex-col gap-4 px-5 pt-[max(1.25rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))]">
+      <StopInmeten />
       <InstallHint />
 
       <div className="grid min-h-0 flex-1 grid-rows-3 gap-3">
