@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { KOZIJN_GROEPEN, KOZIJN_NAMEN } from "@/lib/kozijn-namen";
-import { KOZIJN_CATALOGUS, keuzeToeslag, leegModel, nieuwStandaardModel, typeRecept, type Catalogus, type StandaardModel } from "@/lib/prijsmodel";
+import { KOZIJN_CATALOGUS, keuzeToeslag, leegModel, montageTotaal, nieuwStandaardModel, typeRecept, type Catalogus, type MontageSom, type StandaardModel } from "@/lib/prijsmodel";
 import type { Toeslag, TypeRecept } from "@/lib/prijsmotor";
 import { Kaart, PrijsVeld, Rij } from "./prijs-veld";
 
@@ -25,6 +25,24 @@ const TYPE_VELDEN: { sleutel: "basis" | "perMBreedte" | "perMHoogte" | "perM2"; 
 ];
 
 const afronden = (n: number) => Math.round(n * 100) / 100;
+
+/** Klein veld voor een aantal (monteurs, kozijnen per dag). */
+function AantalVeld({ label, waarde, onChange }: { label: string; waarde: number; onChange: (n: number) => void }) {
+  return (
+    <label className="block w-32 shrink-0">
+      <span className="sr-only">{label}</span>
+      <input
+        type="number"
+        min={1}
+        max={20}
+        inputMode="numeric"
+        value={waarde}
+        onChange={(e) => onChange(Math.min(20, Math.max(1, Math.round(Number(e.target.value)) || 1)))}
+        className="w-full rounded-lg border border-slate-200 py-1.5 pr-3 pl-3 text-right text-sm tabular-nums"
+      />
+    </label>
+  );
+}
 
 /**
  * Prijzen instellen met de standaardprijzen als basis: een prijsniveau (schuif), montage, en
@@ -128,10 +146,47 @@ export function StandaardEditor({
         </Kaart>
       )}
 
-      <Kaart titel="Montage" uitleg="Een vast bedrag per kozijn, exclusief btw. De standaardprijzen zijn zonder montage. Laat leeg als je geen montage rekent.">
-        <Rij naam="Montage per kozijn">
-          <PrijsVeld key={`montage-${reset}`} label="Montage per kozijn" standaard={0} waarde={model.montage ?? 0} onChange={(n) => onChange({ ...model, montage: n })} />
-        </Rij>
+      {(() => {
+        // Het rekenkaartje: elke regel is een invulveld; het totaal komt vanzelf in de prijs van het kozijn.
+        const heeftSom = !!model.montageSom;
+        const som: MontageSom = model.montageSom ?? (model.montage > 0 ? { overig: model.montage } : {});
+        const zet = (patch: Partial<MontageSom>) => {
+          const nieuw = { ...som, ...patch };
+          onChange({ ...model, montageSom: nieuw, montage: montageTotaal(nieuw) });
+        };
+        const totaal = montageTotaal(som);
+        const bedrag = (key: keyof MontageSom, label: string) => (
+          <PrijsVeld key={`${key}-${reset}`} label={label} waarde={(som[key] as number | undefined) ?? 0} onChange={(n) => zet({ [key]: n })} />
+        );
+        return (
+          <Kaart
+            titel="Montage per kozijn"
+            uitleg="Wat kost het jou om één kozijn te plaatsen? Vul in wat voor jou klopt, de som komt vanzelf in de prijs van het kozijn. Alle bedragen zijn exclusief btw. De standaardprijzen zijn zonder montage.">
+            <Rij naam="Aantal monteurs">
+              <AantalVeld key={`monteurs-${reset}`} label="Aantal monteurs" waarde={som.monteurs ?? 2} onChange={(n) => zet({ monteurs: n })} />
+            </Rij>
+            <Rij naam="Bedrag per monteur, per dag">{bedrag("perMonteur", "Bedrag per monteur per dag")}</Rij>
+            <Rij naam="Transport per monteur, per dag">{bedrag("transportPerMonteur", "Transport per monteur per dag")}</Rij>
+            <Rij naam="Kozijnen die ze op één dag plaatsen">
+              <AantalVeld key={`perdag-${reset}`} label="Kozijnen per dag" waarde={som.kozijnenPerDag ?? 1} onChange={(n) => zet({ kozijnenPerDag: n })} />
+            </Rij>
+            <p className="px-4 pb-2 text-[11px] text-slate-500">
+              De kosten van de monteurs en het transport worden verdeeld over het aantal kozijnen dat ze op een dag plaatsen.
+            </p>
+            <Rij naam="Montagemateriaal, per kozijn">{bedrag("materiaal", "Montagemateriaal per kozijn")}</Rij>
+            <Rij naam="Afval wegbrengen, per kozijn">{bedrag("afval", "Afval wegbrengen per kozijn")}</Rij>
+            <Rij naam="Risico, per kozijn (klein afstelwerk na montage)">{bedrag("risico", "Risico per kozijn")}</Rij>
+            <Rij naam="Jouw winst, per kozijn">{bedrag("winst", "Jouw winst per kozijn")}</Rij>
+            {som.overig !== undefined && som.overig > 0 && heeftSom && <Rij naam="Eerder ingevuld bedrag">{bedrag("overig", "Eerder ingevuld bedrag")}</Rij>}
+            {!heeftSom && som.overig !== undefined && (
+              <Rij naam="Eerder ingevuld bedrag">{bedrag("overig", "Eerder ingevuld bedrag")}</Rij>
+            )}
+            <div className="flex items-center justify-between gap-4 bg-slate-50 px-4 py-3">
+              <span className="text-sm font-bold text-slate-800">Montage per kozijn</span>
+              <span className="text-lg font-bold tabular-nums text-slate-900">
+                € {totaal.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </span>
+            </div>
         <fieldset className="space-y-2 px-4 py-3">
           <legend className="sr-only">Hoe laat je de montage zien?</legend>
           {[
@@ -153,7 +208,9 @@ export function StandaardEditor({
             </label>
           ))}
         </fieldset>
-      </Kaart>
+          </Kaart>
+        );
+      })()}
 
       <Kaart titel="Btw" uitleg="Alle prijzen hier zijn exclusief btw. Particulieren zien de prijs inclusief btw, zakelijke klanten exclusief, met de btw apart op de offerte.">
         <Rij naam="Btw-percentage">

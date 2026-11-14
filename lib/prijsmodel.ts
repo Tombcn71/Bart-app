@@ -6,12 +6,46 @@ import { STANDAARD_KEUZES, type KeuzeGroep } from "./standaardopties";
  * Het prijsmodel van een bedrijf: de standaardprijzen, met een prijsniveau (schuif), montage
  * en eigen aanpassingen per kozijntype en per keuze. Wordt opgeslagen bij de prijzen van het bedrijf.
  */
+/**
+ * De rekensom achter "Montage per kozijn": wat het kost om één kozijn te plaatsen, plus de winst.
+ * De kosten van monteurs en transport worden verdeeld over het aantal kozijnen dat ze op een dag plaatsen.
+ */
+export type MontageSom = {
+  /** Aantal monteurs (standaard 2). */
+  monteurs?: number;
+  /** Bedrag per monteur per dag, exclusief btw. */
+  perMonteur?: number;
+  /** Hoeveel kozijnen de monteurs op één dag plaatsen (standaard 1). */
+  kozijnenPerDag?: number;
+  /** Transportkosten per monteur per dag. */
+  transportPerMonteur?: number;
+  /** Per kozijn: montagemateriaal, afval wegbrengen, risico (afstelwerk na montage) en de eigen winst. */
+  materiaal?: number;
+  afval?: number;
+  risico?: number;
+  winst?: number;
+  /** Een eerder ingevuld los bedrag (van vóór het rekenkaartje); blijft meetellen tot het bedrijf het op 0 zet. */
+  overig?: number;
+};
+
+/** Het totaal van de som: wat in de prijs van één kozijn komt, exclusief btw. */
+export function montageTotaal(som: MontageSom): number {
+  const monteurs = som.monteurs ?? 2;
+  const perDag = Math.max(1, som.kozijnenPerDag ?? 1);
+  const dagkosten = monteurs * ((som.perMonteur ?? 0) + (som.transportPerMonteur ?? 0));
+  const totaal =
+    dagkosten / perDag + (som.materiaal ?? 0) + (som.afval ?? 0) + (som.risico ?? 0) + (som.winst ?? 0) + (som.overig ?? 0);
+  return Math.round(totaal * 100) / 100;
+}
+
 export type StandaardModel = {
   model: "standaard";
   /** 1 = precies de standaardprijzen, 0,9 = 10% goedkoper, 1,2 = 20% duurder. */
   factor: number;
   /** Vast bedrag per kozijn voor montage, exclusief btw. De standaardprijzen zijn zonder montage. */
   montage: number;
+  /** De rekensom waaruit `montage` volgt (het totaal). Ontbreekt bij prijzen van vóór het rekenkaartje. */
+  montageSom?: MontageSom;
   /** Het bedrijf vult alle prijzen zelf in (alle velden begonnen leeg) in plaats van de standaardprijzen te volgen. */
   zelf?: boolean;
   /** Hoe montage getoond wordt: true = apart bovenop, anders (standaard) inbegrepen in de prijs van het kozijn. */
