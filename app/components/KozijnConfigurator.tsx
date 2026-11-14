@@ -747,9 +747,27 @@ export function KozijnConfigurator({
     );
   };
 
-  const prijsTekst = berekendePrijs.toLocaleString("nl-NL", {
-    minimumFractionDigits: 2,
-  });
+  // Montage apart vermelden: de prijs bovenaan is dan het kozijn zelf, de montage staat eronder als aparte regel,
+  // met het totaal daaronder. Bij 'inbegrepen' blijft het één totaalprijs.
+  const montageApart = isStandaardModel(matrix) && matrix.montageApart === true && (matrix.montage ?? 0) > 0;
+  const montageBedrag = montageApart
+    ? Math.round((matrix as { montage: number }).montage * aantal * (metBtw ? 1 + btwPct / 100 : 1) * 100) / 100
+    : 0;
+  const bedragTekst = (n: number) => n.toLocaleString("nl-NL", { minimumFractionDigits: 2 });
+  const prijsTekst = bedragTekst(montageApart ? Math.round((berekendePrijs - montageBedrag) * 100) / 100 : berekendePrijs);
+  const prijsLabel = montageApart ? "Prijs kozijn" : "Prijsindicatie";
+  const montageRegels = montageApart ? (
+    <div className="mt-1 space-y-0.5 text-xs text-slate-600">
+      <div className="flex justify-between gap-6">
+        <span>+ Montage</span>
+        <span className="tabular-nums">€ {bedragTekst(montageBedrag)}</span>
+      </div>
+      <div className="flex justify-between gap-6 font-semibold text-slate-800">
+        <span>Totaal</span>
+        <span className="tabular-nums">€ {bedragTekst(berekendePrijs)}</span>
+      </div>
+    </div>
+  ) : null;
   const fotoStap = 0; // de gevelkeuze staat los van de genummerde stappen
   const stap = "mb-1.5 text-xs font-bold text-slate-800";
   const keuze = (actief: boolean) =>
@@ -762,8 +780,9 @@ export function KozijnConfigurator({
       <div className={voorbeeld ? "p-4" : "max-w-[1200px] mx-auto px-4 sm:px-6 py-4 md:py-10"}>
         {voorbeeld && (
           <div className="sticky top-0 z-20 -mx-4 -mt-4 mb-3 border-b border-slate-100 bg-white/95 px-4 py-2 backdrop-blur">
-            <span className="text-[10px] text-slate-600 uppercase tracking-widest">Prijsindicatie{standaard ? (metBtw ? " · incl. btw" : " · excl. btw") : ""}</span>
+            <span className="text-[10px] text-slate-600 uppercase tracking-widest">{prijsLabel}{standaard ? (metBtw ? " · incl. btw" : " · excl. btw") : ""}</span>
             <div className="text-2xl font-semibold tabular-nums text-slate-800">€ {prijsTekst}</div>
+            {montageRegels}
           </div>
         )}
         <h1 className={`font-black text-slate-800 ${voorbeeld ? "mb-2 text-base" : "mb-3 text-xl sm:text-2xl"}`}>
@@ -885,8 +904,9 @@ export function KozijnConfigurator({
           <div className={voorbeeld ? "min-w-0" : "min-w-0 lg:col-span-5"}>
             <div className={voorbeeld ? "space-y-3" : "space-y-3 lg:bg-white lg:border lg:border-slate-200 lg:rounded-xl lg:p-6 lg:shadow-sm"}>
               <div className="hidden lg:block">
-                <span className="text-[10px] text-slate-600 uppercase tracking-widest">Prijsindicatie{standaard ? (metBtw ? " · incl. btw" : " · excl. btw") : ""}</span>
+                <span className="text-[10px] text-slate-600 uppercase tracking-widest">{prijsLabel}{standaard ? (metBtw ? " · incl. btw" : " · excl. btw") : ""}</span>
                 <div className="text-3xl text-slate-800">€ {prijsTekst}</div>
+                {montageRegels}
               </div>
 
               {standaard && (
@@ -1150,8 +1170,13 @@ export function KozijnConfigurator({
       {/* Telefoon: prijs en knop altijd in beeld */}
       <div className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-between gap-3 border-t border-slate-200 bg-white px-4 py-3 lg:hidden">
         <div>
-          <span className="block text-[10px] text-slate-600 uppercase tracking-widest">Prijsindicatie{standaard ? (metBtw ? " · incl. btw" : " · excl. btw") : ""}</span>
+          <span className="block text-[10px] text-slate-600 uppercase tracking-widest">{prijsLabel}{standaard ? (metBtw ? " · incl. btw" : " · excl. btw") : ""}</span>
           <span className="text-xl font-semibold text-slate-800 tabular-nums">€ {prijsTekst}</span>
+          {montageApart && (
+            <span className="block text-[10px] text-slate-600">
+              + montage € {bedragTekst(montageBedrag)} = € {bedragTekst(berekendePrijs)}
+            </span>
+          )}
         </div>
         <button
           onClick={handleAdd}

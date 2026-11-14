@@ -58,6 +58,7 @@ export function StandaardEditor({
   tekening,
   veldLabels,
   standaardModel = nieuwStandaardModel,
+  montageNotitie,
 }: {
   model: StandaardModel;
   onChange: (m: StandaardModel) => void;
@@ -73,6 +74,8 @@ export function StandaardEditor({
   veldLabels?: Partial<Record<"basis" | "perMBreedte" | "perMHoogte" | "perM2", { label: string; kort: string }>>;
   /** Het model waar "Reset" naar terugkeert en waarmee wordt vergeleken; standaard de kale standaardprijzen. */
   standaardModel?: () => StandaardModel;
+  /** Een extra zin onder de uitleg van het montagekaartje, bijvoorbeeld dat de cijfers een voorbeeld zijn. */
+  montageNotitie?: string;
 }) {
   const [reset, setReset] = useState(0);
   // Hoeveel goedkoper (min) of duurder (plus) dan de standaardprijzen, in procenten.
@@ -164,7 +167,8 @@ export function StandaardEditor({
         return (
           <Kaart
             titel="Montage per kozijn"
-            uitleg="Wat kost het jou om één kozijn te plaatsen? Vul in wat voor jou klopt, de som komt vanzelf in de prijs van het kozijn. Alle bedragen zijn exclusief btw. De standaardprijzen zijn zonder montage.">
+            uitleg="Wat kost het jou om één kozijn te plaatsen? Vul in wat voor jou klopt, de som komt vanzelf in de prijs van het kozijn. Alle bedragen zijn exclusief btw. De standaardprijzen zijn zonder montage."
+            notitie={montageNotitie}>
             <Rij naam="Aantal monteurs">
               <AantalVeld key={`monteurs-${reset}`} label="Aantal monteurs" waarde={som.monteurs ?? 2} onChange={(n) => zet({ monteurs: n })} />
             </Rij>

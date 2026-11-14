@@ -65,11 +65,11 @@ export const KOZIJN_CATALOGUS: Catalogus = { typen: STANDAARD_TYPEN, keuzes: STA
 export const nieuwStandaardModel = (): StandaardModel => ({ model: "standaard", factor: 1, montage: 0 });
 
 /**
- * Barts eigen cijfers voor de montage van een kozijn (excl. btw): twee monteurs van €400 en €50 transport per dag,
- * €300 materiaal, €50 afval, €100 risico en €500 winst = €1.850. Staan vooraf ingevuld in zijn kozijnenprijzen;
- * ze gelden pas als hij de prijzen opslaat.
+ * Startpunt voor de montage van een kozijn (excl. btw), uit de cijfers van een echt kozijnbedrijf: twee monteurs van €400
+ * en €50 transport per dag, €300 materiaal, €50 afval, €100 risico en €500 winst = €1.850. Staat vooraf ingevuld in het
+ * prijsscherm, als voorbeeld dat het bedrijf zelf aanpast; het geldt pas als het bedrijf de prijzen opslaat.
  */
-export const BART_KOZIJN_MONTAGE: MontageSom = {
+export const KOZIJN_MONTAGE_STARTPUNT: MontageSom = {
   monteurs: 2,
   perMonteur: 400,
   transportPerMonteur: 50,
@@ -80,12 +80,12 @@ export const BART_KOZIJN_MONTAGE: MontageSom = {
   winst: 500,
 };
 
-/** Het standaardmodel voor kozijnen bij Bart: de standaardprijzen met zijn montage vooraf ingevuld. */
+/** Het startmodel voor kozijnen in het prijsscherm: de standaardprijzen met het montagestartpunt vooraf ingevuld. */
 export const kozijnStandaardModel = (): StandaardModel => ({
   model: "standaard",
   factor: 1,
-  montage: montageTotaal(BART_KOZIJN_MONTAGE),
-  montageSom: { ...BART_KOZIJN_MONTAGE },
+  montage: montageTotaal(KOZIJN_MONTAGE_STARTPUNT),
+  montageSom: { ...KOZIJN_MONTAGE_STARTPUNT },
 });
 /** Een model waarin alle bedragen leeg zijn, om alles zelf in te vullen. De calculator blijft dezelfde. */
 export function leegModel(cat: Catalogus = KOZIJN_CATALOGUS): StandaardModel {

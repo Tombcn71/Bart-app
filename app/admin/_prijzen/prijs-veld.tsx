@@ -65,12 +65,13 @@ export function PrijsVeld({
   );
 }
 
-export function Kaart({ titel, uitleg, children }: { titel: string; uitleg?: string; children: React.ReactNode }) {
+export function Kaart({ titel, uitleg, notitie, children }: { titel: string; uitleg?: string; notitie?: string; children: React.ReactNode }) {
   return (
     <section className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
       <div className="border-b border-slate-100 bg-slate-50 px-4 py-3">
         <h2 className="text-sm font-bold text-slate-800">{titel}</h2>
         {uitleg && <p className="mt-0.5 text-xs text-slate-500">{uitleg}</p>}
+        {notitie && <p className="mt-1 text-xs font-semibold text-brand-text">{notitie}</p>}
       </div>
       <div className="divide-y divide-slate-100">{children}</div>
     </section>
