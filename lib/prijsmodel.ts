@@ -63,6 +63,30 @@ export type Catalogus = { typen: Record<string, TypeRecept>; keuzes: KeuzeGroep[
 export const KOZIJN_CATALOGUS: Catalogus = { typen: STANDAARD_TYPEN, keuzes: STANDAARD_KEUZES };
 
 export const nieuwStandaardModel = (): StandaardModel => ({ model: "standaard", factor: 1, montage: 0 });
+
+/**
+ * Barts eigen cijfers voor de montage van een kozijn (excl. btw): twee monteurs van €400 en €50 transport per dag,
+ * €300 materiaal, €50 afval, €100 risico en €500 winst = €1.850. Staan vooraf ingevuld in zijn kozijnenprijzen;
+ * ze gelden pas als hij de prijzen opslaat.
+ */
+export const BART_KOZIJN_MONTAGE: MontageSom = {
+  monteurs: 2,
+  perMonteur: 400,
+  transportPerMonteur: 50,
+  kozijnenPerDag: 1,
+  materiaal: 300,
+  afval: 50,
+  risico: 100,
+  winst: 500,
+};
+
+/** Het standaardmodel voor kozijnen bij Bart: de standaardprijzen met zijn montage vooraf ingevuld. */
+export const kozijnStandaardModel = (): StandaardModel => ({
+  model: "standaard",
+  factor: 1,
+  montage: montageTotaal(BART_KOZIJN_MONTAGE),
+  montageSom: { ...BART_KOZIJN_MONTAGE },
+});
 /** Een model waarin alle bedragen leeg zijn, om alles zelf in te vullen. De calculator blijft dezelfde. */
 export function leegModel(cat: Catalogus = KOZIJN_CATALOGUS): StandaardModel {
   const typen: Record<string, Partial<TypeRecept>> = {};

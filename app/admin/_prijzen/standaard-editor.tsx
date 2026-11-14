@@ -57,6 +57,7 @@ export function StandaardEditor({
   groepen = KOZIJN_GROEPEN,
   tekening,
   veldLabels,
+  standaardModel = nieuwStandaardModel,
 }: {
   model: StandaardModel;
   onChange: (m: StandaardModel) => void;
@@ -70,6 +71,8 @@ export function StandaardEditor({
   tekening?: (slug: string) => React.ReactNode;
   /** Andere namen voor de vier prijsvelden per type, voor producten die niet per kozijn geprijsd worden. */
   veldLabels?: Partial<Record<"basis" | "perMBreedte" | "perMHoogte" | "perM2", { label: string; kort: string }>>;
+  /** Het model waar "Reset" naar terugkeert en waarmee wordt vergeleken; standaard de kale standaardprijzen. */
+  standaardModel?: () => StandaardModel;
 }) {
   const [reset, setReset] = useState(0);
   // Hoeveel goedkoper (min) of duurder (plus) dan de standaardprijzen, in procenten.
@@ -86,7 +89,7 @@ export function StandaardEditor({
     });
 
   const resetAlles = () => {
-    onChange(model.zelf ? leegModel(catalogus) : nieuwStandaardModel());
+    onChange(model.zelf ? leegModel(catalogus) : standaardModel());
     setReset((r) => r + 1);
   };
   // Groepen met alleen de types die dit product heeft; wat nergens in staat komt in een laatste groep.
@@ -97,7 +100,7 @@ export function StandaardEditor({
     { titel: groepen.length ? "Overige" : typeTitel, slugs: alleSlugs.filter((s) => !ingedeeld.has(s)) },
   ].filter((g) => g.slugs.length > 0);
 
-  const wijkt = model.factor !== 1 || (model.montage ?? 0) > 0 || (model.btw !== undefined && model.btw !== 21) || model.montageApart === true || aangepast > 0;
+  const wijkt = model.factor !== 1 || (model.montage ?? 0) !== (standaardModel().montage ?? 0) || (model.btw !== undefined && model.btw !== 21) || model.montageApart === true || aangepast > 0;
 
   return (
     <div className="space-y-6">

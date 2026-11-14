@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { saveMatrix } from "@/app/actions";
 import { getMatrix } from "@/lib/matrix";
 import { StandaardEditor } from "../_prijzen/standaard-editor";
-import { isStandaardModel, KOZIJN_CATALOGUS, leegModel, nieuwStandaardModel, type StandaardModel } from "@/lib/prijsmodel";
+import { isStandaardModel, KOZIJN_CATALOGUS, kozijnStandaardModel, leegModel, type StandaardModel } from "@/lib/prijsmodel";
 import { KozijnConfigurator, kozijnTekening } from "@/app/components/KozijnConfigurator";
 import { ALU_CATALOGUS } from "@/lib/aluminium";
 
@@ -37,7 +37,7 @@ export default function KozijnenPrijzen() {
   useEffect(() => {
     async function loadData() {
       const [kData, aData] = await Promise.all([getMatrix(SLEUTEL.kunststof), getMatrix(SLEUTEL.aluminium)]);
-      const start = (data: any): StandaardModel => (isStandaardModel(data) ? data : nieuwStandaardModel());
+      const start = (data: any): StandaardModel => (isStandaardModel(data) ? data : kozijnStandaardModel());
       setPrijzen({ kunststof: start(kData), aluminium: start(aData) });
       setNogNietOpgeslagen({ kunststof: !isStandaardModel(kData), aluminium: !isStandaardModel(aData) });
       setOud({
@@ -72,7 +72,7 @@ export default function KozijnenPrijzen() {
     // Wat er nu staat bewaren, en de andere invulling terughalen of nieuw beginnen.
     setKopie((k) => ({ ...k, [materiaal]: { ...k[materiaal], [zelf ? "zelf" : "standaard"]: huidig } }));
     const terug = kopie[materiaal][naarZelf ? "zelf" : "standaard"];
-    zetModel(terug ?? (naarZelf ? leegModel(CATALOGUS[materiaal]) : nieuwStandaardModel()));
+    zetModel(terug ?? (naarZelf ? leegModel(CATALOGUS[materiaal]) : kozijnStandaardModel()));
   };
 
   return (
@@ -155,6 +155,7 @@ export default function KozijnenPrijzen() {
           )}
 
           <StandaardEditor
+            standaardModel={kozijnStandaardModel}
             key={`${materiaal}-${zelf ? "zelf" : "standaard"}`}
             model={huidig}
             onChange={zetModel}
