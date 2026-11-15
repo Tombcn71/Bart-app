@@ -1,5 +1,5 @@
 import { getMatrix } from "@/lib/matrix";
-import { isStandaardModel, nieuwStandaardModel } from "@/lib/prijsmodel";
+import { isStandaardModel, startModelVoor } from "@/lib/prijsmodel";
 
 /**
  * De prijzen van Bart, op de server opgehaald zodat de calculator ze al heeft als de pagina er is (geen
@@ -7,7 +7,7 @@ import { isStandaardModel, nieuwStandaardModel } from "@/lib/prijsmodel";
  */
 export async function prijzenVoor(sleutel: string) {
   const data = await getMatrix(sleutel);
-  return isStandaardModel(data) ? data : nieuwStandaardModel();
+  return isStandaardModel(data) ? data : startModelVoor(sleutel);
 }
 
 /** Zoals opgeslagen (voor de kunststof-kozijncalculator, die zelf ook de oude prijstabel omzet). */

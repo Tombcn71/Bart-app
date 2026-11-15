@@ -296,3 +296,13 @@ export function berekenStandaard(
 }
 
 export { euro as formatEuro };
+
+/** Het startmodel voor een prijssleutel: zo rekent een calculator zolang er nog niets is opgeslagen. */
+export function startModelVoor(sleutel: string): StandaardModel {
+  if (sleutel === "kozijn_matrix" || sleutel === "alu_kozijn_matrix") return kozijnStandaardModel();
+  if (sleutel === "deur_matrix" || sleutel === "alu_deur_matrix") return deurStandaardModel();
+  if (sleutel === "schuifpui_matrix" || sleutel === "alu_schuifpui_matrix") return schuifpuiStandaardModel();
+  if (sleutel === "alu_harmonicadeur_matrix") return harmonicaStandaardModel();
+  if (sleutel === "rolluiken_matrix") return rolluikStandaardModel();
+  return nieuwStandaardModel();
+}

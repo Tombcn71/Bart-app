@@ -9,7 +9,7 @@ import { STANDAARD_KEUZES } from "@/lib/standaardopties";
 import { BEGINMATEN } from "@/lib/beginmaten";
 import { ALU_BEGINMATEN, ALU_CATALOGUS } from "@/lib/aluminium";
 import { EXTRA_MAAT, MAATGRENZEN_ALU, MAATGRENZEN_KUNSTSTOF } from "@/lib/maatgrenzen";
-import { montageVoor, berekenStandaard, btwPercentage, eersteKeuze, isStandaardModel, keuzeNaam, nieuwStandaardModel, KOZIJN_CATALOGUS } from "@/lib/prijsmodel";
+import { montageVoor, berekenStandaard, btwPercentage, eersteKeuze, isStandaardModel, keuzeNaam, kozijnStandaardModel, KOZIJN_CATALOGUS } from "@/lib/prijsmodel";
 import { GevelFoto, GevelKeuze, type GevelId, KOZIJN_KLEUREN, heeftGevelFoto } from "@/app/components/GevelFoto";
 import { KozijnTechnisch, TECHNISCH } from "@/app/components/KozijnTechnisch";
 import Image from "next/image";
@@ -426,8 +426,8 @@ export function KozijnConfigurator({
   // Een bedrijf zonder opgeslagen prijzen (leeg object, bijv. een nieuwe klant of de demo) rekent met de standaardprijzen.
   const normaliseer = (data: any) =>
     alu
-      ? isStandaardModel(data) ? data : nieuwStandaardModel()
-      : isStandaardModel(data) ? data : !data || Object.keys(data).length === 0 ? nieuwStandaardModel() : maakMatrix(data);
+      ? isStandaardModel(data) ? data : kozijnStandaardModel()
+      : isStandaardModel(data) ? data : !data || Object.keys(data).length === 0 ? kozijnStandaardModel() : maakMatrix(data);
   const [opgehaald, setOpgehaald] = useState<any>(() => (startMatrix !== undefined ? normaliseer(startMatrix) : null));
   const matrix = matrixProp ?? opgehaald;
   const standaard = alu || isStandaardModel(matrix);
@@ -585,7 +585,7 @@ export function KozijnConfigurator({
     if (!matrix || !kozijn || breedte <= 0 || hoogte <= 0) return { regels, totaal: 0 };
     if (alu) {
       return berekenStandaard(
-        isStandaardModel(matrix) ? matrix : nieuwStandaardModel(),
+        isStandaardModel(matrix) ? matrix : kozijnStandaardModel(),
         slug,
         breedte,
         hoogte,

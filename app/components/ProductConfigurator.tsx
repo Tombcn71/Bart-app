@@ -8,7 +8,7 @@ import { NumberInput } from "@/app/components/NumberInput";
 import { FormField } from "@/app/components/FormField";
 import { getMatrix } from "@/lib/matrix";
 import type { Maatgrenzen } from "@/lib/maatgrenzen";
-import { montageVoor, berekenStandaard, btwPercentage, isStandaardModel, keuzeNaam, nieuwStandaardModel, type Catalogus } from "@/lib/prijsmodel";
+import { montageVoor, berekenStandaard, btwPercentage, isStandaardModel, keuzeNaam, startModelVoor, type Catalogus } from "@/lib/prijsmodel";
 
 // De stappen van het formulier, in de volgorde van Creon; elke keuzegroep hoort bij één stap.
 const SECTIES = ["Profiel en aanslag", "Kleur", "Vulling", "Eigenschappen"] as const;
@@ -89,7 +89,7 @@ export function ProductConfigurator({
   // Zonder prijzen van buiten: de opgeslagen prijzen van het bedrijf, anders de standaardprijzen.
   useEffect(() => {
     if (matrixProp) return;
-    getMatrix(matrixSleutel).then((data: unknown) => setOpgehaald(isStandaardModel(data) ? data : nieuwStandaardModel()));
+    getMatrix(matrixSleutel).then((data: unknown) => setOpgehaald(isStandaardModel(data) ? data : startModelVoor(matrixSleutel)));
   }, [matrixProp, matrixSleutel]);
 
   const matrix = matrixProp ?? opgehaald;
