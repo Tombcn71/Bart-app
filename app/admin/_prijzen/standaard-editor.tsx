@@ -40,7 +40,7 @@ function AantalVeld({ label, waarde, onChange }: { label: string; waarde: number
         inputMode="numeric"
         value={waarde}
         onChange={(e) => onChange(Math.min(20, Math.max(1, Math.round(Number(e.target.value)) || 1)))}
-        className="w-full rounded-lg border border-slate-200 py-1.5 pr-3 pl-3 text-right text-sm tabular-nums"
+        className="w-full rounded-lg border border-border py-1.5 pr-3 pl-3 text-right text-sm tabular-nums"
       />
     </label>
   );
@@ -148,12 +148,12 @@ export function StandaardEditor({
         />
       )}
       <div className="flex items-center justify-between gap-3">
-        <p className="text-xs text-slate-500">{model.zelf ? "Dit zijn je eigen prijzen." : wijkt ? "Je prijzen wijken af van de standaardprijzen." : "Dit zijn de standaardprijzen."}</p>
+        <p className="text-xs text-muted-foreground">{model.zelf ? "Dit zijn je eigen prijzen." : wijkt ? "Je prijzen wijken af van de standaardprijzen." : "Dit zijn de standaardprijzen."}</p>
         <button
           type="button"
           disabled={!wijkt}
           onClick={() => vragen("alles")}
-          className="shrink-0 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-transparent">
+          className="shrink-0 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-muted/50 disabled:opacity-40 disabled:hover:bg-transparent">
           {model.zelf ? "Alles leegmaken" : "Reset standaardprijzen"}
         </button>
       </div>
@@ -163,7 +163,7 @@ export function StandaardEditor({
           titel="Goedkoper of duurder dan de standaardprijzen"
           uitleg="Zet de schuif en al je prijzen gaan in één keer mee, zonder verder werk. Wil je 30% goedkoper zijn, zet hem dan op 30% goedkoper. Koop je goedkoper in dan de standaardprijs? Zet de schuif dan op jouw korting.">
           <div className="space-y-3 px-4 py-4">
-            <p className="text-3xl font-bold text-slate-900">
+            <p className="text-3xl font-bold text-foreground">
               {verschil === 0 ? "Standaardprijzen" : verschil < 0 ? `${-verschil}% goedkoper` : `${verschil}% duurder`}
             </p>
             <input
@@ -176,7 +176,7 @@ export function StandaardEditor({
               onChange={(e) => onChange({ ...model, factor: 1 + Number(e.target.value) / 100 })}
               className="w-full accent-[var(--color-brand)]"
             />
-            <div className="flex justify-between text-[11px] text-slate-400">
+            <div className="flex justify-between text-[11px] text-muted-foreground">
               <span>50% goedkoper</span>
               <span>standaard</span>
               <span>50% duurder</span>
@@ -185,14 +185,14 @@ export function StandaardEditor({
               type="button"
               disabled={!wijkt}
               onClick={() => vragen("alles")}
-              className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-transparent">
+              className="rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-muted/50 disabled:opacity-40 disabled:hover:bg-transparent">
               Reset standaardprijzen
             </button>
             <button
               type="button"
               disabled={model.factor === 1}
               onClick={() => vragen("schuif")}
-              className="ml-2 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-transparent">
+              className="ml-2 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-muted/50 disabled:opacity-40 disabled:hover:bg-transparent">
               Terug naar 100%
             </button>
           </div>
@@ -216,7 +216,7 @@ export function StandaardEditor({
             titel="Montage per kozijn"
             uitleg="Wat kost het jou om te plaatsen en wat wil je eraan verdienen? Deel 1 is wat je team per werkdag kost, deel 2 is wat per kozijn bijkomt, inclusief je winst. Alle bedragen zijn exclusief btw. De standaardprijzen zijn zonder montage."
             notitie={montageNotitie}>
-            <p className="bg-slate-50 px-4 py-2 text-xs font-bold tracking-wide text-slate-600 uppercase">1. Per werkdag van je team</p>
+            <p className="bg-muted/40 px-4 py-2 text-xs font-bold tracking-wide text-muted-foreground uppercase">1. Per werkdag van je team</p>
             <Rij naam="Aantal monteurs">
               <AantalVeld key={`monteurs-${reset}`} label="Aantal monteurs" waarde={som.monteurs ?? 2} onChange={(n) => zet({ monteurs: n })} />
             </Rij>
@@ -226,10 +226,10 @@ export function StandaardEditor({
             <Rij naam="Capaciteit: kozijnen die ze op één dag plaatsen">
               <AantalVeld key={`perdag-${reset}`} label="Kozijnen per dag" waarde={som.kozijnenPerDag ?? 1} onChange={(n) => zet({ kozijnenPerDag: n })} />
             </Rij>
-            <p className="px-4 pb-2 text-[11px] text-slate-500">
+            <p className="px-4 pb-2 text-[11px] text-muted-foreground">
               Loon en transport reken je per hele werkdag, nooit per halve dag. Passen er {som.kozijnenPerDag ?? 1} kozijn{(som.kozijnenPerDag ?? 1) === 1 ? "" : "s"} op een dag, dan is dat bij 1 t/m {som.kozijnenPerDag ?? 1} kozijn{(som.kozijnenPerDag ?? 1) === 1 ? "" : "s"} één dag, bij het volgende kozijn komt er een dag bij.
             </p>
-            <p className="bg-slate-50 px-4 py-2 text-xs font-bold tracking-wide text-slate-600 uppercase">2. Per kozijn, dit tel je voor elk kozijn mee</p>
+            <p className="bg-muted/40 px-4 py-2 text-xs font-bold tracking-wide text-muted-foreground uppercase">2. Per kozijn, dit tel je voor elk kozijn mee</p>
             <Rij naam="Montagemateriaal, per kozijn">{bedrag("materiaal", "Montagemateriaal per kozijn")}</Rij>
             <Rij naam="Afval wegbrengen, per kozijn">{bedrag("afval", "Afval wegbrengen per kozijn")}</Rij>
             <Rij naam="Risico, per kozijn (klein afstelwerk na montage)">{bedrag("risico", "Risico per kozijn")}</Rij>
@@ -251,41 +251,41 @@ export function StandaardEditor({
               ];
               if ((som.overig ?? 0) > 0) regels.push({ naam: "Eerder ingevuld bedrag", bedrag: som.overig ?? 0 });
               return (
-                <div className="border-t border-slate-100 px-4 py-3">
-                  <p className="mb-2 text-xs font-bold tracking-wide text-slate-600 uppercase">Zo is de prijs voor 1 kozijn (1 dag) opgebouwd</p>
+                <div className="border-t border-border px-4 py-3">
+                  <p className="mb-2 text-xs font-bold tracking-wide text-muted-foreground uppercase">Zo is de prijs voor 1 kozijn (1 dag) opgebouwd</p>
                   <dl className="space-y-1 text-sm">
                     {regels.map((r) => (
-                      <div key={r.naam} className={`flex justify-between gap-4 ${r.winst ? "rounded-md bg-emerald-50 px-2 py-1 font-bold text-emerald-800" : "text-slate-700"}`}>
+                      <div key={r.naam} className={`flex justify-between gap-4 ${r.winst ? "rounded-md bg-emerald-50 px-2 py-1 font-bold text-emerald-700 dark:text-emerald-300" : "text-foreground"}`}>
                         <dt>{r.naam}</dt>
                         <dd className="tabular-nums">{f(r.bedrag)}</dd>
                       </div>
                     ))}
-                    <div className="flex justify-between gap-4 border-t border-slate-200 pt-1 font-bold text-slate-900">
+                    <div className="flex justify-between gap-4 border-t border-border pt-1 font-bold text-foreground">
                       <dt>Montage voor 1 kozijn</dt>
                       <dd className="tabular-nums">{f(totaal)}</dd>
                     </div>
                   </dl>
                   {metKraan && (som.kraan ?? 0) > 0 && (
-                    <p className="mt-2 text-xs text-slate-600">
+                    <p className="mt-2 text-xs text-muted-foreground">
                       Heeft de klant geen tuintoegang, dan komt er per werkdag een kraan bij: {f(som.kraan ?? 0)}. Dat staat apart op de offerte en telt niet mee in het bedrag hierboven.
                     </p>
                   )}
-                  <p className="mt-3 mb-1 text-xs font-semibold text-slate-700">Bij meer kozijnen:</p>
+                  <p className="mt-3 mb-1 text-xs font-semibold text-foreground">Bij meer kozijnen:</p>
                   {[2, 3, 5].map((n) => {
                     const v = montageVoor({ montage: totaal, montageSom: som }, n);
                     const g = (x: number) => `€ ${x.toLocaleString("nl-NL", { maximumFractionDigits: 0 })}`;
                     return (
-                      <p key={n} className="text-xs text-slate-600 tabular-nums">
-                        {n} kozijnen: {v.dagen} dag{v.dagen === 1 ? "" : "en"} loon en transport ({g(v.loon + v.transport)}) + {n} × {g(montagePerKozijn(som))} = <span className="font-semibold text-slate-800">{g(v.totaal)}</span>, waarvan <span className="font-semibold text-emerald-700">{g((som.winst ?? 0) * n)} winst</span>
+                      <p key={n} className="text-xs text-muted-foreground tabular-nums">
+                        {n} kozijnen: {v.dagen} dag{v.dagen === 1 ? "" : "en"} loon en transport ({g(v.loon + v.transport)}) + {n} × {g(montagePerKozijn(som))} = <span className="font-semibold text-foreground">{g(v.totaal)}</span>, waarvan <span className="font-semibold text-emerald-700 dark:text-emerald-300">{g((som.winst ?? 0) * n)} winst</span>
                       </p>
                     );
                   })}
                 </div>
               );
             })()}
-            <div className="flex items-center justify-between gap-4 bg-slate-50 px-4 py-3">
-              <span className="text-sm font-bold text-slate-800">Montage voor één kozijn</span>
-              <span className="text-lg font-bold tabular-nums text-slate-900">
+            <div className="flex items-center justify-between gap-4 bg-muted/40 px-4 py-3">
+              <span className="text-sm font-bold text-foreground">Montage voor één kozijn</span>
+              <span className="text-lg font-bold tabular-nums text-foreground">
                 € {totaal.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
             </div>
@@ -304,8 +304,8 @@ export function StandaardEditor({
                 className="mt-1 accent-[var(--color-brand)]"
               />
               <span>
-                <span className="block text-sm text-slate-800">{o.titel}</span>
-                <span className="block text-xs text-slate-500">{o.tekst}</span>
+                <span className="block text-sm text-foreground">{o.titel}</span>
+                <span className="block text-xs text-muted-foreground">{o.tekst}</span>
               </span>
             </label>
           ))}
@@ -324,7 +324,7 @@ export function StandaardEditor({
         <Kaart key={gr.titel} titel={gr.titel} uitleg={i === 0 ? "De standaardprijzen, exclusief btw. Staat er bij vast bedrag \"inbegrepen\", dan zit het al in de prijs per meter. Reken je zelf een vast bedrag, vul het dan in en zet de prijs per meter lager." : undefined}>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[36rem] text-left">
-              <thead className="bg-slate-50 text-[10px] font-bold text-slate-400 uppercase">
+              <thead className="bg-muted/40 text-[10px] font-bold text-muted-foreground uppercase">
                 <tr>
                   <th className="px-4 py-2">Kozijn</th>
                   {TYPE_VELDEN.map((v) => (
@@ -334,16 +334,16 @@ export function StandaardEditor({
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-border">
                 {gr.slugs.map((slug) => {
                   const recept = typeRecept(model, slug, catalogus)!;
                   const eigen = TYPE_VELDEN.some((v) => Math.abs(recept[v.sleutel] - catalogus.typen[slug][v.sleutel]) > 0.004);
                   return (
                     <tr key={`${slug}-${reset}`}>
-                      <td className="px-4 py-1.5 text-xs text-slate-800">
+                      <td className="px-4 py-1.5 text-xs text-foreground">
                         <span className="flex min-w-[11.5rem] items-center gap-2.5">
                           {tekening && (
-                            <span className="flex h-12 w-14 shrink-0 items-center justify-center rounded-md bg-slate-50 p-1 [&>svg]:h-full! [&>svg]:max-h-full! [&>svg]:w-auto! [&>svg]:max-w-full!">
+                            <span className="flex h-12 w-14 shrink-0 items-center justify-center rounded-md bg-muted/40 p-1 [&>svg]:h-full! [&>svg]:max-h-full! [&>svg]:w-auto! [&>svg]:max-w-full!">
                               {tekening(slug)}
                             </span>
                           )}
@@ -381,14 +381,14 @@ export function StandaardEditor({
             const velden = TOESLAG_VELDEN.filter((v) => t[v.sleutel] !== undefined);
             return (
               <div key={`${k.id}-${reset}`} className="px-4 py-2.5">
-                <p className="text-sm text-slate-800">{k.naam}</p>
+                <p className="text-sm text-foreground">{k.naam}</p>
                 {velden.length === 0 ? (
-                  <p className="text-xs text-slate-400">Geen toeslag</p>
+                  <p className="text-xs text-muted-foreground">Geen toeslag</p>
                 ) : (
                   <div className="mt-1.5 space-y-1.5">
                     {velden.map((v) => (
                       <div key={v.sleutel} className="flex items-center justify-between gap-4">
-                        <span className="text-xs text-slate-500">{v.label}</span>
+                        <span className="text-xs text-muted-foreground">{v.label}</span>
                         <PrijsVeld
                           label={`${k.naam}: ${v.label}`}
                           eenheid={v.eenheid}

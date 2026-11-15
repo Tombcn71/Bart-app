@@ -136,8 +136,8 @@ export function ProductPrijzen({
       )}
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-black text-slate-800">{titel}</h2>
-          <p className="text-sm text-slate-500">
+          <h2 className="text-xl font-black text-foreground">{titel}</h2>
+          <p className="text-sm text-muted-foreground">
             {zelf
               ? "Vul de prijzen in zoals je ze zelf rekent. Laat een bedrag leeg als je er niets voor rekent."
               : "Alle prijzen staan voor je klaar. Zet de schuif voor goedkoper of duurder, of pas een bedrag aan."}
@@ -152,13 +152,13 @@ export function ProductPrijzen({
       </div>
 
       {beschikbaar.length > 1 && (
-        <div className="flex w-fit rounded-xl bg-slate-100 p-1">
+        <div className="flex w-fit rounded-xl bg-muted p-1">
           {beschikbaar.map((m) => (
             <button
               key={m}
               onClick={() => setMateriaal(m)}
               className={`rounded-lg px-6 py-2 text-sm font-bold capitalize transition-colors ${
-                materiaal === m ? "bg-brand text-white shadow-md" : "text-slate-500 hover:text-slate-800"
+                materiaal === m ? "bg-brand text-white shadow-md" : "text-muted-foreground hover:text-foreground"
               }`}>
               {m}
             </button>
@@ -166,13 +166,13 @@ export function ProductPrijzen({
         </div>
       )}
 
-      <div className="flex w-fit rounded-xl bg-slate-100 p-1 lg:hidden">
+      <div className="flex w-fit rounded-xl bg-muted p-1 lg:hidden">
         {(["prijzen", "voorbeeld"] as const).map((w) => (
           <button
             key={w}
             onClick={() => setWeergave(w)}
             className={`rounded-lg px-5 py-2 text-sm font-bold capitalize transition-colors ${
-              weergave === w ? "bg-brand text-white shadow-md" : "text-slate-500 hover:text-slate-800"
+              weergave === w ? "bg-brand text-white shadow-md" : "text-muted-foreground hover:text-foreground"
             }`}>
             {w}
           </button>
@@ -182,9 +182,9 @@ export function ProductPrijzen({
       <div className="grid gap-6 lg:grid-cols-[minmax(0,38rem)_minmax(0,1fr)] lg:items-start">
         <div className={`space-y-6 ${weergave === "voorbeeld" ? "hidden lg:block" : ""}`}>
           {!alleenZelf && (
-          <fieldset className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+          <fieldset className="rounded-2xl border border-border bg-card p-4 shadow-sm">
             <legend className="sr-only">Hoe stel je je prijzen in?</legend>
-            <p className="text-sm font-bold text-slate-800">Hoe stel je je prijzen in?</p>
+            <p className="text-sm font-bold text-foreground">Hoe stel je je prijzen in?</p>
             <div className="mt-3 space-y-2">
               {[
                 { zelf: false, titel: "Vooringevuld met standaardprijzen", tekst: "Alles staat klaar. Wil je bijvoorbeeld 30% goedkoper zijn? Zet dan de schuif op 30% goedkoper, zonder verder werk." },
@@ -192,11 +192,11 @@ export function ProductPrijzen({
               ].map((o) => (
                 <label
                   key={o.titel}
-                  className={`flex cursor-pointer items-start gap-3 rounded-xl border-2 p-3 ${o.zelf === zelf ? "border-brand" : "border-slate-200 hover:border-slate-400"}`}>
+                  className={`flex cursor-pointer items-start gap-3 rounded-xl border-2 p-3 ${o.zelf === zelf ? "border-brand" : "border-border hover:border-foreground/30"}`}>
                   <input type="radio" name={`prijsmodel-${titel}-${materiaal}`} checked={o.zelf === zelf} onChange={() => kies(o.zelf)} className="mt-1 accent-[var(--color-brand)]" />
                   <span>
-                    <span className="block text-sm font-semibold text-slate-800">{o.titel}</span>
-                    <span className="block text-xs text-slate-500">{o.tekst}</span>
+                    <span className="block text-sm font-semibold text-foreground">{o.titel}</span>
+                    <span className="block text-xs text-muted-foreground">{o.tekst}</span>
                   </span>
                 </label>
               ))}
@@ -205,7 +205,7 @@ export function ProductPrijzen({
           )}
 
           {nogNietOpgeslagen[materiaal] && !zelf && (
-            <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            <div className="rounded-xl border border-amber-300 dark:border-amber-500/40 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:text-amber-200">
               <p className="font-semibold">Dit zijn de standaardprijzen, nog niet opgeslagen.</p>
               <p className="mt-0.5">
                 {oud[materiaal]
@@ -231,7 +231,7 @@ export function ProductPrijzen({
         </div>
 
         <aside className={`lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto ${weergave === "prijzen" ? "hidden lg:block" : ""}`}>
-          <div className="overflow-clip rounded-2xl border border-slate-100 bg-white shadow-sm">
+          <div className="overflow-clip rounded-2xl border border-border bg-white text-slate-900 shadow-sm [color-scheme:light]">
             <div className="border-b border-slate-100 bg-slate-50 px-4 py-3">
               <h2 className="text-sm font-bold text-slate-800">Prijscheck</h2>
               <p className="mt-0.5 text-xs text-slate-500">

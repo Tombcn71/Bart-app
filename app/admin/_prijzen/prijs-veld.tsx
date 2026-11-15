@@ -32,7 +32,7 @@ export function PrijsVeld({
     <label className="relative block">
       <span className="sr-only">{label}</span>
       <span
-        className={`pointer-events-none absolute inset-y-0 flex items-center text-sm text-slate-400 ${eenheid === "%" ? "right-3" : "left-3"}`}>
+        className={`pointer-events-none absolute inset-y-0 flex items-center text-sm text-muted-foreground ${eenheid === "%" ? "right-3" : "left-3"}`}>
         {eenheid}
       </span>
       <input
@@ -46,7 +46,7 @@ export function PrijsVeld({
           onChange(parseFloat(t.replace(",", ".")) || 0);
         }}
         className={`w-full rounded-lg border py-1.5 text-right text-sm tabular-nums ${eenheid === "%" ? "pr-7 pl-3" : "pr-3 pl-7"} ${
-          waarschuwing ? "border-amber-400 bg-amber-50" : afwijkt ? "border-brand-text" : "border-slate-200"
+          waarschuwing ? "border-amber-400 dark:border-amber-500/40 bg-amber-50" : afwijkt ? "border-brand-text" : "border-border"
         }`}
       />
     </label>
@@ -67,13 +67,13 @@ export function PrijsVeld({
 
 export function Kaart({ titel, uitleg, notitie, children }: { titel: string; uitleg?: string; notitie?: string; children: React.ReactNode }) {
   return (
-    <section className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
-      <div className="border-b border-slate-100 bg-slate-50 px-4 py-3">
-        <h2 className="text-sm font-bold text-slate-800">{titel}</h2>
-        {uitleg && <p className="mt-0.5 text-xs text-slate-500">{uitleg}</p>}
+    <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+      <div className="border-b border-border bg-muted/40 px-4 py-3">
+        <h2 className="text-sm font-bold text-foreground">{titel}</h2>
+        {uitleg && <p className="mt-0.5 text-xs text-muted-foreground">{uitleg}</p>}
         {notitie && <p className="mt-1 text-xs font-semibold text-brand-text">{notitie}</p>}
       </div>
-      <div className="divide-y divide-slate-100">{children}</div>
+      <div className="divide-y divide-border">{children}</div>
     </section>
   );
 }
@@ -81,7 +81,7 @@ export function Kaart({ titel, uitleg, notitie, children }: { titel: string; uit
 export function Rij({ naam, children, hoofdletters = false }: { naam: string; children: React.ReactNode; hoofdletters?: boolean }) {
   return (
     <div className="flex items-center justify-between gap-4 px-4 py-2.5">
-      <span className={`text-sm text-slate-700 ${hoofdletters ? "capitalize" : ""}`}>{naam}</span>
+      <span className={`text-sm text-foreground ${hoofdletters ? "capitalize" : ""}`}>{naam}</span>
       {children}
     </div>
   );

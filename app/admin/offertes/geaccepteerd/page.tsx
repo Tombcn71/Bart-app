@@ -10,14 +10,14 @@ export default async function GeaccepteerdeOffertes() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-black text-slate-800">Geaccepteerde offertes</h1>
-        <p className="text-sm text-slate-500">{geaccepteerd.length} offerte{geaccepteerd.length !== 1 ? "s" : ""} geaccepteerd.</p>
+        <h1 className="text-2xl font-black text-foreground">Geaccepteerde offertes</h1>
+        <p className="text-sm text-muted-foreground">{geaccepteerd.length} offerte{geaccepteerd.length !== 1 ? "s" : ""} geaccepteerd.</p>
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+      <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
         <table className="w-full text-left">
           <thead>
-            <tr className="bg-slate-50 border-b border-slate-100 text-xs font-bold text-slate-400 uppercase">
+            <tr className="bg-muted/40 border-b border-border text-xs font-bold text-muted-foreground uppercase">
               <th className="py-4 px-6">Klant</th>
               <th className="py-4 px-6">Product</th>
               <th className="py-4 px-6">Bedrag</th>
@@ -26,27 +26,27 @@ export default async function GeaccepteerdeOffertes() {
               <th className="py-4 px-6"></th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-border">
             {geaccepteerd.map((o) => {
               const d = o.data as any;
               const acceptDatum = d.acceptedAt
                 ? new Date(d.acceptedAt).toLocaleString("nl-NL", { dateStyle: "medium", timeStyle: "short" })
                 : "—";
               return (
-                <tr key={o.id} className="hover:bg-slate-50/50 text-sm">
+                <tr key={o.id} className="hover:bg-muted/50 text-sm">
                   <td className="py-4 px-6">
-                    <p className="font-semibold text-slate-800">{d.naam || "—"}</p>
-                    <p className="text-xs text-slate-400">{o.email}</p>
+                    <p className="font-semibold text-foreground">{d.naam || "—"}</p>
+                    <p className="text-xs text-muted-foreground">{o.email}</p>
                   </td>
-                  <td className="py-4 px-6 text-slate-600">{d.product || d.kozijnNaam || d.deurNaam || "—"}</td>
+                  <td className="py-4 px-6 text-muted-foreground">{d.product || d.kozijnNaam || d.deurNaam || "—"}</td>
                   <td className="py-4 px-6 font-semibold text-brand-text">
                     {d.prijs ? `€ ${Number(d.prijs).toLocaleString("nl-NL", { minimumFractionDigits: 2 })}` : "—"}
                   </td>
-                  <td className="py-4 px-6 text-xs text-slate-400">
+                  <td className="py-4 px-6 text-xs text-muted-foreground">
                     {o.createdAt ? new Date(o.createdAt).toLocaleDateString("nl-NL") : "—"}
                   </td>
                   <td className="py-4 px-6">
-                    <span className="inline-flex items-center gap-1.5 bg-green-50 text-green-700 text-xs font-semibold px-2.5 py-1 rounded-full">
+                    <span className="inline-flex items-center gap-1.5 bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-400 text-xs font-semibold px-2.5 py-1 rounded-full">
                       <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block" />
                       {acceptDatum}
                     </span>
@@ -61,7 +61,7 @@ export default async function GeaccepteerdeOffertes() {
             })}
             {geaccepteerd.length === 0 && (
               <tr>
-                <td colSpan={6} className="py-10 text-center text-slate-400 text-sm">
+                <td colSpan={6} className="py-10 text-center text-muted-foreground text-sm">
                   Nog geen geaccepteerde offertes.
                 </td>
               </tr>

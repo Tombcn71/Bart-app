@@ -63,16 +63,16 @@ export function FeedbackButton() {
   };
 
   const formHeader = (
-    <div className="flex items-start justify-between gap-3 border-b border-slate-200 px-5 py-4">
+    <div className="flex items-start justify-between gap-3 border-b border-border px-5 py-4">
       <div>
-        <p className="text-sm font-semibold text-slate-900">Feedback over je app</p>
-        <p className="mt-0.5 text-xs text-slate-500">Gaat direct naar Tom.</p>
+        <p className="text-sm font-semibold text-foreground">Feedback over je app</p>
+        <p className="mt-0.5 text-xs text-muted-foreground">Gaat direct naar Tom.</p>
       </div>
       <button
         type="button"
         aria-label="Feedbackformulier sluiten"
         onClick={() => setOpen(false)}
-        className="flex size-7 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-400 transition-all hover:bg-red-100 hover:text-red-500">
+        className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground transition-all hover:bg-red-100 dark:hover:bg-red-500/20 hover:text-red-500">
         <X size={14} strokeWidth={2.5} />
       </button>
     </div>
@@ -82,14 +82,14 @@ export function FeedbackButton() {
     <div className="flex flex-col items-center justify-center gap-2 px-5 py-10 text-center text-brand-text">
       <CheckCircle size={32} />
       <p className="text-sm font-semibold">Bedankt!</p>
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-muted-foreground">
         {magReageren ? "Ik kijk ernaar en neem contact met je op als ik een vraag heb." : "Ik kijk ernaar."}
       </p>
     </div>
   ) : (
     <div className="space-y-4 p-5">
       <div>
-        <p className="mb-2 text-xs font-medium text-slate-500">Waar gaat het over?</p>
+        <p className="mb-2 text-xs font-medium text-muted-foreground">Waar gaat het over?</p>
         <div className="grid grid-cols-2 gap-2">
           {CATEGORIEEN.map((c) => (
             <button
@@ -98,7 +98,7 @@ export function FeedbackButton() {
               onClick={() => setCategorie(c.value)}
               aria-pressed={categorie === c.value}
               className={`rounded-full border-2 px-2 py-2 text-xs font-medium transition-all ${
-                categorie === c.value ? "border-brand bg-slate-50 text-slate-900" : "border-slate-200 text-slate-500 hover:border-slate-300"
+                categorie === c.value ? "border-brand bg-muted/40 text-foreground" : "border-border text-muted-foreground hover:border-foreground/30"
               }`}>
               <span className="inline-flex items-center gap-1.5">
                 <c.Icon className="size-3.5" />
@@ -115,7 +115,7 @@ export function FeedbackButton() {
         aria-label="Je feedback"
         rows={5}
         // 16px: anders zoomt een iPhone in op het tekstvak
-        className="w-full resize-none rounded-2xl border-2 border-slate-200 bg-slate-50 p-4 text-base outline-none transition-all placeholder:text-slate-400 focus:border-brand focus:bg-white sm:text-sm"
+        className="w-full resize-none rounded-2xl border-2 border-border bg-muted/40 p-4 text-base outline-none transition-all placeholder:text-muted-foreground focus:border-brand focus:bg-card sm:text-sm"
       />
       <label className="flex cursor-pointer items-start gap-3">
         <input
@@ -124,7 +124,7 @@ export function FeedbackButton() {
           onChange={(e) => setMagReageren(e.target.checked)}
           className="mt-0.5 size-4 shrink-0 accent-[#1E5079]"
         />
-        <span className="text-xs leading-tight text-slate-500">Tom mag me hierover mailen of bellen</span>
+        <span className="text-xs leading-tight text-muted-foreground">Tom mag me hierover mailen of bellen</span>
       </label>
 
       <button
@@ -157,7 +157,7 @@ export function FeedbackButton() {
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:hidden">
-          <div className="w-full max-w-sm rounded-3xl border border-slate-200 bg-white shadow-2xl">
+          <div className="w-full max-w-sm rounded-3xl border border-border bg-card shadow-2xl">
             {formHeader}
             {formInhoud}
           </div>
@@ -166,7 +166,7 @@ export function FeedbackButton() {
 
       <div className="fixed top-2/3 right-0 z-50 hidden -translate-y-1/2 items-center sm:flex">
         <div className={`overflow-hidden transition-all duration-300 ease-in-out ${open ? "w-80 opacity-100" : "w-0 opacity-0"}`}>
-          <div className="w-80 rounded-l-3xl border border-slate-200 bg-white shadow-xl">
+          <div className="w-80 rounded-l-3xl border border-border bg-card shadow-xl">
             {formHeader}
             {formInhoud}
           </div>
