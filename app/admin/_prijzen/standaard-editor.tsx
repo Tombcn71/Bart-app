@@ -61,6 +61,7 @@ export function StandaardEditor({
   veldLabels,
   standaardModel = nieuwStandaardModel,
   montageNotitie,
+  metKraan = false,
 }: {
   model: StandaardModel;
   onChange: (m: StandaardModel) => void;
@@ -78,6 +79,8 @@ export function StandaardEditor({
   standaardModel?: () => StandaardModel;
   /** Een extra zin onder de uitleg van het montagekaartje, bijvoorbeeld dat de cijfers een voorbeeld zijn. */
   montageNotitie?: string;
+  /** Toont het veld voor een kraan per werkdag (schuifpui: alleen nodig als er geen tuintoegang is). */
+  metKraan?: boolean;
 }) {
   const [reset, setReset] = useState(0);
   // Hoeveel goedkoper (min) of duurder (plus) dan de standaardprijzen, in procenten.
@@ -219,6 +222,7 @@ export function StandaardEditor({
             </Rij>
             <Rij naam="Bedrag per monteur, per dag">{bedrag("perMonteur", "Bedrag per monteur per dag")}</Rij>
             <Rij naam="Transport per monteur, per dag">{bedrag("transportPerMonteur", "Transport per monteur per dag")}</Rij>
+                        {metKraan && <Rij naam="Kraan per werkdag, alleen als er geen tuintoegang is">{bedrag("kraan", "Kraan per werkdag")}</Rij>}
             <Rij naam="Capaciteit: kozijnen die ze op één dag plaatsen">
               <AantalVeld key={`perdag-${reset}`} label="Kozijnen per dag" waarde={som.kozijnenPerDag ?? 1} onChange={(n) => zet({ kozijnenPerDag: n })} />
             </Rij>
@@ -261,6 +265,11 @@ export function StandaardEditor({
                       <dd className="tabular-nums">{f(totaal)}</dd>
                     </div>
                   </dl>
+                  {metKraan && (som.kraan ?? 0) > 0 && (
+                    <p className="mt-2 text-xs text-slate-600">
+                      Heeft de klant geen tuintoegang, dan komt er per werkdag een kraan bij: {f(som.kraan ?? 0)}. Dat staat apart op de offerte en telt niet mee in het bedrag hierboven.
+                    </p>
+                  )}
                   <p className="mt-3 mb-1 text-xs font-semibold text-slate-700">Bij meer kozijnen:</p>
                   {[2, 3, 5].map((n) => {
                     const v = montageVoor({ montage: totaal, montageSom: som }, n);

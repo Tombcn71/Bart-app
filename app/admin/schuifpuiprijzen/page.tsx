@@ -1,4 +1,5 @@
 "use client";
+import { schuifpuiStandaardModel } from "@/lib/prijsmodel";
 import { ProductPrijzen } from "../_prijzen/product-prijzen";
 import { SchuifpuiCalculator, puiTekening } from "@/app/components/SchuifpuiCalculator";
 import { PUI_ALU_CATALOGUS, PUI_ALU_NAMEN, PUI_KUNSTSTOF_CATALOGUS, PUI_KUNSTSTOF_NAMEN } from "@/lib/schuifpui";
@@ -8,6 +9,8 @@ export default function SchuifpuiPrijzen() {
     <ProductPrijzen
       titel="Schuifpui"
       typeTitel="Prijzen per verdeling"
+      startModel={schuifpuiStandaardModel}
+      metKraan
       materialen={{
         kunststof: {
           sleutel: "schuifpui_matrix",

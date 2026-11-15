@@ -43,6 +43,7 @@ export function SchuifpuiCalculator({
   const alu = materiaal === "aluminium";
   return (
     <ProductConfigurator
+      tuintoegangVraag
       catalogus={alu ? PUI_ALU_CATALOGUS : PUI_KUNSTSTOF_CATALOGUS}
       namen={alu ? PUI_ALU_NAMEN : PUI_KUNSTSTOF_NAMEN}
       beginmaten={alu ? PUI_ALU_BEGINMATEN : PUI_KUNSTSTOF_BEGINMATEN}

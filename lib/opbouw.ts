@@ -8,6 +8,8 @@ export type Opbouw = {
   dagen: number;
   loon: number;
   transport: number;
+  /** Kraan, alleen als de klant geen tuintoegang heeft. */
+  kraan?: number;
   materiaal: number;
   afval: number;
   risico: number;
@@ -17,7 +19,7 @@ export type Opbouw = {
   montage: number;
 };
 
-type ItemMetDag = { dag?: { groep?: string; perDag: number; aantal: number; som?: { monteurs: number; perMonteur: number; transportPerMonteur: number; materiaal: number; afval: number; risico: number; winst: number; overig: number } } };
+type ItemMetDag = { dag?: { groep?: string; kraan?: number; perDag: number; aantal: number; som?: { monteurs: number; perMonteur: number; transportPerMonteur: number; materiaal: number; afval: number; risico: number; winst: number; overig: number; kraan?: number } } };
 
 const r2 = (n: number) => Math.round(n * 100) / 100;
 
@@ -25,7 +27,7 @@ const r2 = (n: number) => Math.round(n * 100) / 100;
 export function bedrijfsOpbouw(items: ItemMetDag[]): Opbouw | null {
   const groepen = [...new Set(items.filter((i) => i.dag?.som).map((i) => i.dag!.groep ?? "kozijn"))];
   if (groepen.length === 0) return null;
-  const totaal: Opbouw = { kozijnen: 0, dagen: 0, loon: 0, transport: 0, materiaal: 0, afval: 0, risico: 0, winst: 0, overig: 0, montage: 0 };
+  const totaal: Opbouw = { kozijnen: 0, dagen: 0, loon: 0, transport: 0, kraan: 0, materiaal: 0, afval: 0, risico: 0, winst: 0, overig: 0, montage: 0 };
   for (const groep of groepen) {
     const met = items.filter((i) => i.dag?.som && (i.dag.groep ?? "kozijn") === groep);
     const som = met[0].dag!.som!;
@@ -35,14 +37,15 @@ export function bedrijfsOpbouw(items: ItemMetDag[]): Opbouw | null {
     totaal.dagen += dagen;
     totaal.loon += dagen * som.monteurs * som.perMonteur;
     totaal.transport += dagen * som.monteurs * som.transportPerMonteur;
+    if (met.some((i) => (i.dag!.kraan ?? 0) > 0)) totaal.kraan = (totaal.kraan ?? 0) + dagen * (som.kraan ?? 0);
     totaal.materiaal += n * som.materiaal;
     totaal.afval += n * som.afval;
     totaal.risico += n * som.risico;
     totaal.winst += n * som.winst;
     totaal.overig += n * som.overig;
   }
-  for (const k of ["loon", "transport", "materiaal", "afval", "risico", "winst", "overig"] as const) totaal[k] = r2(totaal[k]);
-  totaal.montage = r2(totaal.loon + totaal.transport + totaal.materiaal + totaal.afval + totaal.risico + totaal.winst + totaal.overig);
+  for (const k of ["loon", "transport", "kraan", "materiaal", "afval", "risico", "winst", "overig"] as const) totaal[k] = r2(totaal[k] ?? 0);
+  totaal.montage = r2(totaal.loon + totaal.transport + (totaal.kraan ?? 0) + totaal.materiaal + totaal.afval + totaal.risico + totaal.winst + totaal.overig);
   return totaal;
 }
 
@@ -55,6 +58,7 @@ export function opbouwRegels(o: Opbouw): { kop: string; regels: { naam: string; 
     regels: [
       { naam: "Loon", bedrag: eur(o.loon) },
       { naam: "Transport", bedrag: eur(o.transport) },
+      ...((o.kraan ?? 0) > 0 ? [{ naam: "Kraan (geen tuintoegang)", bedrag: eur(o.kraan ?? 0) }] : []),
       { naam: "Montagemateriaal", bedrag: eur(o.materiaal) },
       { naam: "Afval wegbrengen", bedrag: eur(o.afval) },
       { naam: "Risico (afstelwerk)", bedrag: eur(o.risico) },

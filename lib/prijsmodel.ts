@@ -26,6 +26,8 @@ export type MontageSom = {
   winst?: number;
   /** Een eerder ingevuld los bedrag (van vóór het rekenkaartje); blijft meetellen tot het bedrijf het op 0 zet. */
   overig?: number;
+  /** Kraan per werkdag, alleen als de monteurs niet via de tuin bij de plek kunnen (schuifpui). Exclusief btw. */
+  kraan?: number;
 };
 
 /** Loon en transport voor één werkdag van het team. Blijven apart: loon is geen transport. */
@@ -52,19 +54,21 @@ export function montageTotaal(som: MontageSom): number {
 export function montageVoor(
   model: { montage: number; montageSom?: MontageSom },
   aantal: number,
-): { dagen: number; loon: number; transport: number; kozijnen: number; totaal: number } {
+  opties?: { kraan?: boolean },
+): { dagen: number; loon: number; transport: number; kraan: number; kozijnen: number; totaal: number } {
   const n = Math.max(1, aantal);
   const som = model.montageSom;
   if (!som) {
     const kozijnen = Math.max(0, model.montage ?? 0) * n;
-    return { dagen: 0, loon: 0, transport: 0, kozijnen, totaal: kozijnen };
+    return { dagen: 0, loon: 0, transport: 0, kraan: 0, kozijnen, totaal: kozijnen };
   }
   const dagen = Math.ceil(n / Math.max(1, som.kozijnenPerDag ?? 1));
   const d = montageDag(som);
   const loon = dagen * d.loon;
   const transport = dagen * d.transport;
   const kozijnen = n * montagePerKozijn(som);
-  return { dagen, loon, transport, kozijnen, totaal: Math.round((loon + transport + kozijnen) * 100) / 100 };
+  const kraan = opties?.kraan ? dagen * (som.kraan ?? 0) : 0;
+  return { dagen, loon, transport, kraan, kozijnen, totaal: Math.round((loon + transport + kraan + kozijnen) * 100) / 100 };
 }
 
 export type StandaardModel = {
@@ -136,6 +140,24 @@ export const deurStandaardModel = (): StandaardModel => ({
   montage: montageTotaal(DEUR_MONTAGE_STARTPUNT),
   montageSom: { ...DEUR_MONTAGE_STARTPUNT },
 });
+/** Startpunt voor de montage van een schuifpui: zoals een deur, met €1.000 winst en een kraan van €800 per werkdag als er geen tuintoegang is. */
+export const SCHUIFPUI_MONTAGE_STARTPUNT: MontageSom = {
+  monteurs: 2,
+  perMonteur: 400,
+  transportPerMonteur: 50,
+  kozijnenPerDag: 1,
+  materiaal: 250,
+  afval: 50,
+  risico: 100,
+  winst: 1000,
+  kraan: 800,
+};
+export const schuifpuiStandaardModel = (): StandaardModel => ({
+  model: "standaard",
+  factor: 1,
+  montage: montageTotaal(SCHUIFPUI_MONTAGE_STARTPUNT),
+  montageSom: { ...SCHUIFPUI_MONTAGE_STARTPUNT },
+});
 /** Een model waarin alle bedragen leeg zijn, om alles zelf in te vullen. De calculator blijft dezelfde. */
 export function leegModel(cat: Catalogus = KOZIJN_CATALOGUS): StandaardModel {
   const typen: Record<string, Partial<TypeRecept>> = {};
@@ -202,6 +224,7 @@ export function berekenStandaard(
   kozijn: KozijnInfo,
   aantal: number,
   cat: Catalogus = KOZIJN_CATALOGUS,
+  opties?: { kraan?: boolean },
 ): { regels: PrijsRegel[]; totaal: number } {
   const recept = typeRecept(model, slug, cat);
   if (!recept || breedteMm <= 0 || hoogteMm <= 0) return { regels: [], totaal: 0 };
@@ -237,7 +260,7 @@ export function berekenStandaard(
       bedrag: materiaal * (factor - 1),
     });
   }
-  const mv = montageVoor(model, aantal);
+  const mv = montageVoor(model, aantal, opties);
   const montage = mv.totaal / Math.max(1, aantal);
   if (montage > 0 && model.montageApart !== true) {
     // Montage zit in de prijs: geen aparte regel, het kozijn wordt er duurder van.

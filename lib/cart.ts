@@ -18,10 +18,13 @@ export interface CartItem {
     dagen: number;
     /** Soort werk: kozijnen en deuren hebben elk hun eigen werkdagen. Zonder: kozijn. */
     groep?: string;
+    /** Kraan (zelfde eenheid als prijs): wat in deze prijs zit, en het tarief per werkdag. Alleen bij geen tuintoegang. */
+    kraan?: number;
+    kraanPerDag?: number;
     /** Factor waarmee btw erin zit (1 = exclusief btw). */
     btw: number;
     /** De montagesom van het bedrijf, exclusief btw, voor het overzicht "wat dit voor jou betekent". */
-    som: { monteurs: number; perMonteur: number; transportPerMonteur: number; materiaal: number; afval: number; risico: number; winst: number; overig: number };
+    som: { monteurs: number; perMonteur: number; transportPerMonteur: number; materiaal: number; afval: number; risico: number; winst: number; overig: number; kraan?: number };
   };
 }
 
@@ -45,7 +48,9 @@ function verrekenGroep<T extends { prijs: number; dag?: CartItem["dag"] }>(items
   // Loon + transport voor één dag (uit het eerste kozijn: dat is bij 1 dag precies de dagprijs).
   const eerste = met[0].dag!;
   const dagPrijs = (eerste.loon + eerste.transport) / Math.max(1, eerste.dagen);
-  const totaal = Math.round(dagen * dagPrijs * 100) / 100;
+  // Eén kraan per werkplek: heeft één van de producten hem nodig, dan staat hij alle dagen van dit soort werk.
+  const kraanDag = met.some((i) => (i.dag!.kraan ?? 0) > 0) ? Math.max(...met.map((i) => i.dag!.kraanPerDag ?? 0)) : 0;
+  const totaal = Math.round(dagen * (dagPrijs + kraanDag) * 100) / 100;
   let verdeeld = 0;
   let nr = 0;
   return items.map((i) => {
@@ -53,7 +58,7 @@ function verrekenGroep<T extends { prijs: number; dag?: CartItem["dag"] }>(items
     nr++;
     const aandeel = nr === met.length ? Math.round((totaal - verdeeld) * 100) / 100 : Math.round(((totaal * i.dag!.aantal) / aantal) * 100) / 100;
     verdeeld += aandeel;
-    const zonderDag = Math.round((i.prijs - i.dag!.loon - i.dag!.transport) * 100) / 100;
+    const zonderDag = Math.round((i.prijs - i.dag!.loon - i.dag!.transport - (i.dag!.kraan ?? 0)) * 100) / 100;
     return { ...i, prijs: Math.round((zonderDag + aandeel) * 100) / 100 };
   });
 }

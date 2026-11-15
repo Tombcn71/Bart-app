@@ -47,6 +47,8 @@ export type ProductConfiguratorProps = {
   matrix?: unknown;
   /** Voorbeeld in het dashboard: één smalle kolom, zonder offerteknop en winkelmandje. */
   voorbeeld?: boolean;
+  /** Vraagt de klant of de monteurs via de tuin bij de plek kunnen; zo niet, dan komt er een kraan bij (schuifpui). */
+  tuintoegangVraag?: boolean;
 };
 
 /**
@@ -67,6 +69,7 @@ export function ProductConfigurator({
   startSlug,
   matrix: matrixProp,
   voorbeeld = false,
+  tuintoegangVraag = false,
 }: ProductConfiguratorProps) {
   const slugs = Object.keys(catalogus.typen);
   const [slug, setSlug] = useState(startSlug && slugs.includes(startSlug) ? startSlug : slugs[0]);
@@ -76,6 +79,7 @@ export function ProductConfigurator({
     Object.fromEntries(catalogus.keuzes.map((g) => [g.id, g.keuzes[0].id])),
   );
   const [aantal, setAantal] = useState(1);
+  const [geenTuin, setGeenTuin] = useState(false);
   const [klantType, setKlantType] = useState<"particulier" | "zakelijk">("particulier");
   const [opgehaald, setOpgehaald] = useState<unknown>(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -104,8 +108,8 @@ export function ProductConfigurator({
 
   const opbouw = useMemo(() => {
     if (!model || breedte <= 0 || hoogte <= 0) return { regels: [] as { label: string; bedrag: number }[], totaal: 0 };
-    return berekenStandaard(model, slug, breedte, hoogte, keuzes, info?.[slug] ?? { vakken: 1, vleugels: 1 }, aantal, catalogus);
-  }, [model, slug, breedte, hoogte, keuzes, aantal, info, catalogus]);
+    return berekenStandaard(model, slug, breedte, hoogte, keuzes, info?.[slug] ?? { vakken: 1, vleugels: 1 }, aantal, catalogus, { kraan: tuintoegangVraag && geenTuin });
+  }, [model, slug, breedte, hoogte, keuzes, aantal, info, catalogus, tuintoegangVraag, geenTuin]);
 
   const grens = grenzen?.[slug];
   const buitenMaat = !!grens && (breedte < grens.minB || breedte > grens.maxB || hoogte < grens.minH || hoogte > grens.maxH);
@@ -128,12 +132,12 @@ export function ProductConfigurator({
       dag: (() => {
         const som = model?.montageSom;
         if (!som || !model) return undefined;
-        const mv = montageVoor(model, aantal);
+        const mv = montageVoor(model, aantal, { kraan: tuintoegangVraag && geenTuin });
         const f = metBtw ? 1 + btwPct / 100 : 1;
         const rond = (n: number) => Math.round(n * f * 100) / 100;
         return {
-          loon: rond(mv.loon), transport: rond(mv.transport), perDag: Math.max(1, som.kozijnenPerDag ?? 1), aantal, dagen: mv.dagen, groep: matrixSleutel, btw: f,
-          som: { monteurs: som.monteurs ?? 2, perMonteur: som.perMonteur ?? 0, transportPerMonteur: som.transportPerMonteur ?? 0, materiaal: som.materiaal ?? 0, afval: som.afval ?? 0, risico: som.risico ?? 0, winst: som.winst ?? 0, overig: som.overig ?? 0 },
+          loon: rond(mv.loon), transport: rond(mv.transport), perDag: Math.max(1, som.kozijnenPerDag ?? 1), aantal, dagen: mv.dagen, groep: matrixSleutel, btw: f, kraan: rond(mv.kraan), kraanPerDag: rond(som.kraan ?? 0),
+          som: { monteurs: som.monteurs ?? 2, perMonteur: som.perMonteur ?? 0, transportPerMonteur: som.transportPerMonteur ?? 0, materiaal: som.materiaal ?? 0, afval: som.afval ?? 0, risico: som.risico ?? 0, winst: som.winst ?? 0, overig: som.overig ?? 0, kraan: som.kraan ?? 0 },
         };
       })(),
       specs: {
@@ -141,6 +145,7 @@ export function ProductConfigurator({
         hoogte,
         ...Object.fromEntries(catalogus.keuzes.filter((g) => !g.typen || g.typen.includes(slug)).map((g) => [g.titel, keuzeNaam(g.id, keuzes[g.id], catalogus)])),
         aantal,
+        ...(tuintoegangVraag ? { Tuintoegang: geenTuin ? "Geen tuintoegang, kraan nodig" : "Via de tuin bereikbaar" } : {}),
         btw: metBtw ? `Prijs inclusief ${btwPct}% btw` : `Prijs exclusief btw (${btwPct}% btw komt erbij)`,
         btwPercentage: btwPct,
         klantType,
@@ -310,6 +315,27 @@ export function ProductConfigurator({
                   );
                 })}
 
+                {tuintoegangVraag && (
+                  <FormField label="Kunnen de monteurs via de tuin bij de plek?" value={geenTuin ? "Nee, geen tuintoegang" : "Ja"}>
+                    <div className="flex gap-2">
+                      {[false, true].map((nee) => (
+                        <button
+                          key={String(nee)}
+                          type="button"
+                          aria-pressed={geenTuin === nee}
+                          onClick={() => setGeenTuin(nee)}
+                          className={`rounded-lg border-2 px-4 py-2 text-sm font-semibold ${geenTuin === nee ? "border-slate-900 bg-slate-900 text-white" : "border-slate-300 text-slate-800 hover:bg-slate-100"}`}>
+                          {nee ? "Nee" : "Ja"}
+                        </button>
+                      ))}
+                    </div>
+                    {geenTuin && (model?.montageSom?.kraan ?? 0) > 0 && (
+                      <p className="mt-2 text-xs text-slate-600">
+                        Zonder toegang via de tuin is er een kraan nodig: € {Math.round((model!.montageSom!.kraan ?? 0) * (metBtw ? 1 + btwPct / 100 : 1)).toLocaleString("nl-NL")} per werkdag, al meegerekend in de prijs.
+                      </p>
+                    )}
+                  </FormField>
+                )}
                 <FormField label="Aantal" value={`${aantal} stuks`}>
                   <div className="flex items-center gap-3">
                     <button type="button" onClick={() => setAantal(Math.max(1, aantal - 1))} className="h-10 w-10 rounded-lg border-2 border-slate-400 text-xl font-bold text-slate-900 hover:bg-slate-100">

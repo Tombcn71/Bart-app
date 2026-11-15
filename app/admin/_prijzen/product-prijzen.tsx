@@ -40,6 +40,7 @@ export function ProductPrijzen({
   alleenZelf = false,
   veldLabels,
   startModel = nieuwStandaardModel,
+  metKraan = false,
 }: {
   titel: string;
   typeTitel: string;
@@ -50,6 +51,8 @@ export function ProductPrijzen({
   materialen: Partial<Record<Materiaal, MateriaalInstelling>>;
   /** Het startmodel (en waar Reset naar terugkeert); standaard de kale standaardprijzen zonder montage. */
   startModel?: () => StandaardModel;
+  /** Toont het veld voor een kraan per werkdag (schuifpui). */
+  metKraan?: boolean;
 }) {
   const beschikbaar = (Object.keys(materialen) as Materiaal[]).filter((m) => materialen[m]);
   const [materiaal, setMateriaal] = useState<Materiaal>(beschikbaar[0]);
@@ -217,6 +220,7 @@ export function ProductPrijzen({
             model={huidig}
             onChange={zetModel}
             standaardModel={startModel}
+            metKraan={metKraan}
             catalogus={inst.catalogus}
             namen={inst.namen}
             typeTitel={typeTitel}
