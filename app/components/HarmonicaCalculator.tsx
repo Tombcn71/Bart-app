@@ -29,6 +29,7 @@ const naarSlug = (id?: string) =>
 export function HarmonicaCalculator({ startSlug, matrix, voorbeeld }: { startSlug?: string; matrix?: unknown; voorbeeld?: boolean }) {
   return (
     <ProductConfigurator
+      tuintoegangVraag
       catalogus={HARMONICA_CATALOGUS}
       namen={HARMONICA_NAMEN}
       beginmaten={HARMONICA_BEGINMATEN}

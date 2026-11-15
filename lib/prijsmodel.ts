@@ -158,6 +158,14 @@ export const schuifpuiStandaardModel = (): StandaardModel => ({
   montage: montageTotaal(SCHUIFPUI_MONTAGE_STARTPUNT),
   montageSom: { ...SCHUIFPUI_MONTAGE_STARTPUNT },
 });
+/** Startpunt voor de montage van een harmonicadeur: zoals de schuifpui, met €1.500 winst. Kraan €800 per werkdag zonder tuintoegang. */
+export const HARMONICA_MONTAGE_STARTPUNT: MontageSom = { ...SCHUIFPUI_MONTAGE_STARTPUNT, winst: 1500 };
+export const harmonicaStandaardModel = (): StandaardModel => ({
+  model: "standaard",
+  factor: 1,
+  montage: montageTotaal(HARMONICA_MONTAGE_STARTPUNT),
+  montageSom: { ...HARMONICA_MONTAGE_STARTPUNT },
+});
 /** Een model waarin alle bedragen leeg zijn, om alles zelf in te vullen. De calculator blijft dezelfde. */
 export function leegModel(cat: Catalogus = KOZIJN_CATALOGUS): StandaardModel {
   const typen: Record<string, Partial<TypeRecept>> = {};
