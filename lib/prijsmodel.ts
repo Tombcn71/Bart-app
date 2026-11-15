@@ -166,6 +166,23 @@ export const harmonicaStandaardModel = (): StandaardModel => ({
   montage: montageTotaal(HARMONICA_MONTAGE_STARTPUNT),
   montageSom: { ...HARMONICA_MONTAGE_STARTPUNT },
 });
+/** Startpunt voor de montage van een rolluik (excl. btw): twee monteurs van €400 en €50 transport per dag, een rolluik per dag, €50 montagemateriaal, €50 afval, €100 risico en €250 winst. */
+export const ROLLUIK_MONTAGE_STARTPUNT: MontageSom = {
+  monteurs: 2,
+  perMonteur: 400,
+  transportPerMonteur: 50,
+  kozijnenPerDag: 1,
+  materiaal: 50,
+  afval: 50,
+  risico: 100,
+  winst: 250,
+};
+export const rolluikStandaardModel = (): StandaardModel => ({
+  model: "standaard",
+  factor: 1,
+  montage: montageTotaal(ROLLUIK_MONTAGE_STARTPUNT),
+  montageSom: { ...ROLLUIK_MONTAGE_STARTPUNT },
+});
 /** Een model waarin alle bedragen leeg zijn, om alles zelf in te vullen. De calculator blijft dezelfde. */
 export function leegModel(cat: Catalogus = KOZIJN_CATALOGUS): StandaardModel {
   const typen: Record<string, Partial<TypeRecept>> = {};
