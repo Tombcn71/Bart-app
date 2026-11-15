@@ -5,6 +5,7 @@ import { saveMatrix } from "@/app/actions";
 import { getMatrix } from "@/lib/matrix";
 import { Bevestig } from "./bevestig";
 import { StandaardEditor } from "./standaard-editor";
+import { eenheidVoor } from "@/lib/opbouw";
 import { isStandaardModel, leegModel, nieuwStandaardModel, type Catalogus, type StandaardModel } from "@/lib/prijsmodel";
 
 export type Materiaal = "kunststof" | "aluminium";
@@ -221,6 +222,7 @@ export function ProductPrijzen({
             onChange={zetModel}
             standaardModel={startModel}
             metKraan={metKraan}
+            eenheid={eenheidVoor(inst.sleutel)}
             catalogus={inst.catalogus}
             namen={inst.namen}
             typeTitel={typeTitel}

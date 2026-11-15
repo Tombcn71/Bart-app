@@ -65,11 +65,11 @@ export function AppSidebar() {
           "--sidebar-accent-foreground": "#ffffff",
         } as React.CSSProperties
       }>
-      <SidebarHeader className="relative bg-white h-24 flex items-center justify-center p-6 border-b border-gray-100">
+      <SidebarHeader className="relative bg-white dark:bg-[#0b1520] h-24 flex items-center justify-center p-6 border-b border-gray-100 dark:border-white/10">
         <img
           src="/bartmooi-logo-1.png"
           alt="BartMooi Logo"
-          className="max-h-[50px] w-auto object-contain"
+          className="max-h-[50px] w-auto object-contain dark:brightness-0 dark:invert"
         />
         <CustomSidebarTrigger />
       </SidebarHeader>

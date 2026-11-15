@@ -179,3 +179,10 @@
 [data-sidebar="sidebar"] {
   background: linear-gradient(to bottom, #1E5079, #2cb1e1) !important;
 }
+
+/* Beheer in donkere modus: het menu krijgt een donkere variant van de blauwe verloop. */
+.dark .sidebar-gradient,
+.dark .sidebar-gradient [data-sidebar="sidebar"],
+.dark [data-sidebar="sidebar"] {
+  background: linear-gradient(to bottom, #0e1a26, #12202d) !important;
+}

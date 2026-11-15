@@ -3,7 +3,21 @@
  * het bedrijf eraan verdient. Wordt bij het maken van de offerte uitgerekend en in de offerte bewaard, zodat een
  * latere prijswijziging oude offertes niet verandert. Alle bedragen exclusief btw.
  */
+/** Hoe een product in het prijsscherm en in de mail heet: per kozijn, per deur, per schuifpui enz. */
+export type Eenheid = { een: string; meer: string };
+export function eenheidVoor(sleutel?: string): Eenheid {
+  const s = sleutel ?? "";
+  if (s.includes("harmonica")) return { een: "harmonicadeur", meer: "harmonicadeuren" };
+  if (s.includes("schuifpui")) return { een: "schuifpui", meer: "schuifpuien" };
+  if (s.includes("deur")) return { een: "deur", meer: "deuren" };
+  if (s.includes("rolluik")) return { een: "rolluik", meer: "rolluiken" };
+  if (s.includes("hor")) return { een: "hor", meer: "horren" };
+  return { een: "kozijn", meer: "kozijnen" };
+}
+
 export type Opbouw = {
+  /** Soorten werk in deze offerte (sleutels van eenheidVoor); ontbreekt bij oudere offertes: kozijnen. */
+  soorten?: string[];
   kozijnen: number;
   dagen: number;
   loon: number;
@@ -27,13 +41,14 @@ const r2 = (n: number) => Math.round(n * 100) / 100;
 export function bedrijfsOpbouw(items: ItemMetDag[]): Opbouw | null {
   const groepen = [...new Set(items.filter((i) => i.dag?.som).map((i) => i.dag!.groep ?? "kozijn"))];
   if (groepen.length === 0) return null;
-  const totaal: Opbouw = { kozijnen: 0, dagen: 0, loon: 0, transport: 0, kraan: 0, materiaal: 0, afval: 0, risico: 0, winst: 0, overig: 0, montage: 0 };
+  const totaal: Opbouw = { soorten: [], kozijnen: 0, dagen: 0, loon: 0, transport: 0, kraan: 0, materiaal: 0, afval: 0, risico: 0, winst: 0, overig: 0, montage: 0 };
   for (const groep of groepen) {
     const met = items.filter((i) => i.dag?.som && (i.dag.groep ?? "kozijn") === groep);
     const som = met[0].dag!.som!;
     const n = met.reduce((s, i) => s + Math.max(1, i.dag!.aantal), 0);
     const dagen = Math.ceil(n / Math.max(1, met[0].dag!.perDag));
     totaal.kozijnen += n;
+    totaal.soorten = [...new Set([...(totaal.soorten ?? []), groep])];
     totaal.dagen += dagen;
     totaal.loon += dagen * som.monteurs * som.perMonteur;
     totaal.transport += dagen * som.monteurs * som.transportPerMonteur;
@@ -54,7 +69,7 @@ const eur = (n: number) => `€ ${n.toLocaleString("nl-NL", { maximumFractionDig
 /** Korte tekstregels voor mail en scherm. */
 export function opbouwRegels(o: Opbouw): { kop: string; regels: { naam: string; bedrag: string; winst?: boolean }[] } {
   return {
-    kop: `${o.kozijnen} kozijn${o.kozijnen === 1 ? "" : "en"} · ${o.dagen} werkdag${o.dagen === 1 ? "" : "en"}`,
+    kop: `${o.kozijnen} ${(() => { const e = [...new Set((o.soorten ?? ["kozijn"]).map((x) => eenheidVoor(x).een))]; return e.length === 1 ? (o.kozijnen === 1 ? eenheidVoor((o.soorten ?? ["kozijn"])[0]).een : eenheidVoor((o.soorten ?? ["kozijn"])[0]).meer) : (o.kozijnen === 1 ? "stuk" : "stuks"); })()} · ${o.dagen} werkdag${o.dagen === 1 ? "" : "en"}`,
     regels: [
       { naam: "Loon", bedrag: eur(o.loon) },
       { naam: "Transport", bedrag: eur(o.transport) },

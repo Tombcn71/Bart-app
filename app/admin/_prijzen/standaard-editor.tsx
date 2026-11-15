@@ -1,4 +1,5 @@
 "use client";
+import { eenheidVoor, type Eenheid } from "@/lib/opbouw";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Bevestig } from "./bevestig";
@@ -62,6 +63,7 @@ export function StandaardEditor({
   standaardModel = nieuwStandaardModel,
   montageNotitie,
   metKraan = false,
+  eenheid = eenheidVoor("kozijn"),
 }: {
   model: StandaardModel;
   onChange: (m: StandaardModel) => void;
@@ -81,8 +83,13 @@ export function StandaardEditor({
   montageNotitie?: string;
   /** Toont het veld voor een kraan per werkdag (schuifpui: alleen nodig als er geen tuintoegang is). */
   metKraan?: boolean;
+  /** Hoe het product heet (kozijn, deur, schuifpui ...), voor de teksten in het montagekaartje. */
+  eenheid?: Eenheid;
 }) {
   const [reset, setReset] = useState(0);
+  const E = eenheid.een;
+  const M = eenheid.meer;
+  const Mc = M.charAt(0).toUpperCase() + M.slice(1);
   // Hoeveel goedkoper (min) of duurder (plus) dan de standaardprijzen, in procenten.
   const verschil = Math.round((model.factor - 1) * 100);
   const aangepast = Object.keys(model.typen ?? {}).length + Object.values(model.keuzes ?? {}).reduce((n, g) => n + Object.keys(g).length, 0);
@@ -213,8 +220,8 @@ export function StandaardEditor({
         );
         return (
           <Kaart
-            titel="Montage per kozijn"
-            uitleg="Wat kost het jou om te plaatsen en wat wil je eraan verdienen? Deel 1 is wat je team per werkdag kost, deel 2 is wat per kozijn bijkomt, inclusief je winst. Alle bedragen zijn exclusief btw. De standaardprijzen zijn zonder montage."
+            titel={`Montage per ${E}`}
+            uitleg={`Wat kost het jou om te plaatsen en wat wil je eraan verdienen? Deel 1 is wat je team per werkdag kost, deel 2 is wat per ${E} bijkomt, inclusief je winst. Alle bedragen zijn exclusief btw. De standaardprijzen zijn zonder montage.`}
             notitie={montageNotitie}>
             <p className="bg-muted/40 px-4 py-2 text-xs font-bold tracking-wide text-muted-foreground uppercase">1. Per werkdag van je team</p>
             <Rij naam="Aantal monteurs">
@@ -223,17 +230,16 @@ export function StandaardEditor({
             <Rij naam="Bedrag per monteur, per dag">{bedrag("perMonteur", "Bedrag per monteur per dag")}</Rij>
             <Rij naam="Transport per monteur, per dag">{bedrag("transportPerMonteur", "Transport per monteur per dag")}</Rij>
                         {metKraan && <Rij naam="Kraan per werkdag, alleen als er geen tuintoegang is">{bedrag("kraan", "Kraan per werkdag")}</Rij>}
-            <Rij naam="Capaciteit: kozijnen die ze op één dag plaatsen">
-              <AantalVeld key={`perdag-${reset}`} label="Kozijnen per dag" waarde={som.kozijnenPerDag ?? 1} onChange={(n) => zet({ kozijnenPerDag: n })} />
+            <Rij naam={`Capaciteit: ${M} die ze op één dag plaatsen`}>
+              <AantalVeld key={`perdag-${reset}`} label={`${Mc} per dag`} waarde={som.kozijnenPerDag ?? 1} onChange={(n) => zet({ kozijnenPerDag: n })} />
             </Rij>
             <p className="px-4 pb-2 text-[11px] text-muted-foreground">
-              Loon en transport reken je per hele werkdag, nooit per halve dag. Passen er {som.kozijnenPerDag ?? 1} kozijn{(som.kozijnenPerDag ?? 1) === 1 ? "" : "s"} op een dag, dan is dat bij 1 t/m {som.kozijnenPerDag ?? 1} kozijn{(som.kozijnenPerDag ?? 1) === 1 ? "" : "s"} één dag, bij het volgende kozijn komt er een dag bij.
-            </p>
-            <p className="bg-muted/40 px-4 py-2 text-xs font-bold tracking-wide text-muted-foreground uppercase">2. Per kozijn, dit tel je voor elk kozijn mee</p>
-            <Rij naam="Montagemateriaal, per kozijn">{bedrag("materiaal", "Montagemateriaal per kozijn")}</Rij>
-            <Rij naam="Afval wegbrengen, per kozijn">{bedrag("afval", "Afval wegbrengen per kozijn")}</Rij>
-            <Rij naam="Risico, per kozijn (klein afstelwerk na montage)">{bedrag("risico", "Risico per kozijn")}</Rij>
-            <Rij naam="Jouw winst, per kozijn">{bedrag("winst", "Jouw winst per kozijn")}</Rij>
+              Loon en transport reken je per hele werkdag, nooit per halve dag. Passen er {som.kozijnenPerDag ?? 1} {(som.kozijnenPerDag ?? 1) === 1 ? E : M} op een dag, dan is dat bij 1 t/m {som.kozijnenPerDag ?? 1} {(som.kozijnenPerDag ?? 1) === 1 ? E : M} één dag, bij de volgende {E} komt er een dag bij.</p>
+            <p className="bg-muted/40 px-4 py-2 text-xs font-bold tracking-wide text-muted-foreground uppercase">{`2. Per ${E}, dit tel je voor elke ${E} mee`}</p>
+            <Rij naam={`Montagemateriaal, per ${E}`}>{bedrag("materiaal", `Montagemateriaal per ${E}`)}</Rij>
+            <Rij naam={`Afval wegbrengen, per ${E}`}>{bedrag("afval", `Afval wegbrengen per ${E}`)}</Rij>
+            <Rij naam={`Risico, per ${E} (klein afstelwerk na montage)`}>{bedrag("risico", `Risico per ${E}`)}</Rij>
+            <Rij naam={`Jouw winst, per ${E}`}>{bedrag("winst", `Jouw winst per ${E}`)}</Rij>
             {som.overig !== undefined && som.overig > 0 && heeftSom && <Rij naam="Eerder ingevuld bedrag">{bedrag("overig", "Eerder ingevuld bedrag")}</Rij>}
             {!heeftSom && som.overig !== undefined && (
               <Rij naam="Eerder ingevuld bedrag">{bedrag("overig", "Eerder ingevuld bedrag")}</Rij>
@@ -252,7 +258,7 @@ export function StandaardEditor({
               if ((som.overig ?? 0) > 0) regels.push({ naam: "Eerder ingevuld bedrag", bedrag: som.overig ?? 0 });
               return (
                 <div className="border-t border-border px-4 py-3">
-                  <p className="mb-2 text-xs font-bold tracking-wide text-muted-foreground uppercase">Zo is de prijs voor 1 kozijn (1 dag) opgebouwd</p>
+                  <p className="mb-2 text-xs font-bold tracking-wide text-muted-foreground uppercase">{`Zo is de prijs voor 1 ${E} (1 dag) opgebouwd`}</p>
                   <dl className="space-y-1 text-sm">
                     {regels.map((r) => (
                       <div key={r.naam} className={`flex justify-between gap-4 ${r.winst ? "rounded-md bg-emerald-50 px-2 py-1 font-bold text-emerald-700 dark:text-emerald-300" : "text-foreground"}`}>
@@ -261,7 +267,7 @@ export function StandaardEditor({
                       </div>
                     ))}
                     <div className="flex justify-between gap-4 border-t border-border pt-1 font-bold text-foreground">
-                      <dt>Montage voor 1 kozijn</dt>
+                      <dt>{`Montage voor 1 ${E}`}</dt>
                       <dd className="tabular-nums">{f(totaal)}</dd>
                     </div>
                   </dl>
@@ -270,13 +276,13 @@ export function StandaardEditor({
                       Heeft de klant geen tuintoegang, dan komt er per werkdag een kraan bij: {f(som.kraan ?? 0)}. Dat staat apart op de offerte en telt niet mee in het bedrag hierboven.
                     </p>
                   )}
-                  <p className="mt-3 mb-1 text-xs font-semibold text-foreground">Bij meer kozijnen:</p>
+                  <p className="mt-3 mb-1 text-xs font-semibold text-foreground">{`Bij meer ${M}:`}</p>
                   {[2, 3, 5].map((n) => {
                     const v = montageVoor({ montage: totaal, montageSom: som }, n);
                     const g = (x: number) => `€ ${x.toLocaleString("nl-NL", { maximumFractionDigits: 0 })}`;
                     return (
                       <p key={n} className="text-xs text-muted-foreground tabular-nums">
-                        {n} kozijnen: {v.dagen} dag{v.dagen === 1 ? "" : "en"} loon en transport ({g(v.loon + v.transport)}) + {n} × {g(montagePerKozijn(som))} = <span className="font-semibold text-foreground">{g(v.totaal)}</span>, waarvan <span className="font-semibold text-emerald-700 dark:text-emerald-300">{g((som.winst ?? 0) * n)} winst</span>
+                        {n} {M}: {v.dagen} dag{v.dagen === 1 ? "" : "en"} loon en transport ({g(v.loon + v.transport)}) + {n} × {g(montagePerKozijn(som))} = <span className="font-semibold text-foreground">{g(v.totaal)}</span>, waarvan <span className="font-semibold text-emerald-700 dark:text-emerald-300">{g((som.winst ?? 0) * n)} winst</span>
                       </p>
                     );
                   })}
@@ -284,7 +290,7 @@ export function StandaardEditor({
               );
             })()}
             <div className="flex items-center justify-between gap-4 bg-muted/40 px-4 py-3">
-              <span className="text-sm font-bold text-foreground">Montage voor één kozijn</span>
+              <span className="text-sm font-bold text-foreground">{`Montage voor één ${E}`}</span>
               <span className="text-lg font-bold tabular-nums text-foreground">
                 € {totaal.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
@@ -292,8 +298,8 @@ export function StandaardEditor({
         <fieldset className="space-y-2 px-4 py-3">
           <legend className="sr-only">Hoe laat je de montage zien?</legend>
           {[
-            { apart: false, titel: "Montage inbegrepen in de prijs", tekst: "De montage zit in de prijs van het kozijn. De offerte zegt: inclusief montage." },
-            { apart: true, titel: "Montage apart vermelden", tekst: "De klant ziet de montage als aparte regel bovenop het kozijn." },
+            { apart: false, titel: "Montage inbegrepen in de prijs", tekst: `De montage zit in de prijs van de ${E}. De offerte zegt: inclusief montage.` },
+            { apart: true, titel: "Montage apart vermelden", tekst: `De klant ziet de montage als aparte regel bovenop de ${E}.` },
           ].map((o) => (
             <label key={o.titel} className="flex cursor-pointer items-start gap-3">
               <input
