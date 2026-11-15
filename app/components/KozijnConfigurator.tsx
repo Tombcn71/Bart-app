@@ -759,19 +759,31 @@ export function KozijnConfigurator({
   const btwMaal = metBtw ? 1 + btwPct / 100 : 1;
   const mv = isStandaardModel(matrix) ? montageVoor(matrix, aantal) : null;
   const rond = (n: number) => Math.round(n * btwMaal * 100) / 100;
-  const montageBedrag = montageApart && mv ? rond(mv.totaal) : 0;
+  const heeftMontage = isStandaardModel(matrix) && (matrix.montage ?? 0) > 0;
+  const montageBedrag = heeftMontage && mv ? rond(mv.totaal) : 0;
   const bedragTekst = (n: number) => n.toLocaleString("nl-NL", { minimumFractionDigits: 2 });
-  const prijsTekst = bedragTekst(montageApart ? Math.round((berekendePrijs - montageBedrag) * 100) / 100 : berekendePrijs);
-  const prijsLabel = montageApart ? "Prijs kozijn" : "Prijsindicatie";
-  const montageRegels = montageApart ? (
+  const prijsTekst = bedragTekst(berekendePrijs);
+  const prijsLabel = "Prijsindicatie";
+  // Eén duidelijke regel onder de prijs: wat zit erin (aantal, montage, btw).
+  const toelichting = standaard ? (
+    <div className="mt-1 text-sm font-medium text-slate-700">
+      {[
+        aantal > 1 ? `Voor ${aantal} stuks` : "",
+        heeftMontage ? "Inclusief montage" : "Zonder montage",
+        metBtw ? `incl. ${btwPct}% btw` : "excl. btw",
+      ].filter(Boolean).join(" · ")}
+    </div>
+  ) : null;
+  // Het totaal staat groot; eronder wat het kozijn zelf kost (vergelijkbaar met de webshop) en wat de montage kost.
+  const montageRegels = montageApart && montageBedrag > 0 ? (
     <div className="mt-1 space-y-0.5 text-xs text-slate-600">
       <div className="flex justify-between gap-6">
-        <span>+ Montage</span>
-        <span className="tabular-nums">€ {bedragTekst(montageBedrag)}</span>
+        <span>waarvan kozijn</span>
+        <span className="tabular-nums">€ {bedragTekst(Math.round((berekendePrijs - montageBedrag) * 100) / 100)}</span>
       </div>
-      <div className="flex justify-between gap-6 font-semibold text-slate-800">
-        <span>Totaal</span>
-        <span className="tabular-nums">€ {bedragTekst(berekendePrijs)}</span>
+      <div className="flex justify-between gap-6">
+        <span>waarvan montage</span>
+        <span className="tabular-nums">€ {bedragTekst(montageBedrag)}</span>
       </div>
     </div>
   ) : null;
@@ -789,6 +801,7 @@ export function KozijnConfigurator({
           <div className="sticky top-0 z-20 -mx-4 -mt-4 mb-3 border-b border-slate-100 bg-white/95 px-4 py-2 backdrop-blur">
             <span className="text-[10px] text-slate-600 uppercase tracking-widest">{prijsLabel}{standaard ? (metBtw ? " · incl. btw" : " · excl. btw") : ""}</span>
             <div className="text-2xl font-semibold tabular-nums text-slate-800">€ {prijsTekst}</div>
+            {toelichting}
             {montageRegels}
           </div>
         )}
@@ -913,6 +926,7 @@ export function KozijnConfigurator({
               <div className="hidden lg:block">
                 <span className="text-[10px] text-slate-600 uppercase tracking-widest">{prijsLabel}{standaard ? (metBtw ? " · incl. btw" : " · excl. btw") : ""}</span>
                 <div className="text-3xl text-slate-800">€ {prijsTekst}</div>
+                {toelichting}
                 {montageRegels}
               </div>
 
@@ -1080,12 +1094,15 @@ export function KozijnConfigurator({
                 </FormField>
               </div>
 
-              {!voorbeeld && !(isStandaardModel(matrix) && matrix.montageApart === true) && (
-                <div className="flex items-center gap-2 bg-green-50 border border-green-100 rounded-lg px-3 py-2">
-                  <span className="text-xs font-semibold text-green-800">
-                    Bij ons is montage in de prijs inbegrepen
-                  </span>
-                </div>
+              {!voorbeeld && !montageApart && heeftMontage && (
+                <ul className="space-y-1 rounded-lg border border-green-100 bg-green-50 px-3 py-2 text-xs font-semibold text-green-800">
+                  {["Montage door eigen monteurs", "Afval wordt voor je afgevoerd", "Eén totaalprijs, geen aparte rekening voor montage"].map((t) => (
+                    <li key={t} className="flex items-center gap-2">
+                      <span aria-hidden="true">✓</span>
+                      {t}
+                    </li>
+                  ))}
+                </ul>
               )}
 
               {!voorbeeld && (
@@ -1179,9 +1196,10 @@ export function KozijnConfigurator({
         <div>
           <span className="block text-[10px] text-slate-600 uppercase tracking-widest">{prijsLabel}{standaard ? (metBtw ? " · incl. btw" : " · excl. btw") : ""}</span>
           <span className="text-xl font-semibold text-slate-800 tabular-nums">€ {prijsTekst}</span>
-          {montageApart && (
+          {standaard && <span className="block text-[11px] font-medium text-slate-700">{heeftMontage ? "Incl. montage" : "Zonder montage"} · {metBtw ? "incl." : "excl."} btw</span>}
+          {montageApart && montageBedrag > 0 && (
             <span className="block text-[10px] text-slate-600">
-              + montage € {bedragTekst(montageBedrag)} = € {bedragTekst(berekendePrijs)}
+              kozijn € {bedragTekst(Math.round((berekendePrijs - montageBedrag) * 100) / 100)} + montage € {bedragTekst(montageBedrag)}
             </span>
           )}
         </div>
