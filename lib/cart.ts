@@ -16,6 +16,8 @@ export interface CartItem {
     perDag: number;
     aantal: number;
     dagen: number;
+    /** Soort werk: kozijnen en deuren hebben elk hun eigen werkdagen. Zonder: kozijn. */
+    groep?: string;
     /** Factor waarmee btw erin zit (1 = exclusief btw). */
     btw: number;
     /** De montagesom van het bedrijf, exclusief btw, voor het overzicht "wat dit voor jou betekent". */
@@ -28,8 +30,15 @@ export interface CartItem {
  * Loon en transport worden eerlijk over de kozijns verdeeld; de rest van de prijs blijft zoals berekend.
  */
 export function verrekenDagen<T extends { prijs: number; dag?: CartItem["dag"] }>(items: T[]): T[] {
-  const met = items.filter((i) => i.dag);
-  if (met.length === 0) return items;
+  const groepen = [...new Set(items.filter((i) => i.dag).map((i) => i.dag!.groep ?? "kozijn"))];
+  let uit = items;
+  for (const groep of groepen) uit = verrekenGroep(uit, groep);
+  return uit;
+}
+
+function verrekenGroep<T extends { prijs: number; dag?: CartItem["dag"] }>(items: T[], groep: string): T[] {
+  const doet = (i: T) => !!i.dag && (i.dag.groep ?? "kozijn") === groep;
+  const met = items.filter(doet);
   const perDag = met[0].dag!.perDag;
   const aantal = met.reduce((s, i) => s + i.dag!.aantal, 0);
   const dagen = Math.ceil(aantal / perDag);
@@ -40,11 +49,11 @@ export function verrekenDagen<T extends { prijs: number; dag?: CartItem["dag"] }
   let verdeeld = 0;
   let nr = 0;
   return items.map((i) => {
-    if (!i.dag) return i;
+    if (!doet(i)) return i;
     nr++;
-    const aandeel = nr === met.length ? Math.round((totaal - verdeeld) * 100) / 100 : Math.round(((totaal * i.dag.aantal) / aantal) * 100) / 100;
+    const aandeel = nr === met.length ? Math.round((totaal - verdeeld) * 100) / 100 : Math.round(((totaal * i.dag!.aantal) / aantal) * 100) / 100;
     verdeeld += aandeel;
-    const zonderDag = Math.round((i.prijs - i.dag.loon - i.dag.transport) * 100) / 100;
+    const zonderDag = Math.round((i.prijs - i.dag!.loon - i.dag!.transport) * 100) / 100;
     return { ...i, prijs: Math.round((zonderDag + aandeel) * 100) / 100 };
   });
 }

@@ -39,6 +39,7 @@ export function ProductPrijzen({
   materialen,
   alleenZelf = false,
   veldLabels,
+  startModel = nieuwStandaardModel,
 }: {
   titel: string;
   typeTitel: string;
@@ -47,6 +48,8 @@ export function ProductPrijzen({
   /** Andere namen voor de vier prijsvelden per type. */
   veldLabels?: React.ComponentProps<typeof StandaardEditor>["veldLabels"];
   materialen: Partial<Record<Materiaal, MateriaalInstelling>>;
+  /** Het startmodel (en waar Reset naar terugkeert); standaard de kale standaardprijzen zonder montage. */
+  startModel?: () => StandaardModel;
 }) {
   const beschikbaar = (Object.keys(materialen) as Materiaal[]).filter((m) => materialen[m]);
   const [materiaal, setMateriaal] = useState<Materiaal>(beschikbaar[0]);
@@ -67,7 +70,7 @@ export function ProductPrijzen({
       const nog: Partial<Record<Materiaal, boolean>> = {};
       const oudData: Partial<Record<Materiaal, unknown>> = {};
       beschikbaar.forEach((m, i) => {
-        nieuw[m] = isStandaardModel(data[i]) ? data[i] : alleenZelf ? leegModel(materialen[m]!.catalogus) : nieuwStandaardModel();
+        nieuw[m] = isStandaardModel(data[i]) ? data[i] : alleenZelf ? leegModel(materialen[m]!.catalogus) : startModel();
         nog[m] = !isStandaardModel(data[i]);
         if (!isStandaardModel(data[i]) && heeftGetallen(data[i])) oudData[m] = data[i];
       });
@@ -91,7 +94,7 @@ export function ProductPrijzen({
     if (naarZelf === zelf) return;
     setKopie((k) => ({ ...k, [materiaal]: { ...k[materiaal], [zelf ? "zelf" : "standaard"]: huidig } }));
     const terug = kopie[materiaal]?.[naarZelf ? "zelf" : "standaard"];
-    zetModel(terug ?? (naarZelf ? leegModel(inst.catalogus) : nieuwStandaardModel()));
+    zetModel(terug ?? (naarZelf ? leegModel(inst.catalogus) : startModel()));
   };
 
   const klikOpslaan = () => {
@@ -213,6 +216,7 @@ export function ProductPrijzen({
             key={sleutelStatus}
             model={huidig}
             onChange={zetModel}
+            standaardModel={startModel}
             catalogus={inst.catalogus}
             namen={inst.namen}
             typeTitel={typeTitel}

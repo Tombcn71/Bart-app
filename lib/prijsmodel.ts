@@ -95,18 +95,18 @@ export const nieuwStandaardModel = (): StandaardModel => ({ model: "standaard", 
 
 /**
  * Startpunt voor de montage van een kozijn (excl. btw), uit de cijfers van een echt kozijnbedrijf: twee monteurs van €400
- * en €50 transport per dag, €300 materiaal, €50 afval, €100 risico en €500 winst = €1.850. Staat vooraf ingevuld in het
+ * en €50 transport per dag, twee kozijnen per dag, €250 materiaal, €50 afval, €100 risico en €600 winst; één kozijn is €1.900. Staat vooraf ingevuld in het
  * prijsscherm, als voorbeeld dat het bedrijf zelf aanpast; het geldt pas als het bedrijf de prijzen opslaat.
  */
 export const KOZIJN_MONTAGE_STARTPUNT: MontageSom = {
   monteurs: 2,
   perMonteur: 400,
   transportPerMonteur: 50,
-  kozijnenPerDag: 1,
-  materiaal: 300,
+  kozijnenPerDag: 2,
+  materiaal: 250,
   afval: 50,
   risico: 100,
-  winst: 500,
+  winst: 600,
 };
 
 /** Het startmodel voor kozijnen in het prijsscherm: de standaardprijzen met het montagestartpunt vooraf ingevuld. */
@@ -115,6 +115,26 @@ export const kozijnStandaardModel = (): StandaardModel => ({
   factor: 1,
   montage: montageTotaal(KOZIJN_MONTAGE_STARTPUNT),
   montageSom: { ...KOZIJN_MONTAGE_STARTPUNT },
+});
+/**
+ * Startpunt voor de montage van een deur (excl. btw): twee monteurs van €400 en €50 transport per dag, €250 materiaal, €50 afval,
+ * €100 risico en €800 winst, een deur per dag.
+ */
+export const DEUR_MONTAGE_STARTPUNT: MontageSom = {
+  monteurs: 2,
+  perMonteur: 400,
+  transportPerMonteur: 50,
+  kozijnenPerDag: 1,
+  materiaal: 250,
+  afval: 50,
+  risico: 100,
+  winst: 800,
+};
+export const deurStandaardModel = (): StandaardModel => ({
+  model: "standaard",
+  factor: 1,
+  montage: montageTotaal(DEUR_MONTAGE_STARTPUNT),
+  montageSom: { ...DEUR_MONTAGE_STARTPUNT },
 });
 /** Een model waarin alle bedragen leeg zijn, om alles zelf in te vullen. De calculator blijft dezelfde. */
 export function leegModel(cat: Catalogus = KOZIJN_CATALOGUS): StandaardModel {

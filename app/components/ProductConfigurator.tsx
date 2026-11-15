@@ -8,7 +8,7 @@ import { NumberInput } from "@/app/components/NumberInput";
 import { FormField } from "@/app/components/FormField";
 import { getMatrix } from "@/lib/matrix";
 import type { Maatgrenzen } from "@/lib/maatgrenzen";
-import { berekenStandaard, btwPercentage, isStandaardModel, keuzeNaam, nieuwStandaardModel, type Catalogus } from "@/lib/prijsmodel";
+import { montageVoor, berekenStandaard, btwPercentage, isStandaardModel, keuzeNaam, nieuwStandaardModel, type Catalogus } from "@/lib/prijsmodel";
 
 // De stappen van het formulier, in de volgorde van Creon; elke keuzegroep hoort bij één stap.
 const SECTIES = ["Profiel en aanslag", "Kleur", "Vulling", "Eigenschappen"] as const;
@@ -124,6 +124,18 @@ export function ProductConfigurator({
       slug,
       product: `${productNaam}${slugs.length > 1 ? ` · ${namen[slug] ?? slug}` : ""}`,
       prijs,
+      // Voor het mandje: loon en transport staan apart, zodat de werkdagen over alle producten van dit soort verrekend worden.
+      dag: (() => {
+        const som = model?.montageSom;
+        if (!som || !model) return undefined;
+        const mv = montageVoor(model, aantal);
+        const f = metBtw ? 1 + btwPct / 100 : 1;
+        const rond = (n: number) => Math.round(n * f * 100) / 100;
+        return {
+          loon: rond(mv.loon), transport: rond(mv.transport), perDag: Math.max(1, som.kozijnenPerDag ?? 1), aantal, dagen: mv.dagen, groep: matrixSleutel, btw: f,
+          som: { monteurs: som.monteurs ?? 2, perMonteur: som.perMonteur ?? 0, transportPerMonteur: som.transportPerMonteur ?? 0, materiaal: som.materiaal ?? 0, afval: som.afval ?? 0, risico: som.risico ?? 0, winst: som.winst ?? 0, overig: som.overig ?? 0 },
+        };
+      })(),
       specs: {
         breedte,
         hoogte,

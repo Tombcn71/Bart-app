@@ -17,25 +17,33 @@ export type Opbouw = {
   montage: number;
 };
 
-type ItemMetDag = { dag?: { perDag: number; aantal: number; som?: { monteurs: number; perMonteur: number; transportPerMonteur: number; materiaal: number; afval: number; risico: number; winst: number; overig: number } } };
+type ItemMetDag = { dag?: { groep?: string; perDag: number; aantal: number; som?: { monteurs: number; perMonteur: number; transportPerMonteur: number; materiaal: number; afval: number; risico: number; winst: number; overig: number } } };
 
 const r2 = (n: number) => Math.round(n * 100) / 100;
 
 /** Rekent de montage van alle kozijnen in een offerte samen: dagen over alle kozijnen, naar boven afgerond. */
 export function bedrijfsOpbouw(items: ItemMetDag[]): Opbouw | null {
-  const met = items.filter((i) => i.dag?.som);
-  if (met.length === 0) return null;
-  const som = met[0].dag!.som!;
-  const kozijnen = met.reduce((s, i) => s + Math.max(1, i.dag!.aantal), 0);
-  const dagen = Math.ceil(kozijnen / Math.max(1, met[0].dag!.perDag));
-  const loon = r2(dagen * som.monteurs * som.perMonteur);
-  const transport = r2(dagen * som.monteurs * som.transportPerMonteur);
-  const materiaal = r2(kozijnen * som.materiaal);
-  const afval = r2(kozijnen * som.afval);
-  const risico = r2(kozijnen * som.risico);
-  const winst = r2(kozijnen * som.winst);
-  const overig = r2(kozijnen * som.overig);
-  return { kozijnen, dagen, loon, transport, materiaal, afval, risico, winst, overig, montage: r2(loon + transport + materiaal + afval + risico + winst + overig) };
+  const groepen = [...new Set(items.filter((i) => i.dag?.som).map((i) => i.dag!.groep ?? "kozijn"))];
+  if (groepen.length === 0) return null;
+  const totaal: Opbouw = { kozijnen: 0, dagen: 0, loon: 0, transport: 0, materiaal: 0, afval: 0, risico: 0, winst: 0, overig: 0, montage: 0 };
+  for (const groep of groepen) {
+    const met = items.filter((i) => i.dag?.som && (i.dag.groep ?? "kozijn") === groep);
+    const som = met[0].dag!.som!;
+    const n = met.reduce((s, i) => s + Math.max(1, i.dag!.aantal), 0);
+    const dagen = Math.ceil(n / Math.max(1, met[0].dag!.perDag));
+    totaal.kozijnen += n;
+    totaal.dagen += dagen;
+    totaal.loon += dagen * som.monteurs * som.perMonteur;
+    totaal.transport += dagen * som.monteurs * som.transportPerMonteur;
+    totaal.materiaal += n * som.materiaal;
+    totaal.afval += n * som.afval;
+    totaal.risico += n * som.risico;
+    totaal.winst += n * som.winst;
+    totaal.overig += n * som.overig;
+  }
+  for (const k of ["loon", "transport", "materiaal", "afval", "risico", "winst", "overig"] as const) totaal[k] = r2(totaal[k]);
+  totaal.montage = r2(totaal.loon + totaal.transport + totaal.materiaal + totaal.afval + totaal.risico + totaal.winst + totaal.overig);
+  return totaal;
 }
 
 const eur = (n: number) => `€ ${n.toLocaleString("nl-NL", { maximumFractionDigits: 0 })}`;

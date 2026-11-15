@@ -3,6 +3,7 @@ import { ProductPrijzen } from "../_prijzen/product-prijzen";
 import { DeurCalculator, DEUR_NAMEN, deurTekening } from "@/app/components/DeurCalculator";
 import { DEUR_KUNSTSTOF_CATALOGUS } from "@/lib/deuren-kunststof";
 import { DEUR_ALU_CATALOGUS } from "@/lib/deuren-alu";
+import { deurStandaardModel } from "@/lib/prijsmodel";
 
 const enkel = (alle: string[]) => alle.filter((s) => !s.includes("dubbele"));
 const dubbel = (alle: string[]) => alle.filter((s) => s.includes("dubbele"));
@@ -19,6 +20,7 @@ export default function DeurenPrijzen() {
     <ProductPrijzen
       titel="Deuren"
       typeTitel="Prijzen per soort deur"
+      startModel={deurStandaardModel}
       materialen={{
         kunststof: {
           sleutel: "deur_matrix",
