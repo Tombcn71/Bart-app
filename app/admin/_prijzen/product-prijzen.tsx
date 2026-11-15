@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { useEffect, useState, type ReactNode } from "react";
 import { saveMatrix } from "@/app/actions";
 import { getMatrix } from "@/lib/matrix";
+import { Bevestig } from "./bevestig";
 import { StandaardEditor } from "./standaard-editor";
 import { isStandaardModel, leegModel, nieuwStandaardModel, type Catalogus, type StandaardModel } from "@/lib/prijsmodel";
 
@@ -55,6 +56,8 @@ export function ProductPrijzen({
   const [kopie, setKopie] = useState<Partial<Record<Materiaal, { standaard?: StandaardModel; zelf?: StandaardModel }>>>({});
   const [weergave, setWeergave] = useState<"prijzen" | "voorbeeld">("prijzen");
   const [saving, setSaving] = useState(false);
+  const [saveVraag, setSaveVraag] = useState(false);
+  const [opgeslagenFactor, setOpgeslagenFactor] = useState<Partial<Record<Materiaal, number>>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -68,6 +71,7 @@ export function ProductPrijzen({
         nog[m] = !isStandaardModel(data[i]);
         if (!isStandaardModel(data[i]) && heeftGetallen(data[i])) oudData[m] = data[i];
       });
+      setOpgeslagenFactor(Object.fromEntries(beschikbaar.map((m, i) => [m, isStandaardModel(data[i]) ? data[i].factor : 1])));
       setPrijzen(nieuw);
       setNogNietOpgeslagen(nog);
       setOud(oudData);
@@ -90,6 +94,11 @@ export function ProductPrijzen({
     zetModel(terug ?? (naarZelf ? leegModel(inst.catalogus) : nieuwStandaardModel()));
   };
 
+  const klikOpslaan = () => {
+    // Een schuifstand die nog niet is opgeslagen verandert al je prijzen: eerst vragen.
+    if (huidig.factor !== (opgeslagenFactor[materiaal] ?? 1)) setSaveVraag(true);
+    else handleSave();
+  };
   const handleSave = async () => {
     setSaving(true);
     const result = await saveMatrix(inst.sleutel, huidig);
@@ -97,14 +106,28 @@ export function ProductPrijzen({
     setSaving(false);
     if (result.success) {
       setNogNietOpgeslagen((n) => ({ ...n, [materiaal]: false }));
+      setOpgeslagenFactor((f) => ({ ...f, [materiaal]: huidig.factor }));
       toast.success(`${beschikbaar.length > 1 ? (materiaal === "kunststof" ? "Kunststof" : "Aluminium") : titel} prijzen opgeslagen!`);
     } else toast.error("Fout bij opslaan.");
   };
 
   const sleutelStatus = `${materiaal}-${zelf ? "zelf" : "standaard"}`;
 
+  const verschilTxt = Math.round((huidig.factor - 1) * 100);
   return (
     <div className="space-y-6">
+      {saveVraag && (
+        <Bevestig
+          titel="Weet je het zeker?"
+          tekst={`Al je prijzen worden ${Math.abs(verschilTxt)}% ${verschilTxt < 0 ? "goedkoper" : "duurder"} dan de standaardprijzen, ook die in je calculator. Doorgaan met opslaan?`}
+          jaLabel="Ja, opslaan"
+          onNee={() => setSaveVraag(false)}
+          onJa={() => {
+            setSaveVraag(false);
+            handleSave();
+          }}
+        />
+      )}
       <div className="flex items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-black text-slate-800">{titel}</h2>
@@ -115,7 +138,7 @@ export function ProductPrijzen({
           </p>
         </div>
         <button
-          onClick={handleSave}
+          onClick={klikOpslaan}
           disabled={saving}
           className="shrink-0 rounded-xl bg-brand px-6 py-2 font-bold text-white transition-all hover:bg-brand-dark">
           {saving ? "Opslaan..." : "Opslaan"}

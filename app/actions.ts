@@ -7,6 +7,7 @@ import { Resend } from "resend";
 import { desc, eq } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { generateOffertePdf } from "@/app/lib/generate-offerte-pdf";
+import { bedrijfsOpbouw, opbouwRegels } from "@/lib/opbouw";
 import { SITE_URL } from "@/lib/site";
 
 export async function adminLogin(password: string) {
@@ -102,6 +103,17 @@ function euro(n: number): string {
   return "€ " + Number(n ?? 0).toLocaleString("nl-NL", { minimumFractionDigits: 2 });
 }
 
+function opbouwHtml(o: ReturnType<typeof opbouwRegels>): string {
+  return `<div style="margin: 16px 0; padding: 12px 14px; background: #f8fafc; border-radius: 8px;">
+    <p style="margin: 0 0 6px; font-weight: bold;">Wat dit voor jou betekent</p>
+    <p style="margin: 0 0 6px; color: #555; font-size: 13px;">${o.kop}</p>
+    <table style="border-collapse: collapse; font-size: 13px; width: 100%;">${o.regels
+      .map((r) => `<tr style="${r.winst ? "font-weight: bold; color: #047857;" : "color: #444;"}"><td style="padding: 1px 0;">${r.naam}</td><td style="text-align: right;">${r.bedrag}</td></tr>`)
+      .join("")}</table>
+    <p style="margin: 6px 0 0; font-size: 11px; color: #94a3b8;">Exclusief btw. Alleen voor jou, de klant ziet dit niet.</p>
+  </div>`;
+}
+
 // Korte samenvatting van een offerte-item voor de interne notificatie
 function itemRegel(item: any): string {
   const s = item.specs ?? {};
@@ -121,6 +133,8 @@ async function stuurInterneNotificatie(opts: {
 }): Promise<void> {
   const { klant, items, totaalPrijs, totaalSubsidie, offerteId } = opts;
   const regels = items.map(itemRegel);
+  const opb = bedrijfsOpbouw(items);
+  const opbT = opb ? opbouwRegels(opb) : null;
   try {
     await getResend().emails.send({
       from: "Bart Mooi <info@offerte.bartmooi.nl>",
@@ -135,6 +149,7 @@ async function stuurInterneNotificatie(opts: {
         `Telefoon: ${klant.telefoon || "-"}\n\n` +
         `Producten:\n${regels.map((r) => `  • ${r}`).join("\n")}\n\n` +
         `Totaal: ${euro(totaalPrijs)}\n` +
+        (opbT ? `\nWat dit voor jou betekent (${opbT.kop}):\n${opbT.regels.map((r) => `  ${r.naam}: ${r.bedrag}`).join("\n")}\n\n` : "") +
         `Subsidie-indicatie: ${euro(totaalSubsidie)}\n` +
         `Offerte-ID: ${offerteId}`,
       html: `
@@ -151,6 +166,7 @@ async function stuurInterneNotificatie(opts: {
             ${regels.map((r) => `<li style="margin-bottom: 4px;">${r}</li>`).join("")}
           </ul>
           <p style="margin: 0;"><strong>Totaal:</strong> ${euro(totaalPrijs)}</p>
+          ${opbT ? opbouwHtml(opbT) : ""}
           <p style="margin: 0 0 16px;"><strong>Subsidie-indicatie:</strong> ${euro(totaalSubsidie)}</p>
           <p style="font-size: 11px; color: #aaa;">Offerte-ID: ${offerteId}</p>
         </div>`,
@@ -195,6 +211,8 @@ export async function saveOffertes(
       prijs: totaalPrijs,
       subsidieIndicatie: totaalSubsidie,
       product: items.length === 1 ? items[0].product : `${items.length} producten`,
+      // Alleen voor Bart: wat de montage kost en wat hij eraan verdient. De klant ziet dit nooit.
+      opbouw: bedrijfsOpbouw(items) ?? undefined,
     };
 
     const inserted = await db.insert(offertes).values({ email: klant.email, data }).returning({ id: offertes.id });

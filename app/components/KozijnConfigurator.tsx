@@ -9,7 +9,7 @@ import { STANDAARD_KEUZES } from "@/lib/standaardopties";
 import { BEGINMATEN } from "@/lib/beginmaten";
 import { ALU_BEGINMATEN, ALU_CATALOGUS } from "@/lib/aluminium";
 import { EXTRA_MAAT, MAATGRENZEN_ALU, MAATGRENZEN_KUNSTSTOF } from "@/lib/maatgrenzen";
-import { berekenStandaard, btwPercentage, eersteKeuze, isStandaardModel, keuzeNaam, nieuwStandaardModel, KOZIJN_CATALOGUS } from "@/lib/prijsmodel";
+import { montageVoor, berekenStandaard, btwPercentage, eersteKeuze, isStandaardModel, keuzeNaam, nieuwStandaardModel, KOZIJN_CATALOGUS } from "@/lib/prijsmodel";
 import { GevelFoto, GevelKeuze, type GevelId, KOZIJN_KLEUREN, heeftGevelFoto } from "@/app/components/GevelFoto";
 import { KozijnTechnisch, TECHNISCH } from "@/app/components/KozijnTechnisch";
 import Image from "next/image";
@@ -497,6 +497,12 @@ export function KozijnConfigurator({
       slug,
       product: `${alu ? "Aluminium " : ""}${kozijn?.name ?? "Kozijn"}`,
       prijs: berekendePrijs,
+      // Voor het mandje: hoeveel van de prijs loon en transport zijn, zodat de dagen over alle kozijnen verrekend worden.
+      dag: (() => {
+        const som = isStandaardModel(matrix) ? matrix.montageSom : undefined;
+        if (!som || !mv) return undefined;
+        return { loon: rond(mv.loon), transport: rond(mv.transport), perDag: Math.max(1, som.kozijnenPerDag ?? 1), aantal, dagen: mv.dagen, btw: btwMaal, som: { monteurs: som.monteurs ?? 2, perMonteur: som.perMonteur ?? 0, transportPerMonteur: som.transportPerMonteur ?? 0, materiaal: som.materiaal ?? 0, afval: som.afval ?? 0, risico: som.risico ?? 0, winst: som.winst ?? 0, overig: som.overig ?? 0 } };
+      })(),
       specs: {
         breedte,
         hoogte,
@@ -750,9 +756,10 @@ export function KozijnConfigurator({
   // Montage apart vermelden: de prijs bovenaan is dan het kozijn zelf, de montage staat eronder als aparte regel,
   // met het totaal daaronder. Bij 'inbegrepen' blijft het één totaalprijs.
   const montageApart = isStandaardModel(matrix) && matrix.montageApart === true && (matrix.montage ?? 0) > 0;
-  const montageBedrag = montageApart
-    ? Math.round((matrix as { montage: number }).montage * aantal * (metBtw ? 1 + btwPct / 100 : 1) * 100) / 100
-    : 0;
+  const btwMaal = metBtw ? 1 + btwPct / 100 : 1;
+  const mv = isStandaardModel(matrix) ? montageVoor(matrix, aantal) : null;
+  const rond = (n: number) => Math.round(n * btwMaal * 100) / 100;
+  const montageBedrag = montageApart && mv ? rond(mv.totaal) : 0;
   const bedragTekst = (n: number) => n.toLocaleString("nl-NL", { minimumFractionDigits: 2 });
   const prijsTekst = bedragTekst(montageApart ? Math.round((berekendePrijs - montageBedrag) * 100) / 100 : berekendePrijs);
   const prijsLabel = montageApart ? "Prijs kozijn" : "Prijsindicatie";

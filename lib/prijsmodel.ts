@@ -28,14 +28,43 @@ export type MontageSom = {
   overig?: number;
 };
 
-/** Het totaal van de som: wat in de prijs van één kozijn komt, exclusief btw. */
-export function montageTotaal(som: MontageSom): number {
+/** Loon en transport voor één werkdag van het team. Blijven apart: loon is geen transport. */
+export function montageDag(som: MontageSom): { loon: number; transport: number } {
   const monteurs = som.monteurs ?? 2;
-  const perDag = Math.max(1, som.kozijnenPerDag ?? 1);
-  const dagkosten = monteurs * ((som.perMonteur ?? 0) + (som.transportPerMonteur ?? 0));
-  const totaal =
-    dagkosten / perDag + (som.materiaal ?? 0) + (som.afval ?? 0) + (som.risico ?? 0) + (som.winst ?? 0) + (som.overig ?? 0);
-  return Math.round(totaal * 100) / 100;
+  return { loon: monteurs * (som.perMonteur ?? 0), transport: monteurs * (som.transportPerMonteur ?? 0) };
+}
+
+/** Wat per kozijn bijkomt, los van de dag: materiaal, afval, risico, winst. */
+export function montagePerKozijn(som: MontageSom): number {
+  return (som.materiaal ?? 0) + (som.afval ?? 0) + (som.risico ?? 0) + (som.winst ?? 0) + (som.overig ?? 0);
+}
+
+/** Het totaal voor één kozijn, exclusief btw: één kozijn kost het bedrijf een hele werkdag. */
+export function montageTotaal(som: MontageSom): number {
+  const d = montageDag(som);
+  return Math.round((d.loon + d.transport + montagePerKozijn(som)) * 100) / 100;
+}
+
+/**
+ * Montage voor `aantal` kozijnen, exclusief btw. De dagen worden naar boven afgerond (er worden geen halve dagen
+ * uitbetaald); materiaal, afval, risico en winst tellen per kozijn.
+ */
+export function montageVoor(
+  model: { montage: number; montageSom?: MontageSom },
+  aantal: number,
+): { dagen: number; loon: number; transport: number; kozijnen: number; totaal: number } {
+  const n = Math.max(1, aantal);
+  const som = model.montageSom;
+  if (!som) {
+    const kozijnen = Math.max(0, model.montage ?? 0) * n;
+    return { dagen: 0, loon: 0, transport: 0, kozijnen, totaal: kozijnen };
+  }
+  const dagen = Math.ceil(n / Math.max(1, som.kozijnenPerDag ?? 1));
+  const d = montageDag(som);
+  const loon = dagen * d.loon;
+  const transport = dagen * d.transport;
+  const kozijnen = n * montagePerKozijn(som);
+  return { dagen, loon, transport, kozijnen, totaal: Math.round((loon + transport + kozijnen) * 100) / 100 };
 }
 
 export type StandaardModel = {
@@ -188,13 +217,14 @@ export function berekenStandaard(
       bedrag: materiaal * (factor - 1),
     });
   }
-  const montage = model.montage > 0 ? model.montage : 0;
-  if (montage && model.montageApart !== true) {
+  const mv = montageVoor(model, aantal);
+  const montage = mv.totaal / Math.max(1, aantal);
+  if (montage > 0 && model.montageApart !== true) {
     // Montage zit in de prijs: geen aparte regel, het kozijn wordt er duurder van.
     regels[0] = { label: `${regels[0].label}, inclusief montage`, bedrag: regels[0].bedrag + montage };
-  } else if (montage) regels.push({ label: "Montage", bedrag: montage });
-  const totaal = materiaal * factor + montage;
-  return { regels, totaal: Math.round(totaal * aantal * 100) / 100 };
+  } else if (montage > 0) regels.push({ label: "Montage", bedrag: montage });
+  const totaal = materiaal * factor * aantal + mv.totaal;
+  return { regels, totaal: Math.round(totaal * 100) / 100 };
 }
 
 export { euro as formatEuro };

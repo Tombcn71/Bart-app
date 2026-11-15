@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import NextLink from "next/link";
 import Link from "next/link";
-import { getCart, removeFromCart, clearCart, updateCartItem, type CartItem } from "@/lib/cart";
+import { getCart, removeFromCart, clearCart, updateCartItem, type CartItem, verrekenDagen } from "@/lib/cart";
 import { saveOffertes } from "@/app/actions";
 import { useBron } from "@/lib/use-bron";
 import { showToast } from "@/app/components/CenterToast";
@@ -15,7 +15,9 @@ export default function OffertePagina() {
   const bron = useBron();
   // Inmeten (Onspot): de vakman vult bij de klant de gegevens in en mailt de offerte ter plekke.
   const inmeten = bron === "onspot";
-  const [items, setItems]   = useState<CartItem[]>([]);
+  const [ruweItems, setItems] = useState<CartItem[]>([]);
+  // De monteurdagen worden over alle kozijns in het mandje verrekend (hele dagen, naar boven afgerond).
+  const items = verrekenDagen(ruweItems);
   const [adres, setAdres]   = useState("");
   const [naam, setNaam]     = useState("");
   const [woonplaats, setWoonplaats] = useState("");

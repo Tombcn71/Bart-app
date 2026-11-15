@@ -1,7 +1,9 @@
 "use client";
 import { useState } from "react";
+import { toast } from "sonner";
+import { Bevestig } from "./bevestig";
 import { KOZIJN_GROEPEN, KOZIJN_NAMEN } from "@/lib/kozijn-namen";
-import { KOZIJN_CATALOGUS, keuzeToeslag, leegModel, montageTotaal, nieuwStandaardModel, typeRecept, type Catalogus, type MontageSom, type StandaardModel } from "@/lib/prijsmodel";
+import { KOZIJN_CATALOGUS, keuzeToeslag, leegModel, montageDag, montagePerKozijn, montageTotaal, montageVoor, nieuwStandaardModel, typeRecept, type Catalogus, type MontageSom, type StandaardModel } from "@/lib/prijsmodel";
 import type { Toeslag, TypeRecept } from "@/lib/prijsmotor";
 import { Kaart, PrijsVeld, Rij } from "./prijs-veld";
 
@@ -91,10 +93,31 @@ export function StandaardEditor({
       keuzes: { ...model.keuzes, [groep]: { ...model.keuzes?.[groep], [id]: { ...keuzeToeslag(model, groep, id, catalogus), [sleutel]: waarde } } },
     });
 
+  const [vraag, setVraag] = useState<"alles" | "schuif" | null>(null);
   const resetAlles = () => {
+    const vorige = model;
     onChange(model.zelf ? leegModel(catalogus) : standaardModel());
     setReset((r) => r + 1);
+    toast(model.zelf ? "Alles leeggemaakt." : "Teruggezet naar de standaardprijzen.", {
+      duration: 10000,
+      action: {
+        label: "Ongedaan maken",
+        onClick: () => {
+          onChange(vorige);
+          setReset((r) => r + 1);
+        },
+      },
+    });
   };
+  const schuifTerug = () => {
+    const vorige = model;
+    onChange({ ...model, factor: 1 });
+    toast("Schuif teruggezet op de standaardprijzen.", { duration: 10000, action: { label: "Ongedaan maken", onClick: () => onChange(vorige) } });
+  };
+  const vragen = (wat: "alles" | "schuif") => setVraag(wat);
+  const verdwijnt = model.zelf
+    ? "Alle bedragen die je zelf hebt ingevuld worden leeggemaakt."
+    : `${aangepast > 0 ? `${aangepast} eigen prijzen, ` : ""}je montageberekening en je schuif worden vervangen door de standaardprijzen.`;
   // Groepen met alleen de types die dit product heeft; wat nergens in staat komt in een laatste groep.
   const alleSlugs = Object.keys(catalogus.typen);
   const ingedeeld = new Set(groepen.flatMap((g) => g.slugs));
@@ -107,12 +130,26 @@ export function StandaardEditor({
 
   return (
     <div className="space-y-6">
+      {vraag && (
+        <Bevestig
+          titel="Weet je het zeker?"
+          tekst={vraag === "alles" ? verdwijnt : "Je schuif gaat terug naar de standaardprijzen. Je eigen bedragen blijven staan."}
+          jaLabel={vraag === "alles" ? (model.zelf ? "Ja, maak leeg" : "Ja, zet terug") : "Ja, terug naar 100%"}
+          onNee={() => setVraag(null)}
+          onJa={() => {
+            const v = vraag;
+            setVraag(null);
+            if (v === "alles") resetAlles();
+            else schuifTerug();
+          }}
+        />
+      )}
       <div className="flex items-center justify-between gap-3">
         <p className="text-xs text-slate-500">{model.zelf ? "Dit zijn je eigen prijzen." : wijkt ? "Je prijzen wijken af van de standaardprijzen." : "Dit zijn de standaardprijzen."}</p>
         <button
           type="button"
           disabled={!wijkt}
-          onClick={resetAlles}
+          onClick={() => vragen("alles")}
           className="shrink-0 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-transparent">
           {model.zelf ? "Alles leegmaken" : "Reset standaardprijzen"}
         </button>
@@ -121,7 +158,7 @@ export function StandaardEditor({
       {!model.zelf && (
         <Kaart
           titel="Goedkoper of duurder dan de standaardprijzen"
-          uitleg="Zet de schuif en al je prijzen gaan in één keer mee, zonder verder werk. Wil je 30% goedkoper zijn, zet hem dan op 30% goedkoper.">
+          uitleg="Zet de schuif en al je prijzen gaan in één keer mee, zonder verder werk. Wil je 30% goedkoper zijn, zet hem dan op 30% goedkoper. Koop je goedkoper in dan de standaardprijs? Zet de schuif dan op jouw korting.">
           <div className="space-y-3 px-4 py-4">
             <p className="text-3xl font-bold text-slate-900">
               {verschil === 0 ? "Standaardprijzen" : verschil < 0 ? `${-verschil}% goedkoper` : `${verschil}% duurder`}
@@ -144,9 +181,16 @@ export function StandaardEditor({
             <button
               type="button"
               disabled={!wijkt}
-              onClick={resetAlles}
+              onClick={() => vragen("alles")}
               className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-transparent">
               Reset standaardprijzen
+            </button>
+            <button
+              type="button"
+              disabled={model.factor === 1}
+              onClick={() => vragen("schuif")}
+              className="ml-2 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-transparent">
+              Terug naar 100%
             </button>
           </div>
         </Kaart>
@@ -167,19 +211,21 @@ export function StandaardEditor({
         return (
           <Kaart
             titel="Montage per kozijn"
-            uitleg="Wat kost het jou om één kozijn te plaatsen? Vul in wat voor jou klopt, de som komt vanzelf in de prijs van het kozijn. Alle bedragen zijn exclusief btw. De standaardprijzen zijn zonder montage."
+            uitleg="Wat kost het jou om te plaatsen en wat wil je eraan verdienen? Deel 1 is wat je team per werkdag kost, deel 2 is wat per kozijn bijkomt, inclusief je winst. Alle bedragen zijn exclusief btw. De standaardprijzen zijn zonder montage."
             notitie={montageNotitie}>
+            <p className="bg-slate-50 px-4 py-2 text-xs font-bold tracking-wide text-slate-600 uppercase">1. Per werkdag van je team</p>
             <Rij naam="Aantal monteurs">
               <AantalVeld key={`monteurs-${reset}`} label="Aantal monteurs" waarde={som.monteurs ?? 2} onChange={(n) => zet({ monteurs: n })} />
             </Rij>
             <Rij naam="Bedrag per monteur, per dag">{bedrag("perMonteur", "Bedrag per monteur per dag")}</Rij>
             <Rij naam="Transport per monteur, per dag">{bedrag("transportPerMonteur", "Transport per monteur per dag")}</Rij>
-            <Rij naam="Kozijnen die ze op één dag plaatsen">
+            <Rij naam="Capaciteit: kozijnen die ze op één dag plaatsen">
               <AantalVeld key={`perdag-${reset}`} label="Kozijnen per dag" waarde={som.kozijnenPerDag ?? 1} onChange={(n) => zet({ kozijnenPerDag: n })} />
             </Rij>
             <p className="px-4 pb-2 text-[11px] text-slate-500">
-              De kosten van de monteurs en het transport worden verdeeld over het aantal kozijnen dat ze op een dag plaatsen.
+              Loon en transport reken je per hele werkdag, nooit per halve dag. Passen er {som.kozijnenPerDag ?? 1} kozijn{(som.kozijnenPerDag ?? 1) === 1 ? "" : "s"} op een dag, dan is dat bij 1 t/m {som.kozijnenPerDag ?? 1} kozijn{(som.kozijnenPerDag ?? 1) === 1 ? "" : "s"} één dag, bij het volgende kozijn komt er een dag bij.
             </p>
+            <p className="bg-slate-50 px-4 py-2 text-xs font-bold tracking-wide text-slate-600 uppercase">2. Per kozijn, dit tel je voor elk kozijn mee</p>
             <Rij naam="Montagemateriaal, per kozijn">{bedrag("materiaal", "Montagemateriaal per kozijn")}</Rij>
             <Rij naam="Afval wegbrengen, per kozijn">{bedrag("afval", "Afval wegbrengen per kozijn")}</Rij>
             <Rij naam="Risico, per kozijn (klein afstelwerk na montage)">{bedrag("risico", "Risico per kozijn")}</Rij>
@@ -188,8 +234,48 @@ export function StandaardEditor({
             {!heeftSom && som.overig !== undefined && (
               <Rij naam="Eerder ingevuld bedrag">{bedrag("overig", "Eerder ingevuld bedrag")}</Rij>
             )}
+            {(() => {
+              const dag = montageDag(som);
+              const f = (x: number) => `€ ${x.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+              const regels: { naam: string; bedrag: number; winst?: boolean }[] = [
+                { naam: `Loon, ${som.monteurs ?? 2} monteurs voor 1 dag`, bedrag: dag.loon },
+                { naam: "Transport, 1 dag", bedrag: dag.transport },
+                { naam: "Montagemateriaal", bedrag: som.materiaal ?? 0 },
+                { naam: "Afval wegbrengen", bedrag: som.afval ?? 0 },
+                { naam: "Risico (afstelwerk na montage)", bedrag: som.risico ?? 0 },
+                { naam: "Jouw winst", bedrag: som.winst ?? 0, winst: true },
+              ];
+              if ((som.overig ?? 0) > 0) regels.push({ naam: "Eerder ingevuld bedrag", bedrag: som.overig ?? 0 });
+              return (
+                <div className="border-t border-slate-100 px-4 py-3">
+                  <p className="mb-2 text-xs font-bold tracking-wide text-slate-600 uppercase">Zo is de prijs voor 1 kozijn (1 dag) opgebouwd</p>
+                  <dl className="space-y-1 text-sm">
+                    {regels.map((r) => (
+                      <div key={r.naam} className={`flex justify-between gap-4 ${r.winst ? "rounded-md bg-emerald-50 px-2 py-1 font-bold text-emerald-800" : "text-slate-700"}`}>
+                        <dt>{r.naam}</dt>
+                        <dd className="tabular-nums">{f(r.bedrag)}</dd>
+                      </div>
+                    ))}
+                    <div className="flex justify-between gap-4 border-t border-slate-200 pt-1 font-bold text-slate-900">
+                      <dt>Montage voor 1 kozijn</dt>
+                      <dd className="tabular-nums">{f(totaal)}</dd>
+                    </div>
+                  </dl>
+                  <p className="mt-3 mb-1 text-xs font-semibold text-slate-700">Bij meer kozijnen:</p>
+                  {[2, 3, 5].map((n) => {
+                    const v = montageVoor({ montage: totaal, montageSom: som }, n);
+                    const g = (x: number) => `€ ${x.toLocaleString("nl-NL", { maximumFractionDigits: 0 })}`;
+                    return (
+                      <p key={n} className="text-xs text-slate-600 tabular-nums">
+                        {n} kozijnen: {v.dagen} dag{v.dagen === 1 ? "" : "en"} loon en transport ({g(v.loon + v.transport)}) + {n} × {g(montagePerKozijn(som))} = <span className="font-semibold text-slate-800">{g(v.totaal)}</span>, waarvan <span className="font-semibold text-emerald-700">{g((som.winst ?? 0) * n)} winst</span>
+                      </p>
+                    );
+                  })}
+                </div>
+              );
+            })()}
             <div className="flex items-center justify-between gap-4 bg-slate-50 px-4 py-3">
-              <span className="text-sm font-bold text-slate-800">Montage per kozijn</span>
+              <span className="text-sm font-bold text-slate-800">Montage voor één kozijn</span>
               <span className="text-lg font-bold tabular-nums text-slate-900">
                 € {totaal.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>

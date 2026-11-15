@@ -9,6 +9,44 @@ export interface CartItem {
   prijs: number;
   /** Inmeten (Onspot): notitie van de vakman bij dit raam. */
   notitie?: string;
+  /** Loon en transport (in dezelfde eenheid als prijs) die in de prijs zitten, voor het verrekenen van de dagen in het mandje. */
+  dag?: {
+    loon: number;
+    transport: number;
+    perDag: number;
+    aantal: number;
+    dagen: number;
+    /** Factor waarmee btw erin zit (1 = exclusief btw). */
+    btw: number;
+    /** De montagesom van het bedrijf, exclusief btw, voor het overzicht "wat dit voor jou betekent". */
+    som: { monteurs: number; perMonteur: number; transportPerMonteur: number; materiaal: number; afval: number; risico: number; winst: number; overig: number };
+  };
+}
+
+/**
+ * Verrekent de monteurdagen over het hele mandje: alle kozijns samen vormen werkdagen, naar boven afgerond.
+ * Loon en transport worden eerlijk over de kozijns verdeeld; de rest van de prijs blijft zoals berekend.
+ */
+export function verrekenDagen<T extends { prijs: number; dag?: CartItem["dag"] }>(items: T[]): T[] {
+  const met = items.filter((i) => i.dag);
+  if (met.length === 0) return items;
+  const perDag = met[0].dag!.perDag;
+  const aantal = met.reduce((s, i) => s + i.dag!.aantal, 0);
+  const dagen = Math.ceil(aantal / perDag);
+  // Loon + transport voor één dag (uit het eerste kozijn: dat is bij 1 dag precies de dagprijs).
+  const eerste = met[0].dag!;
+  const dagPrijs = (eerste.loon + eerste.transport) / Math.max(1, eerste.dagen);
+  const totaal = Math.round(dagen * dagPrijs * 100) / 100;
+  let verdeeld = 0;
+  let nr = 0;
+  return items.map((i) => {
+    if (!i.dag) return i;
+    nr++;
+    const aandeel = nr === met.length ? Math.round((totaal - verdeeld) * 100) / 100 : Math.round(((totaal * i.dag.aantal) / aantal) * 100) / 100;
+    verdeeld += aandeel;
+    const zonderDag = Math.round((i.prijs - i.dag.loon - i.dag.transport) * 100) / 100;
+    return { ...i, prijs: Math.round((zonderDag + aandeel) * 100) / 100 };
+  });
 }
 
 // Eén winkelmand; bij inmeten een aparte, zodat die van een klant er niet doorheen loopt

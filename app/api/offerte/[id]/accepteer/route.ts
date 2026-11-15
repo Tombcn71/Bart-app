@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 import { Resend } from "resend";
 import { SITE_URL } from "@/lib/site";
 import { INTERN_ADRES } from "@/lib/bedrijf";
+import { opbouwRegels, type Opbouw } from "@/lib/opbouw";
 
 const esc = (s: unknown) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
@@ -35,6 +36,8 @@ export async function POST(
       const tel = telefoon.replace(/[^\d+]/g, "");
       const product = Array.isArray(data.items) && data.items.length > 1 ? `${data.items.length} producten` : String(data.items?.[0]?.product ?? data.product ?? "Product");
       const totaal = data.prijs != null ? `€ ${Number(data.prijs).toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "";
+      const opb = data.opbouw as Opbouw | undefined;
+      const opbT = opb ? opbouwRegels(opb) : null;
       const adminUrl = `${SITE_URL}/admin/offertes/${id}`;
       const zin = `Om ${tijd} uur is ${klant} akkoord gegaan met de offerte. Bel zo snel mogelijk terug om de inmeting te plannen.`;
       const knop = (href: string, label: string) =>
@@ -47,6 +50,7 @@ export async function POST(
         text:
           `${zin}\n\nTelefoon: ${telefoon || "niet opgegeven"}\nWoonplaats: ${data.woonplaats || "-"}\nProduct: ${product}\n` +
           (totaal ? `Totaal: ${totaal}\n` : "") +
+          (opbT ? `\nWat dit voor jou betekent (${opbT.kop}):\n${opbT.regels.map((r) => `  ${r.naam}: ${r.bedrag}`).join("\n")}\n` : "") +
           `\nBekijk in de admin: ${adminUrl}`,
         html: `
           <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px;">
@@ -58,6 +62,7 @@ export async function POST(
               <tr><td style="padding: 2px 12px 2px 0; color: #777;">Product</td><td>${esc(product)}</td></tr>
               ${totaal ? `<tr><td style="padding: 2px 12px 2px 0; color: #777;">Totaal</td><td>${esc(totaal)}</td></tr>` : ""}
             </table>
+            ${opbT ? `<div style="margin: 0 0 20px; padding: 12px 14px; background: #f8fafc; border-radius: 8px;"><p style="margin: 0 0 6px; font-weight: bold;">Wat dit voor jou betekent</p><p style="margin: 0 0 6px; color: #555; font-size: 13px;">${esc(opbT.kop)}</p><table style="border-collapse: collapse; font-size: 13px; width: 100%;">${opbT.regels.map((r) => `<tr style="${r.winst ? "font-weight: bold; color: #047857;" : "color: #444;"}"><td style="padding: 1px 0;">${esc(r.naam)}</td><td style="text-align: right;">${esc(r.bedrag)}</td></tr>`).join("")}</table><p style="margin: 6px 0 0; font-size: 11px; color: #94a3b8;">Exclusief btw. Alleen voor jou.</p></div>` : ""}
             <p style="margin: 0;">${tel ? knop(`tel:${tel}`, `Bel ${telefoon}`) : ""}${knop(adminUrl, "Bekijk de offerte")}</p>
           </div>`,
       });

@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { markeerGemonteerd } from "@/app/actions";
+import { opbouwRegels, type Opbouw } from "@/lib/opbouw";
 
 export default async function OfferteDetailPagina({
   params,
@@ -62,6 +63,26 @@ export default async function OfferteDetailPagina({
                     <p className="mt-2 text-xs text-slate-500">Een dag later krijgt de klant een mail met het verzoek om een Google-review achter te laten.</p>
                   </form>
                 )}
+              </div>
+            );
+          })()}
+
+          {(() => {
+            const opb = (offerte.data as { opbouw?: Opbouw }).opbouw;
+            if (!opb) return null;
+            const o = opbouwRegels(opb);
+            return (
+              <div className="mb-6 rounded-xl border border-slate-100 p-4">
+                <p className="font-bold text-slate-800">Wat dit voor jou betekent</p>
+                <p className="mb-2 text-xs text-slate-500">{o.kop}, exclusief btw. Alleen voor jou, de klant ziet dit niet.</p>
+                <dl className="space-y-1 text-sm">
+                  {o.regels.map((r) => (
+                    <div key={r.naam} className={`flex justify-between gap-3 ${r.winst ? "rounded-md bg-emerald-50 px-2 py-1 font-bold text-emerald-800" : "text-slate-700"}`}>
+                      <dt>{r.naam}</dt>
+                      <dd className="tabular-nums">{r.bedrag}</dd>
+                    </div>
+                  ))}
+                </dl>
               </div>
             );
           })()}
