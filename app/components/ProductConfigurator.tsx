@@ -316,7 +316,7 @@ export function ProductConfigurator({
                 })}
 
                 {tuintoegangVraag && (
-                  <FormField label="Kunnen de monteurs via de tuin bij de plek?" value={geenTuin ? "Nee, geen tuintoegang" : "Ja"}>
+                  <FormField defaultOpen label="Kunnen de monteurs via de tuin bij de plek?" value={geenTuin ? "Nee, geen tuintoegang" : "Ja"}>
                     <div className="flex gap-2">
                       {[false, true].map((nee) => (
                         <button
