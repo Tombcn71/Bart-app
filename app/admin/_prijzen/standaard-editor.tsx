@@ -221,7 +221,7 @@ export function StandaardEditor({
         return (
           <Kaart
             titel={`Montage per ${E}`}
-            uitleg={`Wat kost het jou om te plaatsen en wat wil je eraan verdienen? Deel 1 is wat je team per werkdag kost, deel 2 is wat per ${E} bijkomt, inclusief je winst. Alle bedragen zijn exclusief btw. De standaardprijzen zijn zonder montage.`}
+            uitleg={`Wat kost het jou om te plaatsen en wat wil je eraan verdienen? Deel 1 is wat je team per werkdag kost, deel 2 is wat per ${E} bijkomt, inclusief je marge. Alle bedragen zijn exclusief btw. De standaardprijzen zijn zonder montage.`}
             notitie={montageNotitie}>
             <p className="bg-muted/40 px-4 py-2 text-xs font-bold tracking-wide text-muted-foreground uppercase">1. Per werkdag van je team</p>
             <Rij naam="Aantal monteurs">
@@ -239,7 +239,7 @@ export function StandaardEditor({
             <Rij naam={`Montagemateriaal, per ${E}`}>{bedrag("materiaal", `Montagemateriaal per ${E}`)}</Rij>
             <Rij naam={`Afval wegbrengen, per ${E}`}>{bedrag("afval", `Afval wegbrengen per ${E}`)}</Rij>
             <Rij naam={`Risico, per ${E} (klein afstelwerk na montage)`}>{bedrag("risico", `Risico per ${E}`)}</Rij>
-            <Rij naam={`Jouw winst, per ${E}`}>{bedrag("winst", `Jouw winst per ${E}`)}</Rij>
+            <Rij naam={`Jouw marge, per ${E}`}>{bedrag("winst", `Jouw marge per ${E}`)}</Rij>
             {som.overig !== undefined && som.overig > 0 && heeftSom && <Rij naam="Eerder ingevuld bedrag">{bedrag("overig", "Eerder ingevuld bedrag")}</Rij>}
             {!heeftSom && som.overig !== undefined && (
               <Rij naam="Eerder ingevuld bedrag">{bedrag("overig", "Eerder ingevuld bedrag")}</Rij>
@@ -253,7 +253,7 @@ export function StandaardEditor({
                 { naam: "Montagemateriaal", bedrag: som.materiaal ?? 0 },
                 { naam: "Afval wegbrengen", bedrag: som.afval ?? 0 },
                 { naam: "Risico (afstelwerk na montage)", bedrag: som.risico ?? 0 },
-                { naam: "Jouw winst", bedrag: som.winst ?? 0, winst: true },
+                { naam: "Jouw marge", bedrag: som.winst ?? 0, winst: true },
               ];
               if ((som.overig ?? 0) > 0) regels.push({ naam: "Eerder ingevuld bedrag", bedrag: som.overig ?? 0 });
               return (
@@ -282,7 +282,7 @@ export function StandaardEditor({
                     const g = (x: number) => `€ ${x.toLocaleString("nl-NL", { maximumFractionDigits: 0 })}`;
                     return (
                       <p key={n} className="text-xs text-muted-foreground tabular-nums">
-                        {n} {M}: {v.dagen} dag{v.dagen === 1 ? "" : "en"} loon en transport ({g(v.loon + v.transport)}) + {n} × {g(montagePerKozijn(som))} = <span className="font-semibold text-foreground">{g(v.totaal)}</span>, waarvan <span className="font-semibold text-emerald-700 dark:text-emerald-300">{g((som.winst ?? 0) * n)} winst</span>
+                        {n} {M}: {v.dagen} dag{v.dagen === 1 ? "" : "en"} loon en transport ({g(v.loon + v.transport)}) + {n} × {g(montagePerKozijn(som))} = <span className="font-semibold text-foreground">{g(v.totaal)}</span>, waarvan <span className="font-semibold text-emerald-700 dark:text-emerald-300">{g((som.winst ?? 0) * n)} marge</span>
                       </p>
                     );
                   })}

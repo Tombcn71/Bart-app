@@ -78,7 +78,7 @@ export function opbouwRegels(o: Opbouw): { kop: string; regels: { naam: string; 
       { naam: "Afval wegbrengen", bedrag: eur(o.afval) },
       { naam: "Risico (afstelwerk)", bedrag: eur(o.risico) },
       ...(o.overig > 0 ? [{ naam: "Eerder ingevuld bedrag", bedrag: eur(o.overig) }] : []),
-      { naam: "Jouw winst", bedrag: eur(o.winst), winst: true },
+      { naam: "Jouw marge", bedrag: eur(o.winst), winst: true },
     ],
   };
 }
