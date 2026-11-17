@@ -1071,14 +1071,16 @@ export function KozijnConfigurator({
                     {horPrijs > 0 && (
                       <div>
                         <label className="text-[11px] font-bold text-slate-800 uppercase">Hor</label>
-                        <select value={horAantal} onChange={(e) => setHorAantal(Number(e.target.value))} className="w-full border p-2.5 rounded-lg text-sm">
-                          <option value={0}>Geen hor</option>
-                          {Array.from({ length: 20 }, (_, i) => i + 1).map((n) => (
-                            <option key={n} value={n}>
-                              {n} {n === 1 ? "hor" : "horren"}
-                            </option>
-                          ))}
-                        </select>
+                        <div className="mt-1 flex items-center gap-3">
+                          <button type="button" onClick={() => setHorAantal(Math.max(0, horAantal - 1))} className="w-10 h-10 rounded-lg border-2 border-slate-400 text-xl font-bold text-slate-900 hover:bg-slate-100">
+                            −
+                          </button>
+                          <span className="w-8 text-center text-base font-bold text-slate-900">{horAantal}</span>
+                          <button type="button" onClick={() => setHorAantal(Math.min(20, horAantal + 1))} className="w-10 h-10 rounded-lg border-2 border-slate-400 text-xl font-bold text-slate-900 hover:bg-slate-100">
+                            +
+                          </button>
+                          <span className="text-sm text-slate-600">{horAantal === 1 ? "hor" : "horren"}</span>
+                        </div>
                       </div>
                     )}
                   </div>
