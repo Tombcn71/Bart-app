@@ -75,14 +75,14 @@
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
   --radius: 0.625rem;
-  --sidebar: 0 0% 100%;
-  --sidebar-foreground: 0 0% 100%;
-  --sidebar-primary: 0 0% 100%;
-  --sidebar-primary-foreground: 200 70% 35%;
-  --sidebar-accent: 0 0% 100% / 0.15;
-  --sidebar-accent-foreground: 0 0% 100%;
-  --sidebar-border: 0 0% 100% / 0.2;
-  --sidebar-ring: 0 0% 100%;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: #1a73e8;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e8f0fe;
+  --sidebar-accent-foreground: #1557b0;
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: #1a73e8;
 }
 
 .dark {
@@ -112,10 +112,10 @@
   --chart-5: oklch(0.269 0 0);
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-primary: #8ab4f8;
+  --sidebar-primary-foreground: #202124;
+  --sidebar-accent: rgb(138 180 248 / 0.14);
+  --sidebar-accent-foreground: #8ab4f8;
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
 }
@@ -158,12 +158,6 @@
 .dark .ring-emerald-200 { --tw-ring-color: rgb(16 185 129 / 0.35); }
 .dark .text-emerald-800 { color: var(--color-emerald-300); }
 
-.sidebar-gradient,
-.sidebar-gradient [data-sidebar="sidebar"] {
-  background: linear-gradient(to bottom, #1E5079, #2cb1e1) !important;
-  color: white !important;
-}
-
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -176,13 +170,4 @@
   }
 }
 
-[data-sidebar="sidebar"] {
-  background: linear-gradient(to bottom, #1E5079, #2cb1e1) !important;
-}
 
-/* Beheer in donkere modus: het menu krijgt een donkere variant van de blauwe verloop. */
-.dark .sidebar-gradient,
-.dark .sidebar-gradient [data-sidebar="sidebar"],
-.dark [data-sidebar="sidebar"] {
-  background: linear-gradient(to bottom, #0e1a26, #12202d) !important;
-}
