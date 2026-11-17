@@ -111,6 +111,8 @@ export type StandaardModel = {
   zelf?: boolean;
   /** Hoe montage getoond wordt: true = apart bovenop, anders (standaard) inbegrepen in de prijs van het kozijn. */
   montageApart?: boolean;
+  /** Prijs van één hor (inclusief plaatsing, exclusief btw) die de klant bij een kozijn kan toevoegen; leeg = geen hor-keuze. */
+  horPrijs?: number;
   /** Btw-percentage; ontbreekt het, dan 21. Alle prijzen in het model zijn exclusief btw. */
   btw?: number;
   /** Eigen bedragen per kozijntype (slug); wat ontbreekt volgt de standaardprijzen. */

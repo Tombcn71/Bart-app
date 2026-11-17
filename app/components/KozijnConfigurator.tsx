@@ -445,6 +445,8 @@ export function KozijnConfigurator({
   const [ventilatieRooster, setVentilatieRooster] = useState("");
   const [voorboren, setVoorboren] = useState("");
   const [aantal, setAantal] = useState(1);
+  // Hoeveel horren de klant erbij wil (0 = geen).
+  const [horAantal, setHorAantal] = useState(0);
   // Het preview-venster met de foto op een gevel.
   const [previewOpen, setPreviewOpen] = useState(false);
   // Binnen- of buitenaanzicht van de technische tekening.
@@ -523,6 +525,7 @@ export function KozijnConfigurator({
             }
           : { kleur, kleurBuitenkant, glas, profiel, aanslag, afstandshouder, roeden, ventilatieRooster, voorboren }),
         aantal,
+        ...(horTotaal > 0 ? { Horren: `${horAantal} ${horAantal === 1 ? "hor" : "horren"}` } : {}),
         ...(standaard
           ? {
               btw: metBtw ? `Prijs inclusief ${btwPct}% btw` : `Prijs exclusief btw (${btwPct}% btw komt erbij)`,
@@ -661,11 +664,18 @@ export function KozijnConfigurator({
   ]);
   // Een hogere of lagere borstwering kost een paar cent per mm; het bovenlicht verandert de prijs niet.
   const extra = EXTRA_MAAT[slug];
-  const opbouw = (() => {
+  const opbouwZonderHor = (() => {
     if (!extra?.prijsPerMm || extraMaat === extra.begin || opbouwBasis.totaal === 0) return opbouwBasis;
     const bedrag = (extraMaat - extra.begin) * extra.prijsPerMm;
     return { regels: [...opbouwBasis.regels, { label: `${extra.label} ${nl(extraMaat)} mm`, bedrag }], totaal: Math.round((opbouwBasis.totaal + bedrag * aantal) * 100) / 100 };
   })();
+  // Horren erbij (kunststof en aluminium): een vaste prijs per hor die het bedrijf zelf instelt; leeg = geen keuze.
+  const horPrijs = isStandaardModel(matrix) ? matrix.horPrijs ?? 0 : 0;
+  const horTotaal = horPrijs > 0 && horAantal > 0 ? Math.round(horPrijs * horAantal * 100) / 100 : 0;
+  const opbouw =
+    horTotaal > 0
+      ? { regels: [...opbouwZonderHor.regels, { label: `Hor × ${horAantal}`, bedrag: horTotaal / Math.max(1, aantal) }], totaal: Math.round((opbouwZonderHor.totaal + horTotaal) * 100) / 100 }
+      : opbouwZonderHor;
   // Buiten de maten die de fabriek standaard maakt kan niet besteld worden.
   const grenzen = (alu ? MAATGRENZEN_ALU : MAATGRENZEN_KUNSTSTOF)[slug];
   const buitenMaat = !!grenzen && (breedte < grenzen.minB || breedte > grenzen.maxB || hoogte < grenzen.minH || hoogte > grenzen.maxH);
@@ -1063,10 +1073,10 @@ export function KozijnConfigurator({
 
                 <FormField
                   label="Eigenschappen"
-                  value={alu ? `${kn("ventilatie", aluKeuzes.ventilatie)} · ${kn("klemhor", aluKeuzes.klemhor)}` : `${kn("ventilatie", ventilatieRooster)} · ${kn("voorboren", voorboren)}`}>
+                  value={alu ? `${kn("ventilatie", aluKeuzes.ventilatie)} · ${kn("voorboren", aluKeuzes.voorboren)}` : `${kn("ventilatie", ventilatieRooster)} · ${kn("voorboren", voorboren)}`}>
                   <div className="space-y-3">
                     {alu ? (
-                      <>{["ventilatie", "draairichting", "kruk", "voorboren", "klemhor"].map((id) => selAlu(id))}</>
+                      <>{["ventilatie", "draairichting", "kruk", "voorboren"].map((id) => selAlu(id))}</>
                     ) : standaard ? (
                       <>
                         {selS("ventilatie", ventilatieRooster, setVentilatieRooster)}
@@ -1080,6 +1090,36 @@ export function KozijnConfigurator({
                     )}
                   </div>
                 </FormField>
+
+                {horPrijs > 0 && (
+                  <FormField label="Hor erbij?" value={horAantal > 0 ? `${horAantal} ${horAantal === 1 ? "hor" : "horren"}` : "Nee"}>
+                    <div className="space-y-3">
+                      <div className="flex gap-2">
+                        {[0, 1].map((ja) => (
+                          <button
+                            key={ja}
+                            type="button"
+                            onClick={() => setHorAantal(ja ? Math.max(1, horAantal) : 0)}
+                            className={`rounded-lg border-2 px-6 py-2 text-base font-bold ${(horAantal > 0) === !!ja ? "border-brand bg-brand text-white" : "border-slate-400 text-slate-900 hover:bg-slate-100"}`}>
+                            {ja ? "Ja" : "Nee"}
+                          </button>
+                        ))}
+                      </div>
+                      {horAantal > 0 && (
+                        <div className="flex items-center gap-3">
+                          <button type="button" onClick={() => setHorAantal(Math.max(1, horAantal - 1))} className="w-10 h-10 rounded-lg border-2 border-slate-400 text-xl font-bold text-slate-900 hover:bg-slate-100">
+                            −
+                          </button>
+                          <span className="w-8 text-center text-base font-bold text-slate-900">{horAantal}</span>
+                          <button type="button" onClick={() => setHorAantal(Math.min(20, horAantal + 1))} className="w-10 h-10 rounded-lg border-2 border-slate-400 text-xl font-bold text-slate-900 hover:bg-slate-100">
+                            +
+                          </button>
+                          <span className="text-sm text-slate-600">horren</span>
+                        </div>
+                      )}
+                    </div>
+                  </FormField>
+                )}
 
                 <FormField label="Aantal" value={`${aantal} stuks`}>
                   <div className="flex items-center gap-3">

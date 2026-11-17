@@ -141,6 +141,7 @@ export default function KozijnenPrijzen() {
             standaardModel={kozijnStandaardModel}
             key={`${materiaal}-${zelf ? "zelf" : "standaard"}`}
             nogNietOpgeslagen={!!nogNietOpgeslagen[materiaal]}
+            metHor
             model={huidig}
             onChange={zetModel}
             catalogus={CATALOGUS[materiaal]}
