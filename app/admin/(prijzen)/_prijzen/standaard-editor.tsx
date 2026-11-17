@@ -323,6 +323,11 @@ export function StandaardEditor({
             <Rij naam={`Afval wegbrengen, per ${E}`}>{bedrag("afval", `Afval wegbrengen per ${E}`)}</Rij>
             <Rij naam={`Risico, per ${E} (klein afstelwerk na montage)`}>{bedrag("risico", `Risico per ${E}`)}</Rij>
             <Rij naam={`Jouw marge, per ${E}`}>{bedrag("winst", `Jouw marge per ${E}`)}</Rij>
+            {metHor && (
+              <Rij naam="Hor erbij, prijs per hor (inclusief plaatsing)">
+                <PrijsVeld key={`hor-${reset}`} label="Prijs per hor" waarde={model.horPrijs ?? 0} leeg="bijv. 120" onChange={(n) => onChange({ ...model, horPrijs: n })} />
+              </Rij>
+            )}
             {som.overig !== undefined && som.overig > 0 && heeftSom && <Rij naam="Eerder ingevuld bedrag">{bedrag("overig", "Eerder ingevuld bedrag")}</Rij>}
             {!heeftSom && som.overig !== undefined && (
               <Rij naam="Eerder ingevuld bedrag">{bedrag("overig", "Eerder ingevuld bedrag")}</Rij>
@@ -405,13 +410,6 @@ export function StandaardEditor({
         );
       })()}
 
-      {metHor && (
-        <Kaart titel="Hor erbij">
-          <Rij naam="Prijs per hor, inclusief plaatsing">
-            <PrijsVeld key={`hor-${reset}`} label="Prijs per hor" waarde={model.horPrijs ?? 0} leeg="geen hor" onChange={(n) => onChange({ ...model, horPrijs: n })} />
-          </Rij>
-        </Kaart>
-      )}
       <Kaart titel="Btw" uitleg="Alle prijzen hier zijn exclusief btw. Particulieren zien de prijs inclusief btw, zakelijke klanten exclusief, met de btw apart op de offerte.">
         <Rij naam="Btw-percentage">
           <PrijsVeld key={`btw-${reset}`} label="Btw-percentage" eenheid="%" standaard={21} waarde={model.btw ?? 21} onChange={(n) => onChange({ ...model, btw: n })} />
