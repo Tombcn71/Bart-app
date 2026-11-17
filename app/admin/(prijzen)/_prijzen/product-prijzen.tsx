@@ -42,6 +42,7 @@ export function ProductPrijzen({
   veldLabels,
   startModel = nieuwStandaardModel,
   metKraan = false,
+  metInmeten = false,
 }: {
   titel: string;
   typeTitel: string;
@@ -54,6 +55,8 @@ export function ProductPrijzen({
   startModel?: () => StandaardModel;
   /** Toont het veld voor een kraan per werkdag (schuifpui). */
   metKraan?: boolean;
+  /** Toont de inmeetkosten (horren). */
+  metInmeten?: boolean;
 }) {
   const beschikbaar = (Object.keys(materialen) as Materiaal[]).filter((m) => materialen[m]);
   const [materiaal, setMateriaal] = useState<Materiaal>(beschikbaar[0]);
@@ -206,6 +209,7 @@ export function ProductPrijzen({
             onChange={zetModel}
             standaardModel={startModel}
             metKraan={metKraan}
+            metInmeten={metInmeten}
             eenheid={eenheidVoor(inst.sleutel)}
             catalogus={inst.catalogus}
             namen={inst.namen}

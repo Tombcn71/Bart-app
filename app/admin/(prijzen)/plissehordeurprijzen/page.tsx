@@ -9,6 +9,7 @@ export default function PlisseHordeurPrijzen() {
     <ProductPrijzen
       titel="Plissé hordeur"
       typeTitel="Prijzen per soort"
+      metInmeten
       startModel={plisseStandaardModel}
       materialen={{
         kunststof: {

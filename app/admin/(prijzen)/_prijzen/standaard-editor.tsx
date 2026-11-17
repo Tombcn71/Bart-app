@@ -5,7 +5,7 @@ import { Minus, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Bevestig } from "./bevestig";
 import { KOZIJN_GROEPEN, KOZIJN_NAMEN } from "@/lib/kozijn-namen";
-import { KOZIJN_CATALOGUS, keuzeToeslag, leegModel, montageDag, montagePerKozijn, montageTotaal, montageVoor, nieuwStandaardModel, typeRecept, type Catalogus, type MontageSom, type StandaardModel } from "@/lib/prijsmodel";
+import { KOZIJN_CATALOGUS, inmetenKosten, keuzeToeslag, leegModel, montageDag, montagePerKozijn, montageTotaal, montageVoor, nieuwStandaardModel, typeRecept, type Catalogus, type MontageSom, type StandaardModel } from "@/lib/prijsmodel";
 import type { Toeslag, TypeRecept } from "@/lib/prijsmotor";
 import { Kaart, PrijsVeld, Rij } from "./prijs-veld";
 
@@ -86,6 +86,7 @@ export function StandaardEditor({
   standaardModel = nieuwStandaardModel,
   montageNotitie,
   metKraan = false,
+  metInmeten = false,
   eenheid = eenheidVoor("kozijn"),
   nogNietOpgeslagen = false,
 }: {
@@ -107,6 +108,7 @@ export function StandaardEditor({
   montageNotitie?: string;
   /** Toont het veld voor een kraan per werkdag (schuifpui: alleen nodig als er geen tuintoegang is). */
   metKraan?: boolean;
+  metInmeten?: boolean;
   /** Hoe het product heet (kozijn, deur, schuifpui ...), voor de teksten in het montagekaartje. */
   eenheid?: Eenheid;
   /** Nog niets opgeslagen: dan staat het eerste deel van het montagekaartje open, zodat de startcijfers in beeld zijn. */
@@ -287,6 +289,15 @@ export function StandaardEditor({
                   <PrijsVeld key={`uren-${reset}`} label={`Uren per ${E}`} eenheid="uur" waarde={som.urenPerStuk ?? 1} onChange={(n) => zet({ urenPerStuk: n })} />
                 </Rij>
                 <Rij naam="Transport per monteur, per klus">{bedrag("transportPerMonteur", "Transport per monteur per klus")}</Rij>
+                {metInmeten && (
+                  <>
+                    <Rij naam={`Inmeten, tot ${som.inmetenGrens ?? 10} ${M}`}>{bedrag("inmeten", "Inmeten tot de grens")}</Rij>
+                    <Rij naam={`Inmeten: tot hoeveel ${M}`}>
+                      <AantalVeld key={`grens-${reset}`} label={`Tot hoeveel ${M}`} waarde={som.inmetenGrens ?? 10} onChange={(n) => zet({ inmetenGrens: n })} />
+                    </Rij>
+                    <Rij naam={`Inmeten, ${elk} ${E} daarboven`}>{bedrag("inmetenPerExtra", `Inmeten per extra ${E}`)}</Rij>
+                  </>
+                )}
               </>
             ) : (
               <>
@@ -320,6 +331,7 @@ export function StandaardEditor({
               const regels: { naam: string; bedrag: number; winst?: boolean }[] = [
                 { naam: uur ? `Loon, ${som.monteurs ?? 1} monteur${(som.monteurs ?? 1) === 1 ? "" : "s"} × ${String(som.urenPerStuk ?? 1).replace(".", ",")} uur` : `Loon, ${som.monteurs ?? 2} monteurs voor 1 dag`, bedrag: dag.loon },
                 { naam: uur ? "Transport, per klus" : "Transport, 1 dag", bedrag: dag.transport },
+                ...(uur && metInmeten ? [{ naam: "Inmeten, per klus", bedrag: inmetenKosten(som, 1) }] : []),
                 { naam: "Montagemateriaal", bedrag: som.materiaal ?? 0 },
                 { naam: "Afval wegbrengen", bedrag: som.afval ?? 0 },
                 { naam: "Risico (afstelwerk na montage)", bedrag: som.risico ?? 0 },
@@ -352,7 +364,7 @@ export function StandaardEditor({
                     const g = (x: number) => `€ ${x.toLocaleString("nl-NL", { maximumFractionDigits: 0 })}`;
                     return (
                       <p key={n} className="text-sm text-foreground/80 tabular-nums">
-                        {n} {M}: {uur ? `${String(v.uren ?? 0).replace(".", ",")} uur loon en transport` : `${v.dagen} dag${v.dagen === 1 ? "" : "en"} loon en transport`} ({g(v.loon + v.transport)}) + {n} × {g(montagePerKozijn(som))} = <span className="font-semibold text-foreground">{g(v.totaal)}</span>, waarvan <span className="font-semibold text-emerald-700 dark:text-emerald-300">{g((som.winst ?? 0) * n)} marge</span>
+                        {n} {M}: {uur ? `${String(v.uren ?? 0).replace(".", ",")} uur loon, transport${metInmeten ? " en inmeten" : ""}` : `${v.dagen} dag${v.dagen === 1 ? "" : "en"} loon en transport`} ({g(v.loon + v.transport + (v.inmeten ?? 0))}) + {n} × {g(montagePerKozijn(som))} = <span className="font-semibold text-foreground">{g(v.totaal)}</span>, waarvan <span className="font-semibold text-emerald-700 dark:text-emerald-300">{g((som.winst ?? 0) * n)} marge</span>
                       </p>
                     );
                   })}

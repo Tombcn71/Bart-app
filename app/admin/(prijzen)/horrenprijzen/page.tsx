@@ -9,6 +9,7 @@ export default function HorPrijzen() {
     <ProductPrijzen
       titel="Inzethor en klemhor"
       typeTitel="Prijzen per soort hor"
+      metInmeten
       startModel={horStandaardModel}
       materialen={{
         kunststof: {

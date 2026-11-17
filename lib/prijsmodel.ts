@@ -31,7 +31,18 @@ export type MontageSom = {
   /** Werk dat je per uur rekent (een hor): `perMonteur` is dan het bedrag per uur en `urenPerStuk` de tijd per stuk; transport is één bedrag per klus. */
   perUur?: boolean;
   urenPerStuk?: number;
+  /** Inmeten (horren): een vast bedrag voor de klus tot `inmetenGrens` stuks (standaard 10), daarboven een bedrag per extra stuk. */
+  inmeten?: number;
+  inmetenGrens?: number;
+  inmetenPerExtra?: number;
 };
+
+/** Inmeetkosten voor `aantal` stuks, één keer per klus. */
+export function inmetenKosten(som: MontageSom, aantal: number): number {
+  const grens = Math.max(1, som.inmetenGrens ?? 10);
+  const extra = Math.max(0, aantal - grens) * (som.inmetenPerExtra ?? 0);
+  return Math.round(((som.inmeten ?? 0) + extra) * 100) / 100;
+}
 
 /** Loon en transport voor één werkdag van het team. Blijven apart: loon is geen transport. */
 export function montageDag(som: MontageSom): { loon: number; transport: number } {
@@ -52,7 +63,7 @@ export function montagePerKozijn(som: MontageSom): number {
 /** Het totaal voor één kozijn, exclusief btw: één kozijn kost het bedrijf een hele werkdag. */
 export function montageTotaal(som: MontageSom): number {
   const d = montageDag(som);
-  return Math.round((d.loon + d.transport + montagePerKozijn(som)) * 100) / 100;
+  return Math.round((d.loon + d.transport + montagePerKozijn(som) + (som.perUur ? inmetenKosten(som, 1) : 0)) * 100) / 100;
 }
 
 /**
@@ -63,7 +74,7 @@ export function montageVoor(
   model: { montage: number; montageSom?: MontageSom },
   aantal: number,
   opties?: { kraan?: boolean },
-): { dagen: number; uren?: number; loon: number; transport: number; kraan: number; kozijnen: number; totaal: number } {
+): { dagen: number; uren?: number; inmeten?: number; loon: number; transport: number; kraan: number; kozijnen: number; totaal: number } {
   const n = Math.max(1, aantal);
   const som = model.montageSom;
   if (!som) {
@@ -76,7 +87,8 @@ export function montageVoor(
     const loon = uren * m * (som.perMonteur ?? 0);
     const transport = m * (som.transportPerMonteur ?? 0);
     const kozijnen = n * montagePerKozijn(som);
-    return { dagen: 0, uren, loon, transport, kraan: 0, kozijnen, totaal: Math.round((loon + transport + kozijnen) * 100) / 100 };
+    const inmeten = inmetenKosten(som, n);
+    return { dagen: 0, uren, inmeten, loon, transport, kraan: 0, kozijnen, totaal: Math.round((loon + transport + inmeten + kozijnen) * 100) / 100 };
   }
   const dagen = Math.ceil(n / Math.max(1, som.kozijnenPerDag ?? 1));
   const d = montageDag(som);
@@ -208,6 +220,9 @@ export const HOR_MONTAGE_STARTPUNT: MontageSom = {
   monteurs: 1,
   perMonteur: 50,
   urenPerStuk: 0.5,
+  inmeten: 150,
+  inmetenGrens: 10,
+  inmetenPerExtra: 15,
   transportPerMonteur: 25,
   materiaal: 0,
   afval: 0,

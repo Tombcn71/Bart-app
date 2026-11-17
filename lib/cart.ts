@@ -1,3 +1,4 @@
+import { inmetenKosten } from "@/lib/prijsmodel";
 import { BART_SLUG, isInmeten } from "@/lib/inmeten";
 // Cart utility — opgeslagen in localStorage
 
@@ -25,8 +26,10 @@ export interface CartItem {
     btw: number;
     /** Per uur gerekend (een hor): het loon staat per stuk in de prijs, het transport telt één keer per klus. */
     uur?: boolean;
+    /** Inmeetkosten (zelfde eenheid als prijs) die in deze prijs zitten. */
+    inmeten?: number;
     /** De montagesom van het bedrijf, exclusief btw, voor het overzicht "wat dit voor jou betekent". */
-    som: { monteurs: number; perMonteur: number; transportPerMonteur: number; materiaal: number; afval: number; risico: number; winst: number; overig: number; kraan?: number; perUur?: boolean; urenPerStuk?: number };
+    som: { monteurs: number; perMonteur: number; transportPerMonteur: number; materiaal: number; afval: number; risico: number; winst: number; overig: number; kraan?: number; perUur?: boolean; urenPerStuk?: number; inmeten?: number; inmetenGrens?: number; inmetenPerExtra?: number };
   };
 }
 
@@ -47,7 +50,10 @@ function verrekenGroep<T extends { prijs: number; dag?: CartItem["dag"] }>(items
   if (met[0].dag!.uur) {
     // Per uur: het loon zit al per stuk in de prijs; het transport telt één keer voor alle stuks samen.
     const stuks = met.reduce((s, i) => s + i.dag!.aantal, 0);
-    const transport = met[0].dag!.transport;
+    // Transport en inmeten tellen één keer voor de hele klus; het inmeten wordt over alle stuks opnieuw gerekend.
+    const e = met[0].dag!;
+    const inmeten = e.som ? Math.round(inmetenKosten(e.som, stuks) * (e.btw ?? 1) * 100) / 100 : 0;
+    const transport = e.transport + inmeten;
     let klaar = 0;
     let volgnr = 0;
     return items.map((i) => {
@@ -55,7 +61,7 @@ function verrekenGroep<T extends { prijs: number; dag?: CartItem["dag"] }>(items
       volgnr++;
       const deel = volgnr === met.length ? Math.round((transport - klaar) * 100) / 100 : Math.round(((transport * i.dag!.aantal) / stuks) * 100) / 100;
       klaar += deel;
-      return { ...i, prijs: Math.round((i.prijs - i.dag!.transport + deel) * 100) / 100 };
+      return { ...i, prijs: Math.round((i.prijs - i.dag!.transport - (i.dag!.inmeten ?? 0) + deel) * 100) / 100 };
     });
   }
   const perDag = met[0].dag!.perDag;

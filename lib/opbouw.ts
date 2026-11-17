@@ -1,3 +1,4 @@
+import { inmetenKosten } from "./prijsmodel";
 /**
  * "Wat dit voor jou betekent": voor het bedrijf zelf (nooit voor de klant) hoe een offerte is opgebouwd en wat
  * het bedrijf eraan verdient. Wordt bij het maken van de offerte uitgerekend en in de offerte bewaard, zodat een
@@ -16,6 +17,8 @@ export function eenheidVoor(sleutel?: string): Eenheid {
 }
 
 export type Opbouw = {
+  /** Inmeetkosten (horren). */
+  inmeten?: number;
   /** Uren loon, voor werk dat per uur wordt gerekend (horren). */
   uren?: number;
   /** Soorten werk in deze offerte (sleutels van eenheidVoor); ontbreekt bij oudere offertes: kozijnen. */
@@ -35,7 +38,7 @@ export type Opbouw = {
   montage: number;
 };
 
-type ItemMetDag = { dag?: { groep?: string; kraan?: number; perDag: number; aantal: number; som?: { monteurs: number; perMonteur: number; transportPerMonteur: number; materiaal: number; afval: number; risico: number; winst: number; overig: number; kraan?: number; perUur?: boolean; urenPerStuk?: number } } };
+type ItemMetDag = { dag?: { groep?: string; kraan?: number; perDag: number; aantal: number; som?: { monteurs: number; perMonteur: number; transportPerMonteur: number; materiaal: number; afval: number; risico: number; winst: number; overig: number; kraan?: number; perUur?: boolean; urenPerStuk?: number; inmeten?: number; inmetenGrens?: number; inmetenPerExtra?: number } } };
 
 const r2 = (n: number) => Math.round(n * 100) / 100;
 
@@ -56,6 +59,7 @@ export function bedrijfsOpbouw(items: ItemMetDag[]): Opbouw | null {
       totaal.uren = (totaal.uren ?? 0) + uren;
       totaal.loon += uren * som.monteurs * som.perMonteur;
       totaal.transport += som.monteurs * som.transportPerMonteur;
+      totaal.inmeten = (totaal.inmeten ?? 0) + inmetenKosten(som, n);
     } else {
       const dagen = Math.ceil(n / Math.max(1, met[0].dag!.perDag));
       totaal.dagen += dagen;
@@ -69,8 +73,8 @@ export function bedrijfsOpbouw(items: ItemMetDag[]): Opbouw | null {
     totaal.winst += n * som.winst;
     totaal.overig += n * som.overig;
   }
-  for (const k of ["loon", "transport", "kraan", "materiaal", "afval", "risico", "winst", "overig"] as const) totaal[k] = r2(totaal[k] ?? 0);
-  totaal.montage = r2(totaal.loon + totaal.transport + (totaal.kraan ?? 0) + totaal.materiaal + totaal.afval + totaal.risico + totaal.winst + totaal.overig);
+  for (const k of ["loon", "transport", "inmeten", "kraan", "materiaal", "afval", "risico", "winst", "overig"] as const) totaal[k] = r2(totaal[k] ?? 0);
+  totaal.montage = r2(totaal.loon + totaal.transport + (totaal.inmeten ?? 0) + (totaal.kraan ?? 0) + totaal.materiaal + totaal.afval + totaal.risico + totaal.winst + totaal.overig);
   return totaal;
 }
 
@@ -83,6 +87,7 @@ export function opbouwRegels(o: Opbouw): { kop: string; regels: { naam: string; 
     regels: [
       { naam: "Loon", bedrag: eur(o.loon) },
       { naam: "Transport", bedrag: eur(o.transport) },
+      ...((o.inmeten ?? 0) > 0 ? [{ naam: "Inmeten", bedrag: eur(o.inmeten ?? 0) }] : []),
       ...((o.kraan ?? 0) > 0 ? [{ naam: "Kraan (geen tuintoegang)", bedrag: eur(o.kraan ?? 0) }] : []),
       { naam: "Montagemateriaal", bedrag: eur(o.materiaal) },
       { naam: "Afval wegbrengen", bedrag: eur(o.afval) },
