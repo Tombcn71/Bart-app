@@ -347,10 +347,12 @@ export function berekenStandaard(
   }
   const mv = montageVoor(model, aantal, opties);
   const montage = mv.totaal / Math.max(1, aantal);
+  // Horren met inmeetkosten: de klant ziet in de tekst dat inmeten erin zit (zonder apart bedrag).
+  const metInmeten = !!model.montageSom?.perUur && (mv.inmeten ?? 0) > 0;
   if (montage > 0 && model.montageApart !== true) {
     // Montage zit in de prijs: geen aparte regel, het kozijn wordt er duurder van.
-    regels[0] = { label: `${regels[0].label}, inclusief montage`, bedrag: regels[0].bedrag + montage };
-  } else if (montage > 0) regels.push({ label: "Montage", bedrag: montage });
+    regels[0] = { label: `${regels[0].label}, inclusief montage${metInmeten ? " en inmeten" : ""}`, bedrag: regels[0].bedrag + montage };
+  } else if (montage > 0) regels.push({ label: metInmeten ? "Montage en inmeten" : "Montage", bedrag: montage });
   const totaal = materiaal * factor * aantal + mv.totaal;
   return { regels, totaal: Math.round(totaal * 100) / 100 };
 }
