@@ -23,8 +23,10 @@ export interface CartItem {
     kraanPerDag?: number;
     /** Factor waarmee btw erin zit (1 = exclusief btw). */
     btw: number;
+    /** Per uur gerekend (een hor): het loon staat per stuk in de prijs, het transport telt één keer per klus. */
+    uur?: boolean;
     /** De montagesom van het bedrijf, exclusief btw, voor het overzicht "wat dit voor jou betekent". */
-    som: { monteurs: number; perMonteur: number; transportPerMonteur: number; materiaal: number; afval: number; risico: number; winst: number; overig: number; kraan?: number };
+    som: { monteurs: number; perMonteur: number; transportPerMonteur: number; materiaal: number; afval: number; risico: number; winst: number; overig: number; kraan?: number; perUur?: boolean; urenPerStuk?: number };
   };
 }
 
@@ -42,6 +44,20 @@ export function verrekenDagen<T extends { prijs: number; dag?: CartItem["dag"] }
 function verrekenGroep<T extends { prijs: number; dag?: CartItem["dag"] }>(items: T[], groep: string): T[] {
   const doet = (i: T) => !!i.dag && (i.dag.groep ?? "kozijn") === groep;
   const met = items.filter(doet);
+  if (met[0].dag!.uur) {
+    // Per uur: het loon zit al per stuk in de prijs; het transport telt één keer voor alle stuks samen.
+    const stuks = met.reduce((s, i) => s + i.dag!.aantal, 0);
+    const transport = met[0].dag!.transport;
+    let klaar = 0;
+    let volgnr = 0;
+    return items.map((i) => {
+      if (!doet(i)) return i;
+      volgnr++;
+      const deel = volgnr === met.length ? Math.round((transport - klaar) * 100) / 100 : Math.round(((transport * i.dag!.aantal) / stuks) * 100) / 100;
+      klaar += deel;
+      return { ...i, prijs: Math.round((i.prijs - i.dag!.transport + deel) * 100) / 100 };
+    });
+  }
   const perDag = met[0].dag!.perDag;
   const aantal = met.reduce((s, i) => s + i.dag!.aantal, 0);
   const dagen = Math.ceil(aantal / perDag);

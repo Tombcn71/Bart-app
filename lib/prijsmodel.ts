@@ -28,10 +28,18 @@ export type MontageSom = {
   overig?: number;
   /** Kraan per werkdag, alleen als de monteurs niet via de tuin bij de plek kunnen (schuifpui). Exclusief btw. */
   kraan?: number;
+  /** Werk dat je per uur rekent (een hor): `perMonteur` is dan het bedrag per uur en `urenPerStuk` de tijd per stuk; transport is één bedrag per klus. */
+  perUur?: boolean;
+  urenPerStuk?: number;
 };
 
 /** Loon en transport voor één werkdag van het team. Blijven apart: loon is geen transport. */
 export function montageDag(som: MontageSom): { loon: number; transport: number } {
+  // Per uur: loon en transport voor één stuk (transport is één bedrag per klus).
+  if (som.perUur) {
+    const m = som.monteurs ?? 1;
+    return { loon: m * (som.perMonteur ?? 0) * (som.urenPerStuk ?? 1), transport: m * (som.transportPerMonteur ?? 0) };
+  }
   const monteurs = som.monteurs ?? 2;
   return { loon: monteurs * (som.perMonteur ?? 0), transport: monteurs * (som.transportPerMonteur ?? 0) };
 }
@@ -55,12 +63,20 @@ export function montageVoor(
   model: { montage: number; montageSom?: MontageSom },
   aantal: number,
   opties?: { kraan?: boolean },
-): { dagen: number; loon: number; transport: number; kraan: number; kozijnen: number; totaal: number } {
+): { dagen: number; uren?: number; loon: number; transport: number; kraan: number; kozijnen: number; totaal: number } {
   const n = Math.max(1, aantal);
   const som = model.montageSom;
   if (!som) {
     const kozijnen = Math.max(0, model.montage ?? 0) * n;
     return { dagen: 0, loon: 0, transport: 0, kraan: 0, kozijnen, totaal: kozijnen };
+  }
+  if (som.perUur) {
+    const m = som.monteurs ?? 1;
+    const uren = n * (som.urenPerStuk ?? 1);
+    const loon = uren * m * (som.perMonteur ?? 0);
+    const transport = m * (som.transportPerMonteur ?? 0);
+    const kozijnen = n * montagePerKozijn(som);
+    return { dagen: 0, uren, loon, transport, kraan: 0, kozijnen, totaal: Math.round((loon + transport + kozijnen) * 100) / 100 };
   }
   const dagen = Math.ceil(n / Math.max(1, som.kozijnenPerDag ?? 1));
   const d = montageDag(som);
@@ -183,6 +199,35 @@ export const rolluikStandaardModel = (): StandaardModel => ({
   montage: montageTotaal(ROLLUIK_MONTAGE_STARTPUNT),
   montageSom: { ...ROLLUIK_MONTAGE_STARTPUNT },
 });
+/**
+ * Startpunt voor de montage van een inzethor of klemhor (excl. btw): één monteur van €50 per uur, een half uur per hor,
+ * €25 transport per klus, €5 risico en €15 marge. Een hor rekent een bedrijf per uur, niet per werkdag.
+ */
+export const HOR_MONTAGE_STARTPUNT: MontageSom = {
+  perUur: true,
+  monteurs: 1,
+  perMonteur: 50,
+  urenPerStuk: 0.5,
+  transportPerMonteur: 25,
+  materiaal: 0,
+  afval: 0,
+  risico: 5,
+  winst: 15,
+};
+export const horStandaardModel = (): StandaardModel => ({
+  model: "standaard",
+  factor: 1,
+  montage: montageTotaal(HOR_MONTAGE_STARTPUNT),
+  montageSom: { ...HOR_MONTAGE_STARTPUNT },
+});
+/** Startpunt voor een plissé hordeur: zoals een hor, met anderhalf uur per stuk en €40 marge. */
+export const PLISSE_MONTAGE_STARTPUNT: MontageSom = { ...HOR_MONTAGE_STARTPUNT, urenPerStuk: 1.5, risico: 10, winst: 40 };
+export const plisseStandaardModel = (): StandaardModel => ({
+  model: "standaard",
+  factor: 1,
+  montage: montageTotaal(PLISSE_MONTAGE_STARTPUNT),
+  montageSom: { ...PLISSE_MONTAGE_STARTPUNT },
+});
 /** Een model waarin alle bedragen leeg zijn, om alles zelf in te vullen. De calculator blijft dezelfde. */
 export function leegModel(cat: Catalogus = KOZIJN_CATALOGUS): StandaardModel {
   const typen: Record<string, Partial<TypeRecept>> = {};
@@ -304,5 +349,7 @@ export function startModelVoor(sleutel: string): StandaardModel {
   if (sleutel === "schuifpui_matrix" || sleutel === "alu_schuifpui_matrix") return schuifpuiStandaardModel();
   if (sleutel === "alu_harmonicadeur_matrix") return harmonicaStandaardModel();
   if (sleutel === "rolluiken_matrix") return rolluikStandaardModel();
+  if (sleutel === "horren_matrix") return horStandaardModel();
+  if (sleutel === "plisse_hor_matrix") return plisseStandaardModel();
   return nieuwStandaardModel();
 }

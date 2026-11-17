@@ -16,6 +16,8 @@ export function eenheidVoor(sleutel?: string): Eenheid {
 }
 
 export type Opbouw = {
+  /** Uren loon, voor werk dat per uur wordt gerekend (horren). */
+  uren?: number;
   /** Soorten werk in deze offerte (sleutels van eenheidVoor); ontbreekt bij oudere offertes: kozijnen. */
   soorten?: string[];
   kozijnen: number;
@@ -33,7 +35,7 @@ export type Opbouw = {
   montage: number;
 };
 
-type ItemMetDag = { dag?: { groep?: string; kraan?: number; perDag: number; aantal: number; som?: { monteurs: number; perMonteur: number; transportPerMonteur: number; materiaal: number; afval: number; risico: number; winst: number; overig: number; kraan?: number } } };
+type ItemMetDag = { dag?: { groep?: string; kraan?: number; perDag: number; aantal: number; som?: { monteurs: number; perMonteur: number; transportPerMonteur: number; materiaal: number; afval: number; risico: number; winst: number; overig: number; kraan?: number; perUur?: boolean; urenPerStuk?: number } } };
 
 const r2 = (n: number) => Math.round(n * 100) / 100;
 
@@ -46,13 +48,21 @@ export function bedrijfsOpbouw(items: ItemMetDag[]): Opbouw | null {
     const met = items.filter((i) => i.dag?.som && (i.dag.groep ?? "kozijn") === groep);
     const som = met[0].dag!.som!;
     const n = met.reduce((s, i) => s + Math.max(1, i.dag!.aantal), 0);
-    const dagen = Math.ceil(n / Math.max(1, met[0].dag!.perDag));
     totaal.kozijnen += n;
     totaal.soorten = [...new Set([...(totaal.soorten ?? []), groep])];
-    totaal.dagen += dagen;
-    totaal.loon += dagen * som.monteurs * som.perMonteur;
-    totaal.transport += dagen * som.monteurs * som.transportPerMonteur;
-    if (met.some((i) => (i.dag!.kraan ?? 0) > 0)) totaal.kraan = (totaal.kraan ?? 0) + dagen * (som.kraan ?? 0);
+    if (som.perUur) {
+      // Per uur (een hor): loon voor alle uren, transport één keer per klus, geen werkdagen.
+      const uren = n * (som.urenPerStuk ?? 1);
+      totaal.uren = (totaal.uren ?? 0) + uren;
+      totaal.loon += uren * som.monteurs * som.perMonteur;
+      totaal.transport += som.monteurs * som.transportPerMonteur;
+    } else {
+      const dagen = Math.ceil(n / Math.max(1, met[0].dag!.perDag));
+      totaal.dagen += dagen;
+      totaal.loon += dagen * som.monteurs * som.perMonteur;
+      totaal.transport += dagen * som.monteurs * som.transportPerMonteur;
+      if (met.some((i) => (i.dag!.kraan ?? 0) > 0)) totaal.kraan = (totaal.kraan ?? 0) + dagen * (som.kraan ?? 0);
+    }
     totaal.materiaal += n * som.materiaal;
     totaal.afval += n * som.afval;
     totaal.risico += n * som.risico;
@@ -69,7 +79,7 @@ const eur = (n: number) => `€ ${n.toLocaleString("nl-NL", { maximumFractionDig
 /** Korte tekstregels voor mail en scherm. */
 export function opbouwRegels(o: Opbouw): { kop: string; regels: { naam: string; bedrag: string; winst?: boolean }[] } {
   return {
-    kop: `${o.kozijnen} ${(() => { const e = [...new Set((o.soorten ?? ["kozijn"]).map((x) => eenheidVoor(x).een))]; return e.length === 1 ? (o.kozijnen === 1 ? eenheidVoor((o.soorten ?? ["kozijn"])[0]).een : eenheidVoor((o.soorten ?? ["kozijn"])[0]).meer) : (o.kozijnen === 1 ? "stuk" : "stuks"); })()} · ${o.dagen} werkdag${o.dagen === 1 ? "" : "en"}`,
+    kop: `${o.kozijnen} ${(() => { const e = [...new Set((o.soorten ?? ["kozijn"]).map((x) => eenheidVoor(x).een))]; return e.length === 1 ? (o.kozijnen === 1 ? eenheidVoor((o.soorten ?? ["kozijn"])[0]).een : eenheidVoor((o.soorten ?? ["kozijn"])[0]).meer) : (o.kozijnen === 1 ? "stuk" : "stuks"); })()}${o.dagen > 0 ? ` · ${o.dagen} werkdag${o.dagen === 1 ? "" : "en"}` : ""}${(o.uren ?? 0) > 0 ? ` · ${String(o.uren).replace(".", ",")} uur` : ""}`,
     regels: [
       { naam: "Loon", bedrag: eur(o.loon) },
       { naam: "Transport", bedrag: eur(o.transport) },

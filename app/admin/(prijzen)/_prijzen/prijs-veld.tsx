@@ -16,7 +16,7 @@ export function PrijsVeld({
   waarde: number;
   onChange: (n: number) => void;
   waarschuwing?: boolean;
-  eenheid?: "€" | "%";
+  eenheid?: "€" | "%" | "uur";
   /** Tailwind-breedte van het veld. */
   breedte?: string;
   /** De standaardwaarde: wijkt het bedrag hiervan af, dan staat ze eronder en kleurt het veld. */
@@ -32,7 +32,7 @@ export function PrijsVeld({
     <label className="relative block">
       <span className="sr-only">{label}</span>
       <span
-        className={`pointer-events-none absolute inset-y-0 flex items-center text-base text-foreground/80 ${eenheid === "%" ? "right-3" : "left-3"}`}>
+        className={`pointer-events-none absolute inset-y-0 flex items-center text-base text-foreground/80 ${eenheid !== "€" ? "right-3" : "left-3"}`}>
         {eenheid}
       </span>
       <input
@@ -45,7 +45,7 @@ export function PrijsVeld({
           setTekst(t);
           onChange(parseFloat(t.replace(",", ".")) || 0);
         }}
-        className={`w-full rounded-lg border py-1.5 text-right text-base tabular-nums ${eenheid === "%" ? "pr-7 pl-3" : "pr-3 pl-7"} ${
+        className={`w-full rounded-lg border py-1.5 text-right text-base tabular-nums ${eenheid === "uur" ? "pr-11 pl-3" : eenheid === "%" ? "pr-7 pl-3" : "pr-3 pl-7"} ${
           waarschuwing ? "border-amber-400 dark:border-amber-500/40 bg-amber-50" : afwijkt ? "border-brand-text" : "border-border"
         }`}
       />
@@ -58,7 +58,7 @@ export function PrijsVeld({
           onChange(standaard);
         }}
         className="mt-0.5 block w-full text-right text-xs text-brand-text hover:underline">
-        standaard {eenheid === "%" ? `${fmt(standaard)}%` : `€ ${fmt(standaard)}`}
+        standaard {eenheid === "%" ? `${fmt(standaard)}%` : eenheid === "uur" ? `${fmt(standaard)} uur` : `€ ${fmt(standaard)}`}
       </button>
     )}
     </div>

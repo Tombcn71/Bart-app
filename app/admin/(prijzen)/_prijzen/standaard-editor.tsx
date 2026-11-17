@@ -243,15 +243,29 @@ export function StandaardEditor({
           onChange({ ...model, montageSom: nieuw, montage: montageTotaal(nieuw) });
         };
         const totaal = montageTotaal(som);
+        const uur = !!som.perUur;
         const bedrag = (key: keyof MontageSom, label: string) => (
           <PrijsVeld key={`${key}-${reset}`} label={label} waarde={(som[key] as number | undefined) ?? 0} onChange={(n) => zet({ [key]: n })} />
         );
         return (
           <Kaart
             titel={`Montage per ${E}`}
-            uitleg={`Wat kost het jou om te plaatsen en wat wil je eraan verdienen? Deel 1 is wat je team per werkdag kost, deel 2 is wat per ${E} bijkomt, inclusief je marge. Alle bedragen zijn exclusief btw. De standaardprijzen zijn zonder montage.`}
+            uitleg={`Wat kost het jou om te plaatsen en wat wil je eraan verdienen? Deel 1 is wat je team ${uur ? "per uur kost" : "per werkdag kost"}, deel 2 is wat per ${E} bijkomt, inclusief je marge. Alle bedragen zijn exclusief btw. De standaardprijzen zijn zonder montage.`}
             notitie={montageNotitie}>
-            <Uitklap titel="1. Per werkdag van je team" startOpen={nogNietOpgeslagen}>
+            <Uitklap titel={uur ? "1. Per uur van je team" : "1. Per werkdag van je team"} startOpen={nogNietOpgeslagen}>
+            {uur ? (
+              <>
+                <Rij naam="Aantal monteurs">
+                  <AantalVeld key={`monteurs-${reset}`} label="Aantal monteurs" waarde={som.monteurs ?? 1} onChange={(n) => zet({ monteurs: n })} />
+                </Rij>
+                <Rij naam="Bedrag per monteur, per uur">{bedrag("perMonteur", "Bedrag per monteur per uur")}</Rij>
+                <Rij naam={`Tijd per ${E}`}>
+                  <PrijsVeld key={`uren-${reset}`} label={`Uren per ${E}`} eenheid="uur" waarde={som.urenPerStuk ?? 1} onChange={(n) => zet({ urenPerStuk: n })} />
+                </Rij>
+                <Rij naam="Transport per monteur, per klus">{bedrag("transportPerMonteur", "Transport per monteur per klus")}</Rij>
+              </>
+            ) : (
+              <>
             <Rij naam="Aantal monteurs">
               <AantalVeld key={`monteurs-${reset}`} label="Aantal monteurs" waarde={som.monteurs ?? 2} onChange={(n) => zet({ monteurs: n })} />
             </Rij>
@@ -263,6 +277,8 @@ export function StandaardEditor({
             </Rij>
             <p className="px-4 pb-2 text-sm text-foreground/80">
               Loon en transport reken je per hele werkdag, nooit per halve dag. Passen er {som.kozijnenPerDag ?? 1} {(som.kozijnenPerDag ?? 1) === 1 ? E : M} op een dag, dan is dat bij 1 t/m {som.kozijnenPerDag ?? 1} {(som.kozijnenPerDag ?? 1) === 1 ? E : M} één dag, bij {art} volgende {E} komt er een dag bij.</p>
+              </>
+            )}
             </Uitklap>
             <Uitklap titel={`2. Per ${E}, dit tel je voor ${elk} ${E} mee`}>
             <Rij naam={`Montagemateriaal, per ${E}`}>{bedrag("materiaal", `Montagemateriaal per ${E}`)}</Rij>
@@ -278,8 +294,8 @@ export function StandaardEditor({
               const dag = montageDag(som);
               const f = (x: number) => `€ ${x.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
               const regels: { naam: string; bedrag: number; winst?: boolean }[] = [
-                { naam: `Loon, ${som.monteurs ?? 2} monteurs voor 1 dag`, bedrag: dag.loon },
-                { naam: "Transport, 1 dag", bedrag: dag.transport },
+                { naam: uur ? `Loon, ${som.monteurs ?? 1} monteur${(som.monteurs ?? 1) === 1 ? "" : "s"} × ${String(som.urenPerStuk ?? 1).replace(".", ",")} uur` : `Loon, ${som.monteurs ?? 2} monteurs voor 1 dag`, bedrag: dag.loon },
+                { naam: uur ? "Transport, per klus" : "Transport, 1 dag", bedrag: dag.transport },
                 { naam: "Montagemateriaal", bedrag: som.materiaal ?? 0 },
                 { naam: "Afval wegbrengen", bedrag: som.afval ?? 0 },
                 { naam: "Risico (afstelwerk na montage)", bedrag: som.risico ?? 0 },
@@ -288,7 +304,7 @@ export function StandaardEditor({
               if ((som.overig ?? 0) > 0) regels.push({ naam: "Eerder ingevuld bedrag", bedrag: som.overig ?? 0 });
               return (
                 <div className="border-t border-border px-4 py-3">
-                  <p className="mb-2 text-sm font-bold tracking-wide text-foreground/80 uppercase">{`Zo is de prijs voor 1 ${E} (1 dag) opgebouwd`}</p>
+                  <p className="mb-2 text-sm font-bold tracking-wide text-foreground/80 uppercase">{uur ? `Zo is de prijs voor 1 ${E} opgebouwd` : `Zo is de prijs voor 1 ${E} (1 dag) opgebouwd`}</p>
                   <dl className="space-y-1 text-sm">
                     {regels.map((r) => (
                       <div key={r.naam} className={`flex justify-between gap-4 ${r.winst ? "rounded-md bg-emerald-50 px-2 py-1 font-bold text-emerald-700 dark:text-emerald-300" : "text-foreground"}`}>
@@ -312,7 +328,7 @@ export function StandaardEditor({
                     const g = (x: number) => `€ ${x.toLocaleString("nl-NL", { maximumFractionDigits: 0 })}`;
                     return (
                       <p key={n} className="text-sm text-foreground/80 tabular-nums">
-                        {n} {M}: {v.dagen} dag{v.dagen === 1 ? "" : "en"} loon en transport ({g(v.loon + v.transport)}) + {n} × {g(montagePerKozijn(som))} = <span className="font-semibold text-foreground">{g(v.totaal)}</span>, waarvan <span className="font-semibold text-emerald-700 dark:text-emerald-300">{g((som.winst ?? 0) * n)} marge</span>
+                        {n} {M}: {uur ? `${String(v.uren ?? 0).replace(".", ",")} uur loon en transport` : `${v.dagen} dag${v.dagen === 1 ? "" : "en"} loon en transport`} ({g(v.loon + v.transport)}) + {n} × {g(montagePerKozijn(som))} = <span className="font-semibold text-foreground">{g(v.totaal)}</span>, waarvan <span className="font-semibold text-emerald-700 dark:text-emerald-300">{g((som.winst ?? 0) * n)} marge</span>
                       </p>
                     );
                   })}

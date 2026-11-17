@@ -136,8 +136,8 @@ export function ProductConfigurator({
         const f = metBtw ? 1 + btwPct / 100 : 1;
         const rond = (n: number) => Math.round(n * f * 100) / 100;
         return {
-          loon: rond(mv.loon), transport: rond(mv.transport), perDag: Math.max(1, som.kozijnenPerDag ?? 1), aantal, dagen: mv.dagen, groep: matrixSleutel, btw: f, kraan: rond(mv.kraan), kraanPerDag: rond(som.kraan ?? 0),
-          som: { monteurs: som.monteurs ?? 2, perMonteur: som.perMonteur ?? 0, transportPerMonteur: som.transportPerMonteur ?? 0, materiaal: som.materiaal ?? 0, afval: som.afval ?? 0, risico: som.risico ?? 0, winst: som.winst ?? 0, overig: som.overig ?? 0, kraan: som.kraan ?? 0 },
+          loon: rond(mv.loon), transport: rond(mv.transport), perDag: Math.max(1, som.kozijnenPerDag ?? 1), aantal, dagen: mv.dagen, uur: !!som.perUur, groep: matrixSleutel, btw: f, kraan: rond(mv.kraan), kraanPerDag: rond(som.kraan ?? 0),
+          som: { monteurs: som.monteurs ?? 2, perMonteur: som.perMonteur ?? 0, transportPerMonteur: som.transportPerMonteur ?? 0, materiaal: som.materiaal ?? 0, afval: som.afval ?? 0, risico: som.risico ?? 0, winst: som.winst ?? 0, overig: som.overig ?? 0, kraan: som.kraan ?? 0, perUur: som.perUur, urenPerStuk: som.urenPerStuk },
         };
       })(),
       specs: {
