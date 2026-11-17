@@ -244,6 +244,16 @@ export function StandaardEditor({
         };
         const totaal = montageTotaal(som);
         const uur = !!som.perUur;
+        // Wisselen tussen werkdag en uur: de bedragen rekenen mee om (een werkdag is 8 uur).
+        const wissel = (naarUur: boolean) => {
+          if (naarUur === uur) return;
+          const r2 = (n: number) => Math.round(n * 100) / 100;
+          zet(
+            naarUur
+              ? { perUur: true, perMonteur: r2((som.perMonteur ?? 0) / 8), urenPerStuk: r2(8 / Math.max(1, som.kozijnenPerDag ?? 1)), monteurs: som.monteurs ?? 2 }
+              : { perUur: false, perMonteur: r2((som.perMonteur ?? 0) * 8), kozijnenPerDag: Math.max(1, Math.round(8 / Math.max(0.25, som.urenPerStuk ?? 1))), monteurs: som.monteurs ?? 2 },
+          );
+        };
         const bedrag = (key: keyof MontageSom, label: string) => (
           <PrijsVeld key={`${key}-${reset}`} label={label} waarde={(som[key] as number | undefined) ?? 0} onChange={(n) => zet({ [key]: n })} />
         );
@@ -252,6 +262,20 @@ export function StandaardEditor({
             titel={`Montage per ${E}`}
             uitleg={`Wat kost het jou om te plaatsen en wat wil je eraan verdienen? Deel 1 is wat je team ${uur ? "per uur kost" : "per werkdag kost"}, deel 2 is wat per ${E} bijkomt, inclusief je marge. Alle bedragen zijn exclusief btw. De standaardprijzen zijn zonder montage.`}
             notitie={montageNotitie}>
+            <div className="flex items-center justify-between gap-4 px-4 py-3">
+              <span className="text-sm font-bold text-foreground">Reken montage per</span>
+              <div className="flex rounded-xl bg-muted p-1">
+                {([false, true] as const).map((u) => (
+                  <button
+                    key={String(u)}
+                    type="button"
+                    onClick={() => wissel(u)}
+                    className={`rounded-lg px-4 py-1.5 text-sm font-bold transition-colors ${uur === u ? "bg-brand text-white shadow-md" : "text-foreground/80 hover:text-foreground"}`}>
+                    {u ? "Uur" : "Werkdag"}
+                  </button>
+                ))}
+              </div>
+            </div>
             <Uitklap titel={uur ? "1. Per uur van je team" : "1. Per werkdag van je team"} startOpen={nogNietOpgeslagen}>
             {uur ? (
               <>

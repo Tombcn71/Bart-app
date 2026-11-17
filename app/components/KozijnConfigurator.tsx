@@ -501,7 +501,7 @@ export function KozijnConfigurator({
       dag: (() => {
         const som = isStandaardModel(matrix) ? matrix.montageSom : undefined;
         if (!som || !mv) return undefined;
-        return { loon: rond(mv.loon), transport: rond(mv.transport), perDag: Math.max(1, som.kozijnenPerDag ?? 1), aantal, dagen: mv.dagen, btw: btwMaal, som: { monteurs: som.monteurs ?? 2, perMonteur: som.perMonteur ?? 0, transportPerMonteur: som.transportPerMonteur ?? 0, materiaal: som.materiaal ?? 0, afval: som.afval ?? 0, risico: som.risico ?? 0, winst: som.winst ?? 0, overig: som.overig ?? 0 } };
+        return { loon: rond(mv.loon), transport: rond(mv.transport), perDag: Math.max(1, som.kozijnenPerDag ?? 1), aantal, dagen: mv.dagen, uur: !!som.perUur, btw: btwMaal, som: { perUur: som.perUur, urenPerStuk: som.urenPerStuk, monteurs: som.monteurs ?? 2, perMonteur: som.perMonteur ?? 0, transportPerMonteur: som.transportPerMonteur ?? 0, materiaal: som.materiaal ?? 0, afval: som.afval ?? 0, risico: som.risico ?? 0, winst: som.winst ?? 0, overig: som.overig ?? 0 } };
       })(),
       specs: {
         breedte,
