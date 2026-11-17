@@ -138,68 +138,14 @@ export function AppSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
 
-            <Collapsible defaultOpen className="group/collapsible">
-              <SidebarMenuItem>
-                <CollapsibleTrigger asChild>
-                  <SidebarMenuButton className="hover:bg-black/20 text-white w-full flex justify-between">
-                    <div className="flex items-center gap-3">
-                      <Package size={20} />
-                      <span>Producten</span>
-                    </div>
-                    <ChevronRight
-                      className="transition-transform group-data-[state=open]/collapsible:rotate-90"
-                      size={16}
-                    />
-                  </SidebarMenuButton>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <SidebarMenuSub className="border-l border-white/20 ml-6 mt-1 space-y-1">
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton
-                        asChild
-                        className="text-white hover:bg-black/10">
-                        <a href="/admin/kozijnenprijzen">Kozijnen Prijzen</a>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton
-                        asChild
-                        className="text-white hover:bg-black/10">
-                        <a href="/admin/deurenprijzen">Deuren Prijzen</a>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton
-                        asChild
-                        className="text-white hover:bg-black/10">
-                        <a href="/admin/schuifpuiprijzen">Schuifpui Prijzen</a>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton
-                        asChild
-                        className="text-white hover:bg-black/10">
-                        <a href="/admin/harmonicadeuurprijzen">Harmonicadeur Prijzen</a>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton
-                        asChild
-                        className="text-white hover:bg-black/10">
-                        <a href="/admin/rolluikenprijzen">Rolluiken Prijzen</a>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton
-                        asChild
-                        className="text-white hover:bg-black/10">
-                        <a href="/admin/horrenprijzen">Horren Prijzen</a>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                  </SidebarMenuSub>
-                </CollapsibleContent>
-              </SidebarMenuItem>
-            </Collapsible>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild className="hover:bg-black/20 text-white">
+                <a href="/admin/kozijnenprijzen">
+                  <Package size={20} />
+                  <span>Prijzen</span>
+                </a>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>

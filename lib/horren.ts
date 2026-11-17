@@ -249,6 +249,18 @@ export const HOR_KEUZES: KeuzeGroep[] = [
 
 export const HOR_CATALOGUS: Catalogus = { typen: HOR_TYPEN, keuzes: HOR_KEUZES };
 
+/** Inzethor en klemhor: kleine horren in een kozijn. Eigen prijzen onder "horren_matrix". */
+export const HOR_CATALOGUS_KLEIN: Catalogus = {
+  typen: Object.fromEntries(Object.entries(HOR_TYPEN).filter(([k]) => k !== "plisse-hordeur")),
+  keuzes: HOR_KEUZES,
+};
+/** Plissé hordeur: een deurhor, met eigen prijzen onder "plisse_hor_matrix". */
+export const HOR_CATALOGUS_PLISSE: Catalogus = {
+  typen: Object.fromEntries(Object.entries(HOR_TYPEN).filter(([k]) => k === "plisse-hordeur")),
+  keuzes: HOR_KEUZES,
+};
+export const PLISSE_SLEUTEL = "plisse_hor_matrix";
+
 export const HOR_NAMEN: Record<string, string> = {"inzethor": "inzethor", "klemhor": "klemhor", "plisse-hordeur": "plisse-hordeur"};
 
 export const HOR_BEGINMATEN: Record<string, [number, number]> = {"inzethor": [800, 1300], "klemhor": [850, 1200], "plisse-hordeur": [1600, 2350]};

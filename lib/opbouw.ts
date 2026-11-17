@@ -4,15 +4,15 @@
  * latere prijswijziging oude offertes niet verandert. Alle bedragen exclusief btw.
  */
 /** Hoe een product in het prijsscherm en in de mail heet: per kozijn, per deur, per schuifpui enz. */
-export type Eenheid = { een: string; meer: string };
+export type Eenheid = { een: string; meer: string; /** "het kozijn", "de deur" */ art: "het" | "de" };
 export function eenheidVoor(sleutel?: string): Eenheid {
   const s = sleutel ?? "";
-  if (s.includes("harmonica")) return { een: "harmonicadeur", meer: "harmonicadeuren" };
-  if (s.includes("schuifpui")) return { een: "schuifpui", meer: "schuifpuien" };
-  if (s.includes("deur")) return { een: "deur", meer: "deuren" };
-  if (s.includes("rolluik")) return { een: "rolluik", meer: "rolluiken" };
-  if (s.includes("hor")) return { een: "hor", meer: "horren" };
-  return { een: "kozijn", meer: "kozijnen" };
+  if (s.includes("harmonica")) return { een: "harmonicadeur", meer: "harmonicadeuren", art: "de" };
+  if (s.includes("schuifpui")) return { een: "schuifpui", meer: "schuifpuien", art: "de" };
+  if (s.includes("deur")) return { een: "deur", meer: "deuren", art: "de" };
+  if (s.includes("rolluik")) return { een: "rolluik", meer: "rolluiken", art: "het" };
+  if (s.includes("hor")) return { een: "hor", meer: "horren", art: "de" };
+  return { een: "kozijn", meer: "kozijnen", art: "het" };
 }
 
 export type Opbouw = {

@@ -2,7 +2,7 @@
 import { ProductConfigurator } from "@/app/components/ProductConfigurator";
 import { InzethorSVG, KlemhorSVG, PlisseHordeurSVG } from "@/lib/hor-svgs";
 import { KozijnTechnisch, TECHNISCH } from "@/app/components/KozijnTechnisch";
-import { HOR_BEGINMATEN, HOR_CATALOGUS, HOR_GRENZEN, HOR_INFO } from "@/lib/horren";
+import { HOR_BEGINMATEN, HOR_CATALOGUS_KLEIN, HOR_CATALOGUS_PLISSE, HOR_GRENZEN, HOR_INFO, PLISSE_SLEUTEL } from "@/lib/horren";
 
 const NAMEN: Record<string, string> = { inzethor: "Inzethor", klemhor: "Klemhor", "plisse-hordeur": "Plissé hordeur" };
 
@@ -19,18 +19,20 @@ export const horTekening = (slug: string, opties?: { breedte: number; hoogte: nu
 };
 
 /** De calculator van de klant voor een hor: inzethor, klemhor of plissé hordeur. */
-export function HorCalculator({ startSlug, matrix, voorbeeld }: { startSlug?: string; matrix?: unknown; voorbeeld?: boolean }) {
+export function HorCalculator({ startSlug, matrix, voorbeeld, plisse }: { startSlug?: string; matrix?: unknown; voorbeeld?: boolean; plisse?: boolean }) {
+  // De plissé hordeur heeft een eigen calculator met eigen prijzen.
+  const isPlisse = plisse ?? startSlug === "plisse-hordeur";
   return (
     <ProductConfigurator
-      catalogus={HOR_CATALOGUS}
+      catalogus={isPlisse ? HOR_CATALOGUS_PLISSE : HOR_CATALOGUS_KLEIN}
       namen={NAMEN}
       beginmaten={HOR_BEGINMATEN}
       grenzen={HOR_GRENZEN}
       info={HOR_INFO}
       tekening={horTekening}
-      matrixSleutel="horren_matrix"
-      productNaam="Hor"
-      typeTitel="Soort hor"
+      matrixSleutel={isPlisse ? PLISSE_SLEUTEL : "horren_matrix"}
+      productNaam={isPlisse ? "Plissé hordeur" : "Hor"}
+      typeTitel={isPlisse ? "Soort" : "Soort hor"}
       startSlug={startSlug}
       matrix={matrix}
       voorbeeld={voorbeeld}

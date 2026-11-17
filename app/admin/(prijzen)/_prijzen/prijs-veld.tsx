@@ -32,7 +32,7 @@ export function PrijsVeld({
     <label className="relative block">
       <span className="sr-only">{label}</span>
       <span
-        className={`pointer-events-none absolute inset-y-0 flex items-center text-sm text-muted-foreground ${eenheid === "%" ? "right-3" : "left-3"}`}>
+        className={`pointer-events-none absolute inset-y-0 flex items-center text-base text-foreground/80 ${eenheid === "%" ? "right-3" : "left-3"}`}>
         {eenheid}
       </span>
       <input
@@ -45,7 +45,7 @@ export function PrijsVeld({
           setTekst(t);
           onChange(parseFloat(t.replace(",", ".")) || 0);
         }}
-        className={`w-full rounded-lg border py-1.5 text-right text-sm tabular-nums ${eenheid === "%" ? "pr-7 pl-3" : "pr-3 pl-7"} ${
+        className={`w-full rounded-lg border py-1.5 text-right text-base tabular-nums ${eenheid === "%" ? "pr-7 pl-3" : "pr-3 pl-7"} ${
           waarschuwing ? "border-amber-400 dark:border-amber-500/40 bg-amber-50" : afwijkt ? "border-brand-text" : "border-border"
         }`}
       />
@@ -57,7 +57,7 @@ export function PrijsVeld({
           setTekst(standaard ? fmt(standaard) : "");
           onChange(standaard);
         }}
-        className="mt-0.5 block w-full text-right text-[10px] text-brand-text hover:underline">
+        className="mt-0.5 block w-full text-right text-xs text-brand-text hover:underline">
         standaard {eenheid === "%" ? `${fmt(standaard)}%` : `€ ${fmt(standaard)}`}
       </button>
     )}
@@ -69,9 +69,7 @@ export function Kaart({ titel, uitleg, notitie, children }: { titel: string; uit
   return (
     <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
       <div className="border-b border-border bg-muted/40 px-4 py-3">
-        <h2 className="text-sm font-bold text-foreground">{titel}</h2>
-        {uitleg && <p className="mt-0.5 text-xs text-muted-foreground">{uitleg}</p>}
-        {notitie && <p className="mt-1 text-xs font-semibold text-brand-text">{notitie}</p>}
+        <h2 className="text-base font-bold text-foreground">{titel}</h2>
       </div>
       <div className="divide-y divide-border">{children}</div>
     </section>

@@ -80,11 +80,6 @@ export default function KozijnenPrijzen() {
       <div className="flex items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-black text-foreground">Kozijn & glas</h2>
-          <p className="text-sm text-muted-foreground">
-            {zelf
-              ? "Vul de prijzen in zoals je ze zelf rekent. Laat een bedrag leeg als je er niets voor rekent."
-              : "Alle prijzen staan voor je klaar. Zet de schuif voor goedkoper of duurder, of pas een bedrag aan."}
-          </p>
         </div>
         <button
           onClick={handleSave}
@@ -100,7 +95,7 @@ export default function KozijnenPrijzen() {
             key={m}
             onClick={() => setMateriaal(m)}
             className={`rounded-lg px-6 py-2 text-sm font-bold capitalize transition-colors ${
-              materiaal === m ? "bg-brand text-white shadow-md" : "text-muted-foreground hover:text-foreground"
+              materiaal === m ? "bg-brand text-white shadow-md" : "text-foreground/80 hover:text-foreground"
             }`}>
             {m}
           </button>
@@ -113,7 +108,7 @@ export default function KozijnenPrijzen() {
             key={w}
             onClick={() => setWeergave(w)}
             className={`rounded-lg px-5 py-2 text-sm font-bold capitalize transition-colors ${
-              weergave === w ? "bg-brand text-white shadow-md" : "text-muted-foreground hover:text-foreground"
+              weergave === w ? "bg-brand text-white shadow-md" : "text-foreground/80 hover:text-foreground"
             }`}>
             {w}
           </button>
@@ -136,27 +131,16 @@ export default function KozijnenPrijzen() {
                   <input type="radio" name={`prijsmodel-${materiaal}`} checked={o.zelf === zelf} onChange={() => kies(o.zelf)} className="mt-1 accent-[var(--color-brand)]" />
                   <span>
                     <span className="block text-sm font-semibold text-foreground">{o.titel}</span>
-                    <span className="block text-xs text-muted-foreground">{o.tekst}</span>
                   </span>
                 </label>
               ))}
             </div>
           </fieldset>
 
-          {nogNietOpgeslagen[materiaal] && !zelf && (
-            <div className="rounded-xl border border-amber-300 dark:border-amber-500/40 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:text-amber-200">
-              <p className="font-semibold">Dit zijn de standaardprijzen, nog niet opgeslagen.</p>
-              <p className="mt-0.5">
-                {oud[materiaal]
-                  ? "Je eerdere prijzen blijven in je calculator staan tot je op Opslaan klikt. Ze blijven bewaard."
-                  : "Pas aan wat je wilt en klik op Opslaan om ze in je calculator te gebruiken."}
-              </p>
-            </div>
-          )}
-
           <StandaardEditor
             standaardModel={kozijnStandaardModel}
             key={`${materiaal}-${zelf ? "zelf" : "standaard"}`}
+            nogNietOpgeslagen={!!nogNietOpgeslagen[materiaal]}
             model={huidig}
             onChange={zetModel}
             catalogus={CATALOGUS[materiaal]}
@@ -168,9 +152,6 @@ export default function KozijnenPrijzen() {
           <div className="overflow-clip rounded-2xl border border-border bg-white text-slate-900 shadow-sm [color-scheme:light]">
             <div className="border-b border-slate-100 bg-slate-50 px-4 py-3">
               <h2 className="text-sm font-bold text-slate-800">Prijscheck</h2>
-              <p className="mt-0.5 text-xs text-slate-500">
-                Kies een kozijn en een maat. Prijzen die je typt tellen meteen mee, ook als je ze nog niet hebt opgeslagen.
-              </p>
             </div>
             <KozijnConfigurator key={`${materiaal}-${zelf ? "zelf" : "standaard"}`} voorbeeld product={materiaal} matrix={huidig} startSlug="dk-13-vast-23" />
           </div>

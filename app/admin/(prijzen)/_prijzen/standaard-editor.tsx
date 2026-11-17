@@ -1,6 +1,7 @@
 "use client";
 import { eenheidVoor, type Eenheid } from "@/lib/opbouw";
 import { useState } from "react";
+import { Minus, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Bevestig } from "./bevestig";
 import { KOZIJN_GROEPEN, KOZIJN_NAMEN } from "@/lib/kozijn-namen";
@@ -28,6 +29,28 @@ const TYPE_VELDEN: { sleutel: "basis" | "perMBreedte" | "perMHoogte" | "perM2"; 
 ];
 
 const afronden = (n: number) => Math.round(n * 100) / 100;
+
+/** Een deel van het montagekaartje dat dicht kan: standaard dicht, met een duidelijke plus. */
+function Uitklap({ titel, startOpen = false, children }: { titel: string; startOpen?: boolean; children: React.ReactNode }) {
+  const [open, setOpen] = useState(startOpen);
+  return (
+    <div className="border-t border-border first:border-t-0">
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center justify-between gap-3 bg-muted/40 px-4 py-3 text-left hover:bg-muted/70">
+        <span className="min-w-0">
+          <span className="block text-sm font-bold tracking-wide text-foreground uppercase">{titel}</span>
+        </span>
+        <span aria-hidden="true" className="flex size-9 shrink-0 items-center justify-center rounded-full border-2 border-foreground/40 text-foreground">
+          {open ? <Minus className="size-5" strokeWidth={3} /> : <Plus className="size-5" strokeWidth={3} />}
+        </span>
+      </button>
+      {open && children}
+    </div>
+  );
+}
 
 /** Klein veld voor een aantal (monteurs, kozijnen per dag). */
 function AantalVeld({ label, waarde, onChange }: { label: string; waarde: number; onChange: (n: number) => void }) {
@@ -64,6 +87,7 @@ export function StandaardEditor({
   montageNotitie,
   metKraan = false,
   eenheid = eenheidVoor("kozijn"),
+  nogNietOpgeslagen = false,
 }: {
   model: StandaardModel;
   onChange: (m: StandaardModel) => void;
@@ -85,11 +109,15 @@ export function StandaardEditor({
   metKraan?: boolean;
   /** Hoe het product heet (kozijn, deur, schuifpui ...), voor de teksten in het montagekaartje. */
   eenheid?: Eenheid;
+  /** Nog niets opgeslagen: dan staat het eerste deel van het montagekaartje open, zodat de startcijfers in beeld zijn. */
+  nogNietOpgeslagen?: boolean;
 }) {
   const [reset, setReset] = useState(0);
   const E = eenheid.een;
   const M = eenheid.meer;
   const Mc = M.charAt(0).toUpperCase() + M.slice(1);
+  const art = eenheid.art;
+  const elk = art === "het" ? "elk" : "elke";
   // Hoeveel goedkoper (min) of duurder (plus) dan de standaardprijzen, in procenten.
   const verschil = Math.round((model.factor - 1) * 100);
   const aangepast = Object.keys(model.typen ?? {}).length + Object.values(model.keuzes ?? {}).reduce((n, g) => n + Object.keys(g).length, 0);
@@ -154,13 +182,13 @@ export function StandaardEditor({
           }}
         />
       )}
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-xs text-muted-foreground">{model.zelf ? "Dit zijn je eigen prijzen." : wijkt ? "Je prijzen wijken af van de standaardprijzen." : "Dit zijn de standaardprijzen."}</p>
+      <div className={`flex items-center justify-between gap-3 ${model.zelf ? "" : "hidden"}`}>
+        <span />
         <button
           type="button"
           disabled={!wijkt}
           onClick={() => vragen("alles")}
-          className="shrink-0 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-muted/50 disabled:opacity-40 disabled:hover:bg-transparent">
+          className="shrink-0 rounded-lg border border-border px-3 py-1.5 text-sm font-semibold text-foreground hover:bg-muted/50 disabled:opacity-40 disabled:hover:bg-transparent">
           {model.zelf ? "Alles leegmaken" : "Reset standaardprijzen"}
         </button>
       </div>
@@ -183,7 +211,7 @@ export function StandaardEditor({
               onChange={(e) => onChange({ ...model, factor: 1 + Number(e.target.value) / 100 })}
               className="w-full accent-[var(--color-brand)]"
             />
-            <div className="flex justify-between text-[11px] text-muted-foreground">
+            <div className="flex justify-between text-sm text-foreground/80">
               <span>50% goedkoper</span>
               <span>standaard</span>
               <span>50% duurder</span>
@@ -192,14 +220,14 @@ export function StandaardEditor({
               type="button"
               disabled={!wijkt}
               onClick={() => vragen("alles")}
-              className="rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-muted/50 disabled:opacity-40 disabled:hover:bg-transparent">
+              className="rounded-lg border border-border px-3 py-1.5 text-sm font-semibold text-foreground hover:bg-muted/50 disabled:opacity-40 disabled:hover:bg-transparent">
               Reset standaardprijzen
             </button>
             <button
               type="button"
               disabled={model.factor === 1}
               onClick={() => vragen("schuif")}
-              className="ml-2 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-muted/50 disabled:opacity-40 disabled:hover:bg-transparent">
+              className="ml-2 rounded-lg border border-border px-3 py-1.5 text-sm font-semibold text-foreground hover:bg-muted/50 disabled:opacity-40 disabled:hover:bg-transparent">
               Terug naar 100%
             </button>
           </div>
@@ -223,7 +251,7 @@ export function StandaardEditor({
             titel={`Montage per ${E}`}
             uitleg={`Wat kost het jou om te plaatsen en wat wil je eraan verdienen? Deel 1 is wat je team per werkdag kost, deel 2 is wat per ${E} bijkomt, inclusief je marge. Alle bedragen zijn exclusief btw. De standaardprijzen zijn zonder montage.`}
             notitie={montageNotitie}>
-            <p className="bg-muted/40 px-4 py-2 text-xs font-bold tracking-wide text-muted-foreground uppercase">1. Per werkdag van je team</p>
+            <Uitklap titel="1. Per werkdag van je team" startOpen={nogNietOpgeslagen}>
             <Rij naam="Aantal monteurs">
               <AantalVeld key={`monteurs-${reset}`} label="Aantal monteurs" waarde={som.monteurs ?? 2} onChange={(n) => zet({ monteurs: n })} />
             </Rij>
@@ -233,9 +261,10 @@ export function StandaardEditor({
             <Rij naam={`Capaciteit: ${M} die ze op één dag plaatsen`}>
               <AantalVeld key={`perdag-${reset}`} label={`${Mc} per dag`} waarde={som.kozijnenPerDag ?? 1} onChange={(n) => zet({ kozijnenPerDag: n })} />
             </Rij>
-            <p className="px-4 pb-2 text-[11px] text-muted-foreground">
-              Loon en transport reken je per hele werkdag, nooit per halve dag. Passen er {som.kozijnenPerDag ?? 1} {(som.kozijnenPerDag ?? 1) === 1 ? E : M} op een dag, dan is dat bij 1 t/m {som.kozijnenPerDag ?? 1} {(som.kozijnenPerDag ?? 1) === 1 ? E : M} één dag, bij de volgende {E} komt er een dag bij.</p>
-            <p className="bg-muted/40 px-4 py-2 text-xs font-bold tracking-wide text-muted-foreground uppercase">{`2. Per ${E}, dit tel je voor elke ${E} mee`}</p>
+            <p className="px-4 pb-2 text-sm text-foreground/80">
+              Loon en transport reken je per hele werkdag, nooit per halve dag. Passen er {som.kozijnenPerDag ?? 1} {(som.kozijnenPerDag ?? 1) === 1 ? E : M} op een dag, dan is dat bij 1 t/m {som.kozijnenPerDag ?? 1} {(som.kozijnenPerDag ?? 1) === 1 ? E : M} één dag, bij {art} volgende {E} komt er een dag bij.</p>
+            </Uitklap>
+            <Uitklap titel={`2. Per ${E}, dit tel je voor ${elk} ${E} mee`}>
             <Rij naam={`Montagemateriaal, per ${E}`}>{bedrag("materiaal", `Montagemateriaal per ${E}`)}</Rij>
             <Rij naam={`Afval wegbrengen, per ${E}`}>{bedrag("afval", `Afval wegbrengen per ${E}`)}</Rij>
             <Rij naam={`Risico, per ${E} (klein afstelwerk na montage)`}>{bedrag("risico", `Risico per ${E}`)}</Rij>
@@ -244,6 +273,7 @@ export function StandaardEditor({
             {!heeftSom && som.overig !== undefined && (
               <Rij naam="Eerder ingevuld bedrag">{bedrag("overig", "Eerder ingevuld bedrag")}</Rij>
             )}
+            </Uitklap>
             {(() => {
               const dag = montageDag(som);
               const f = (x: number) => `€ ${x.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -258,7 +288,7 @@ export function StandaardEditor({
               if ((som.overig ?? 0) > 0) regels.push({ naam: "Eerder ingevuld bedrag", bedrag: som.overig ?? 0 });
               return (
                 <div className="border-t border-border px-4 py-3">
-                  <p className="mb-2 text-xs font-bold tracking-wide text-muted-foreground uppercase">{`Zo is de prijs voor 1 ${E} (1 dag) opgebouwd`}</p>
+                  <p className="mb-2 text-sm font-bold tracking-wide text-foreground/80 uppercase">{`Zo is de prijs voor 1 ${E} (1 dag) opgebouwd`}</p>
                   <dl className="space-y-1 text-sm">
                     {regels.map((r) => (
                       <div key={r.naam} className={`flex justify-between gap-4 ${r.winst ? "rounded-md bg-emerald-50 px-2 py-1 font-bold text-emerald-700 dark:text-emerald-300" : "text-foreground"}`}>
@@ -272,16 +302,16 @@ export function StandaardEditor({
                     </div>
                   </dl>
                   {metKraan && (som.kraan ?? 0) > 0 && (
-                    <p className="mt-2 text-xs text-muted-foreground">
+                    <p className="mt-2 text-sm text-foreground/80">
                       Heeft de klant geen tuintoegang, dan komt er per werkdag een kraan bij: {f(som.kraan ?? 0)}. Dat staat apart op de offerte en telt niet mee in het bedrag hierboven.
                     </p>
                   )}
-                  <p className="mt-3 mb-1 text-xs font-semibold text-foreground">{`Bij meer ${M}:`}</p>
+                  <p className="mt-3 mb-1 text-sm font-semibold text-foreground">{`Bij meer ${M}:`}</p>
                   {[2, 3, 5].map((n) => {
                     const v = montageVoor({ montage: totaal, montageSom: som }, n);
                     const g = (x: number) => `€ ${x.toLocaleString("nl-NL", { maximumFractionDigits: 0 })}`;
                     return (
-                      <p key={n} className="text-xs text-muted-foreground tabular-nums">
+                      <p key={n} className="text-sm text-foreground/80 tabular-nums">
                         {n} {M}: {v.dagen} dag{v.dagen === 1 ? "" : "en"} loon en transport ({g(v.loon + v.transport)}) + {n} × {g(montagePerKozijn(som))} = <span className="font-semibold text-foreground">{g(v.totaal)}</span>, waarvan <span className="font-semibold text-emerald-700 dark:text-emerald-300">{g((som.winst ?? 0) * n)} marge</span>
                       </p>
                     );
@@ -298,8 +328,8 @@ export function StandaardEditor({
         <fieldset className="space-y-2 px-4 py-3">
           <legend className="sr-only">Hoe laat je de montage zien?</legend>
           {[
-            { apart: false, titel: "Montage inbegrepen in de prijs", tekst: `De montage zit in de prijs van de ${E}. De offerte zegt: inclusief montage.` },
-            { apart: true, titel: "Montage apart vermelden", tekst: `De klant ziet de montage als aparte regel bovenop de ${E}.` },
+            { apart: false, titel: "Montage inbegrepen in de prijs", tekst: `De montage zit in de prijs van ${art} ${E}. De offerte zegt: inclusief montage.` },
+            { apart: true, titel: "Montage apart vermelden", tekst: `De klant ziet de montage als aparte regel bovenop ${art} ${E}.` },
           ].map((o) => (
             <label key={o.titel} className="flex cursor-pointer items-start gap-3">
               <input
@@ -311,7 +341,7 @@ export function StandaardEditor({
               />
               <span>
                 <span className="block text-sm text-foreground">{o.titel}</span>
-                <span className="block text-xs text-muted-foreground">{o.tekst}</span>
+                <span className="block text-sm text-foreground/80">{o.tekst}</span>
               </span>
             </label>
           ))}
@@ -326,11 +356,14 @@ export function StandaardEditor({
         </Rij>
       </Kaart>
 
+      {(() => {
+        const lijst = (
+          <>
       {typeGroepen.map((gr, i) => (
         <Kaart key={gr.titel} titel={gr.titel} uitleg={i === 0 ? "De standaardprijzen, exclusief btw. Staat er bij vast bedrag \"inbegrepen\", dan zit het al in de prijs per meter. Reken je zelf een vast bedrag, vul het dan in en zet de prijs per meter lager." : undefined}>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[36rem] text-left">
-              <thead className="bg-muted/40 text-[10px] font-bold text-muted-foreground uppercase">
+              <thead className="bg-muted/40 text-xs font-bold text-foreground/80 uppercase">
                 <tr>
                   <th className="px-4 py-2">Kozijn</th>
                   {TYPE_VELDEN.map((v) => (
@@ -346,7 +379,7 @@ export function StandaardEditor({
                   const eigen = TYPE_VELDEN.some((v) => Math.abs(recept[v.sleutel] - catalogus.typen[slug][v.sleutel]) > 0.004);
                   return (
                     <tr key={`${slug}-${reset}`}>
-                      <td className="px-4 py-1.5 text-xs text-foreground">
+                      <td className="px-4 py-1.5 text-sm text-foreground">
                         <span className="flex min-w-[11.5rem] items-center gap-2.5">
                           {tekening && (
                             <span className="flex h-12 w-14 shrink-0 items-center justify-center rounded-md bg-muted/40 p-1 [&>svg]:h-full! [&>svg]:max-h-full! [&>svg]:w-auto! [&>svg]:max-w-full!">
@@ -355,7 +388,7 @@ export function StandaardEditor({
                           )}
                           <span>
                             {namen[slug] ?? slug}
-                            {eigen && !model.zelf && <span className="ml-1 text-[10px] font-semibold text-brand-text">aangepast</span>}
+                            {eigen && !model.zelf && <span className="ml-1 text-xs font-semibold text-brand-text">aangepast</span>}
                           </span>
                         </span>
                       </td>
@@ -389,12 +422,12 @@ export function StandaardEditor({
               <div key={`${k.id}-${reset}`} className="px-4 py-2.5">
                 <p className="text-sm text-foreground">{k.naam}</p>
                 {velden.length === 0 ? (
-                  <p className="text-xs text-muted-foreground">Geen toeslag</p>
+                  <p className="text-sm text-foreground/80">Geen toeslag</p>
                 ) : (
                   <div className="mt-1.5 space-y-1.5">
                     {velden.map((v) => (
                       <div key={v.sleutel} className="flex items-center justify-between gap-4">
-                        <span className="text-xs text-muted-foreground">{v.label}</span>
+                        <span className="text-sm text-foreground/80">{v.label}</span>
                         <PrijsVeld
                           label={`${k.naam}: ${v.label}`}
                           eenheid={v.eenheid}
@@ -411,6 +444,18 @@ export function StandaardEditor({
           })}
         </Kaart>
       ))}
+          </>
+        );
+        // Bij vooringevuld hoeft de boer hier niets te doen: de lijst zit dicht. Bij zelf invullen staat hij open.
+        if (model.zelf) return <div className="space-y-6">{lijst}</div>;
+        return (
+          <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+            <Uitklap titel="Prijzen per type aanpassen">
+              <div className="space-y-6 p-4">{lijst}</div>
+            </Uitklap>
+          </section>
+        );
+      })()}
     </div>
   );
 }
