@@ -17,7 +17,7 @@ export default function AluSchuifpuiOverzicht() {
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end mb-10 border-l-4 border-brand pl-4 md:pl-6">
         <div className="mb-6 lg:mb-0">
           <h1 className="text-2xl md:text-4xl font-bold text-[#1a1a1a] mb-1 md:mb-3">Aluminium schuifpuien</h1>
-          <p className="text-brand-text font-medium text-sm md:text-xl uppercase tracking-tighter">Kies uw gewenste indeling</p>
+          <p className="text-brand-text font-medium text-sm md:text-xl uppercase tracking-tighter">Kies je gewenste indeling</p>
         </div>
         {/* Bij één uitvoering is een wisselknop overbodig. */}
         {uitvoeringen.length > 1 && (

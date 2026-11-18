@@ -44,7 +44,7 @@ export default function RolluikenOverzicht() {
             Rolluiken &amp; screens
           </h1>
           <p className="text-brand-text font-medium text-sm md:text-xl uppercase tracking-tighter">
-            Kies uw type
+            Kies je type
           </p>
         </div>
         <div className="flex bg-[#f4f7f9] p-1 rounded-xl flex-wrap gap-1">

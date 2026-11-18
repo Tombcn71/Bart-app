@@ -45,7 +45,7 @@ export default function HorrenOverzicht() {
             Kunststof horren
           </h1>
           <p className="text-brand-text font-medium text-sm md:text-xl uppercase tracking-tighter">
-            Kies uw hortype
+            Kies je hortype
           </p>
         </div>
         <div className="flex bg-[#f4f7f9] p-1 rounded-xl">

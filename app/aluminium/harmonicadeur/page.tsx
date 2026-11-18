@@ -14,7 +14,7 @@ export default function AluHarmonicadeurOverzicht() {
     <div className="max-w-[1200px] mx-auto p-4 md:p-12 lg:p-16 font-sans bg-white min-h-screen">
       <div className="mb-10 border-l-4 border-brand pl-4 md:pl-6">
         <h1 className="text-2xl md:text-4xl font-bold text-[#1a1a1a] mb-1 md:mb-3">Aluminium harmonicadeuren</h1>
-        <p className="text-brand-text font-medium text-sm md:text-xl uppercase tracking-tighter">Kies uw gewenste indeling</p>
+        <p className="text-brand-text font-medium text-sm md:text-xl uppercase tracking-tighter">Kies je gewenste indeling</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">

@@ -51,7 +51,7 @@ export default function AluKozijnenOverzicht() {
     <div className="max-w-[1200px] mx-auto p-4 sm:p-8 md:p-16 font-sans bg-white min-h-screen">
       <div className="mb-6 md:mb-12 border-l-4 border-brand pl-4 md:pl-6">
         <h1 className="text-2xl md:text-4xl font-bold text-[#1a1a1a] mb-2 md:mb-3 tracking-tight">Aluminium kozijnen</h1>
-        <p className="text-brand-text font-medium text-sm md:text-xl uppercase tracking-tighter">Kies uw gewenste indeling</p>
+        <p className="text-brand-text font-medium text-sm md:text-xl uppercase tracking-tighter">Kies je gewenste indeling</p>
       </div>
 
       <div className="flex justify-start mb-6 md:mb-12">

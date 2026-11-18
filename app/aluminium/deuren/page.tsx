@@ -31,7 +31,7 @@ export default function AluDeurenOverzicht() {
             Aluminium deuren
           </h1>
           <p className="text-brand-text font-medium text-sm md:text-xl uppercase tracking-tighter">
-            Kies uw gewenste indeling
+            Kies je gewenste indeling
           </p>
         </div>
         <div className="w-full lg:w-auto">
