@@ -24,7 +24,7 @@ export function WelkomScherm({ onStart, inmeten = false }: { onStart: () => void
           </>
         ) : (
           <>
-            <h1 className="text-4xl leading-[1.1] font-bold tracking-tight text-white md:text-5xl">Bereken jouw offerte</h1>
+            <h1 className="text-4xl leading-[1.1] font-bold tracking-tight text-white md:text-5xl">Bereken jouw prijs</h1>
             <p className="mt-5 text-base leading-relaxed text-white/85 md:text-lg">
               Stel je kozijn samen en zie direct wat het kost. Wissel met één knop naar de fotoweergave en zie hoe het kozijn
               er realistisch op je gevel uitziet. De offerte ontvang je direct in je mail.
