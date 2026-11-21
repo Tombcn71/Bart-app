@@ -1,6 +1,7 @@
 "use client";
 import { SidebarProvider, useSidebar } from "@/components/ui/sidebar";
 import { AppSidebar } from "../components/AppSidebar";
+import { Onderbalk } from "../components/Onderbalk";
 import { Toaster } from "@/components/ui/sonner";
 import { Menu, X } from "lucide-react";
 import { usePathname } from "next/navigation";
@@ -50,8 +51,9 @@ export default function AdminLayout({
           </a>
           </div>
         </header>
-        <div className="flex-1 p-8">{children}</div>
+        <div className="flex-1 p-4 pb-24 md:p-8">{children}</div>
       </main>
+      <Onderbalk />
       <Toaster position="top-right" richColors />
       <FeedbackButton />
     </SidebarProvider>

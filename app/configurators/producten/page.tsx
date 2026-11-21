@@ -1,6 +1,6 @@
 import { ProductTegel } from "@/app/components/ProductTegel";
 import { TEGELS } from "@/lib/start-tegels";
-import { ProductenKop } from "./kop";
+import { ProductenRaster } from "@/app/components/ProductenRaster";
 
 /**
  * Overzicht met een tekening per product dat BartMooi aanbiedt. Netjes uitgelijnd bij elk aantal:
@@ -19,15 +19,10 @@ export default function ProductenPagina() {
   };
 
   return (
-    <div className="h-[calc(100svh-5rem)] bg-white md:h-[calc(100svh-6rem)]">
-      <div className="mx-auto flex h-full w-full max-w-[1400px] flex-col px-4 pt-6 pb-4 md:px-6 md:py-10">
-        <ProductenKop />
-        <div className={`grid min-h-0 flex-1 auto-rows-fr gap-x-4 gap-y-8 md:gap-x-10 ${kolommen} ${n <= 2 ? "mx-auto w-full max-w-4xl" : ""}`}>
-          {tegels.map((p, i) => (
-            <ProductTegel key={p.name} {...p} className={span(i)} />
-          ))}
-        </div>
-      </div>
-    </div>
+    <ProductenRaster kolommen={kolommen} smal={n <= 2}>
+      {tegels.map((p, i) => (
+        <ProductTegel key={p.name} {...p} className={span(i)} />
+      ))}
+    </ProductenRaster>
   );
 }

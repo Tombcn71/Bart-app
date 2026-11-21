@@ -87,7 +87,7 @@ export default function OffertePagina() {
   if (items.length === 0) return (
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="text-center">
-        <p className="text-slate-500 mb-4">{inmeten ? "Nog geen ramen ingevoerd." : "Uw offerte is nog leeg."}</p>
+        <p className="text-slate-500 mb-4">{inmeten ? "Nog geen producten ingevoerd." : "Uw offerte is nog leeg."}</p>
         <Link href="/kozijnen" className="text-brand-text font-semibold hover:underline">Begin met configureren →</Link>
       </div>
     </div>
@@ -97,7 +97,7 @@ export default function OffertePagina() {
     <div className="max-w-[1000px] mx-auto px-4 sm:px-6 py-8 md:py-12 pb-32 lg:pb-12">
       <h1 className="text-2xl md:text-3xl font-bold text-[#1a1a1a] mb-1">{inmeten ? "Offerte bij de klant" : "Uw offerte"}</h1>
       <p className="text-slate-500 text-sm mb-8">
-        {items.length} {inmeten ? (items.length === 1 ? "raam" : "ramen") : `product${items.length !== 1 ? "en" : ""}`} in {inmeten ? "deze offerte" : "uw aanvraag"}
+        {items.length} {`product${items.length !== 1 ? "en" : ""}`} in {inmeten ? "deze offerte" : "uw aanvraag"}
       </p>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -131,7 +131,7 @@ export default function OffertePagina() {
                   <textarea
                     value={item.notitie ?? ""}
                     onChange={e => updateCartItem(item.id, { notitie: e.target.value.slice(0, 500) })}
-                    placeholder="Notitie bij dit raam, bijv. keuken, draairichting links"
+                    placeholder="Notitie bij dit product, bijv. keuken, draairichting links"
                     rows={2}
                     className="mt-3 w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
                 )}
@@ -140,7 +140,7 @@ export default function OffertePagina() {
           ))}
 
           <Link href="/kozijnen" className="block text-center text-sm text-brand-text font-semibold hover:underline py-3">
-            {inmeten ? "+ Nog een raam" : "+ Verder winkelen"}
+            {inmeten ? "+ Nog een product" : "+ Verder winkelen"}
           </Link>
         </div>
 

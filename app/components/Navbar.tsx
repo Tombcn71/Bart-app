@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { CartButton } from "./CartButton";
+import { useBron } from "@/lib/use-bron";
 
 const NAV_ITEMS = [
   {
@@ -90,6 +91,7 @@ function DropdownItem({ label, items }: { label: string; items: { label: string;
 }
 
 const Navbar = () => {
+  const bron = useBron();
   const [isOpen, setIsOpen] = useState(false);
   const [openMobile, setOpenMobile] = useState<string | null>(null);
   const [isOfferte, setIsOfferte] = useState(false);
@@ -99,7 +101,7 @@ const Navbar = () => {
   }, []);
 
   return (
-    <nav className="w-full bg-white border-b border-gray-100 shadow-sm sticky top-0 z-50">
+    <nav className={`w-full bg-white border-b border-gray-100 shadow-sm sticky top-0 z-50 ${bron === "onspot" ? "hidden md:block" : ""}`}>
       <div className="max-w-[1400px] mx-auto px-4 md:px-6 h-20 md:h-24 flex items-center justify-between">
         {/* Links: het hamburgermenu (telefoon) of het menu (computer). Geen logo. */}
         <div className="flex items-center gap-2 md:gap-8">

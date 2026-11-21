@@ -25,7 +25,7 @@ export default function MetenPage() {
       href: "/meten/inmeten",
       Icon: FilePlus,
       titel: "Offerte maken",
-      tekst: "Bij de klant of aan de telefoon: maten per raam invoeren en de offerte direct mailen.",
+      tekst: "Bij de klant of aan de telefoon: maten per product invoeren en de offerte direct mailen.",
     },
   ];
 

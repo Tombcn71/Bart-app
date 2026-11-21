@@ -19,7 +19,7 @@ export function WelkomScherm({ onStart, inmeten = false }: { onStart: () => void
           <>
             <h1 className="text-4xl leading-[1.1] font-bold tracking-tight text-white md:text-5xl">Inmeten</h1>
             <p className="mt-5 text-base leading-relaxed text-white/85 md:text-lg">
-              Hier kun je inmeten. Voer per raam de maten in, zet er een notitie bij en verstuur de offerte direct naar je klant.
+              Hier kun je inmeten. Voer per product de maten in, zet er een notitie bij en verstuur de offerte direct naar je klant.
             </p>
           </>
         ) : (

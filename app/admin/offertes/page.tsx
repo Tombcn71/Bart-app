@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { getOffertes, deleteOfferte } from "@/app/actions";
 import Link from "next/link";
+import { FilterKeuze } from "./filter-keuze";
 
 export default function OffertesPagina() {
   const [offertes, setOffertes] = useState<any[]>([]);
@@ -26,12 +27,59 @@ export default function OffertesPagina() {
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="hidden md:block">
         <h1 className="text-2xl font-black text-foreground">Verstuurd</h1>
         <p className="text-sm text-muted-foreground">{offertes.length} offerte{offertes.length !== 1 ? "s" : ""} verzonden.</p>
       </div>
 
-      <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+      {/* Telefoon: keuzemenu met aantallen en de offertes als compacte kaarten. */}
+      <div className="space-y-2 md:hidden">
+        <FilterKeuze
+          actief="/admin/offertes"
+          opties={[
+            { href: "/admin/offertes", label: "Alle offertes", aantal: offertes.length },
+            { href: "/admin/offertes/geaccepteerd", label: "Geaccepteerd", aantal: offertes.filter((o) => o.data?.acceptedAt).length },
+          ]}
+        />
+        {loading ? (
+          <p className="p-6 text-center text-muted-foreground">Laden...</p>
+        ) : offertes.length === 0 ? (
+          <p className="p-6 text-center text-sm text-muted-foreground">Nog geen offertes.</p>
+        ) : (
+          offertes.map((o) => {
+            const d = o.data;
+            const isAccepted = !!d?.acceptedAt;
+            return (
+              <Link key={o.id} href={`/admin/offertes/${o.id}`} className="block rounded-xl border border-border bg-card p-3 active:bg-muted">
+                <div className="flex items-start justify-between gap-3">
+                  <span className="min-w-0 truncate font-semibold text-foreground">{d?.naam || o.email}</span>
+                  <span className="shrink-0 font-semibold tabular-nums text-foreground">
+                    {d?.prijs ? `€ ${Number(d.prijs).toLocaleString("nl-NL", { minimumFractionDigits: 2 })}` : "—"}
+                  </span>
+                </div>
+                <div className="mt-1.5 flex items-center justify-between gap-3">
+                  <span className="min-w-0 truncate text-xs text-muted-foreground">
+                    {o.createdAt ? new Date(o.createdAt).toLocaleDateString("nl-NL", { day: "numeric", month: "short" }) : ""} · {d?.product || d?.kozijnNaam || d?.deurNaam || "—"}
+                  </span>
+                  {isAccepted ? (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-700 dark:bg-green-500/10 dark:text-green-400">
+                      <span className="inline-block h-1.5 w-1.5 rounded-full bg-green-500" />
+                      Geaccepteerd
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-brand-text">
+                      <span className="inline-block h-1.5 w-1.5 rounded-full bg-brand" />
+                      Verzonden
+                    </span>
+                  )}
+                </div>
+              </Link>
+            );
+          })
+        )}
+      </div>
+
+      <div className="hidden overflow-hidden rounded-2xl border border-border bg-card shadow-sm md:block">
         {loading ? (
           <div className="p-10 text-center text-muted-foreground">Laden...</div>
         ) : (
