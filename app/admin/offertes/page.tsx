@@ -28,8 +28,8 @@ export default function OffertesPagina() {
   return (
     <div className="space-y-6">
       <div className="hidden md:block">
-        <h1 className="text-2xl font-black text-foreground">Verstuurd</h1>
-        <p className="text-sm text-muted-foreground">{offertes.length} offerte{offertes.length !== 1 ? "s" : ""} verzonden.</p>
+        <h1 className="text-2xl font-black text-foreground">Aanvragen</h1>
+        <p className="text-sm text-muted-foreground">Alle offertes, nieuwste bovenaan.</p>
       </div>
 
       {/* Telefoon: keuzemenu met aantallen en de offertes als compacte kaarten. */}
@@ -37,7 +37,7 @@ export default function OffertesPagina() {
         <FilterKeuze
           actief="/admin/offertes"
           opties={[
-            { href: "/admin/offertes", label: "Alle offertes", aantal: offertes.length },
+            { href: "/admin/offertes", label: "Alle aanvragen", aantal: offertes.length },
             { href: "/admin/offertes/geaccepteerd", label: "Geaccepteerd", aantal: offertes.filter((o) => o.data?.acceptedAt).length },
           ]}
         />

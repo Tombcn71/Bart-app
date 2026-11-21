@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { FileText, FilePlus, Link2, Menu } from "lucide-react";
 
 const ITEMS = [
-  { id: "offertes", href: "/admin/offertes", label: "Offertes", icon: FileText },
+  { id: "offertes", href: "/admin/offertes", label: "Aanvragen", icon: FileText },
   { id: "maken", href: "/meten/inmeten", label: "Offerte maken", icon: FilePlus },
   { id: "link", href: "/meten/reageer", label: "Link versturen", icon: Link2 },
   { id: "meer", href: "/admin/offertes?menu=1", label: "Meer", icon: Menu },

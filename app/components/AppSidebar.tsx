@@ -1,17 +1,15 @@
 "use client";
 import * as React from "react";
 import {
-  LayoutDashboard,
   FileText,
   Package,
-  ChevronRight,
   Menu,
   X,
   LogOut,
   FilePlus,
   Link2,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { adminLogout } from "@/app/actions";
 import {
   Sidebar,
@@ -20,18 +18,10 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
   SidebarHeader,
   SidebarFooter,
   useSidebar,
 } from "@/components/ui/sidebar";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 
 function CustomSidebarTrigger() {
   const { toggleSidebar, openMobile, isMobile, open } = useSidebar();
@@ -46,8 +36,21 @@ function CustomSidebarTrigger() {
   );
 }
 
+const GROEPEN = [
+  {
+    label: "Werk",
+    items: [
+      { href: "/admin/offertes", label: "Aanvragen", icon: FileText },
+      { href: "/meten/inmeten", label: "Offerte maken", icon: FilePlus },
+      { href: "/meten/reageer", label: "Link versturen", icon: Link2 },
+    ],
+  },
+  { label: "Instellen", items: [{ href: "/admin/kozijnenprijzen", label: "Prijzen", icon: Package }] },
+];
+
 export function AppSidebar() {
   const router = useRouter();
+  const pathname = usePathname();
 
   const handleLogout = async () => {
     await adminLogout();
@@ -67,77 +70,26 @@ export function AppSidebar() {
 
       <SidebarContent className="px-4 py-4">
         <SidebarGroup>
-          <SidebarMenu className="gap-2 font-semibold text-sm text-sidebar-foreground">
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
-                <a href="/admin">
-                  <LayoutDashboard size={20} />
-                  <span>Dashboard</span>
-                </a>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-
-            <Collapsible defaultOpen className="group/offertes">
-              <SidebarMenuItem>
-                <CollapsibleTrigger asChild>
-                  <SidebarMenuButton className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground w-full flex justify-between">
-                    <div className="flex items-center gap-3">
-                      <FileText size={20} />
-                      <span>Offertes</span>
-                    </div>
-                    <ChevronRight
-                      className="transition-transform group-data-[state=open]/offertes:rotate-90"
-                      size={16}
-                    />
-                  </SidebarMenuButton>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <SidebarMenuSub className="border-l border-sidebar-border ml-6 mt-1 space-y-1">
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton asChild className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
-                        <a href="/admin/offertes">Verstuurd</a>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton asChild className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
-                        <a href="/admin/offertes/geaccepteerd">Geaccepteerd</a>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                  </SidebarMenuSub>
-                </CollapsibleContent>
-              </SidebarMenuItem>
-            </Collapsible>
-
-            {/* Zoals bij kozijnsoftware: Offerte maken en Link versturen staan in het menu (ook in de web app op de telefoon) */}
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
-                <a href="/meten/inmeten">
-                  <FilePlus size={20} />
-                  <span>Offerte maken</span>
-                </a>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
-                <a href="/meten/reageer">
-                  <Link2 size={20} />
-                  <span>Link versturen</span>
-                </a>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
-                <a href="/admin/kozijnenprijzen">
-                  <Package size={20} />
-                  <span>Prijzen</span>
-                </a>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
+          {GROEPEN.map((groep) => (
+            <div key={groep.label} className="mb-4">
+              <p className="px-2 pb-1 text-xs font-medium text-sidebar-foreground/60">{groep.label}</p>
+              <SidebarMenu className="gap-1 font-semibold text-sm text-sidebar-foreground">
+                {groep.items.map(({ href, label, icon: Icon }) => (
+                  <SidebarMenuItem key={href}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={pathname.startsWith(href)}
+                      className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
+                      <a href={href}>
+                        <Icon size={20} />
+                        <span>{label}</span>
+                      </a>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </div>
+          ))}
         </SidebarGroup>
       </SidebarContent>
 

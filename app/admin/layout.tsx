@@ -36,9 +36,6 @@ export default function AdminLayout({
         <header className="h-14 md:h-20 bg-card border-b border-border px-3 md:px-8 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-4">
             <CustomSidebarTrigger />
-            <div>
-              <h1 className="text-lg md:text-xl font-black text-foreground">Dashboard</h1>
-            </div>
           </div>
           <div className="flex items-center gap-3">
           <AdminTheme />

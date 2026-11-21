@@ -11,7 +11,7 @@ export default async function GeaccepteerdeOffertes() {
   return (
     <div className="space-y-6">
       <div className="hidden md:block">
-        <h1 className="text-2xl font-black text-foreground">Geaccepteerde offertes</h1>
+        <h1 className="text-2xl font-black text-foreground">Geaccepteerd</h1>
         <p className="text-sm text-muted-foreground">{geaccepteerd.length} offerte{geaccepteerd.length !== 1 ? "s" : ""} geaccepteerd.</p>
       </div>
 
@@ -20,7 +20,7 @@ export default async function GeaccepteerdeOffertes() {
         <FilterKeuze
           actief="/admin/offertes/geaccepteerd"
           opties={[
-            { href: "/admin/offertes", label: "Alle offertes", aantal: alle.length },
+            { href: "/admin/offertes", label: "Alle aanvragen", aantal: alle.length },
             { href: "/admin/offertes/geaccepteerd", label: "Geaccepteerd", aantal: geaccepteerd.length },
           ]}
         />

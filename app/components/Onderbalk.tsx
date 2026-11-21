@@ -6,7 +6,7 @@ import { FileText, FilePlus, Link2, Menu } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar";
 
 const ITEMS = [
-  { href: "/admin/offertes", label: "Offertes", icon: FileText },
+  { href: "/admin/offertes", label: "Aanvragen", icon: FileText },
   { href: "/meten/inmeten", label: "Offerte maken", icon: FilePlus },
   { href: "/meten/reageer", label: "Link versturen", icon: Link2 },
 ];
