@@ -178,3 +178,8 @@
     bottom: 4rem;
   }
 }
+@media (max-width: 767px) {
+  html[data-monteur-balk="1"] body {
+    padding-bottom: 5rem;
+  }
+}

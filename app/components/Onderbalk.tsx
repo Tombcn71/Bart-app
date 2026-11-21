@@ -1,4 +1,5 @@
 "use client";
+import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { FileText, FilePlus, Link2, Menu } from "lucide-react";
@@ -13,7 +14,13 @@ const ITEMS = [
 /** Vaste balk onderin op een telefoon, zoals in een app: de drie dingen die je het vaakst doet en "Meer" voor de rest van het menu. */
 export function Onderbalk() {
   const pathname = usePathname();
-  const { toggleSidebar } = useSidebar();
+  const { toggleSidebar, setOpenMobile } = useSidebar();
+  // Vanuit de calculator ("Meer") komt de monteur hier met ?menu=1: het menu gaat meteen open.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("menu") !== "1") return;
+    setOpenMobile(true);
+    window.history.replaceState(null, "", window.location.pathname);
+  }, [setOpenMobile]);
   return (
     <nav
       aria-label="Hoofdmenu"

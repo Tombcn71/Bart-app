@@ -5,7 +5,6 @@ import { Onderbalk } from "../components/Onderbalk";
 import { Toaster } from "@/components/ui/sonner";
 import { Menu, X } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { SITE_URL } from "@/lib/site";
 import { FeedbackButton } from "../components/FeedbackButton";
 import { AdminTheme } from "../components/AdminTheme";
 
@@ -33,22 +32,16 @@ export default function AdminLayout({
   return (
     <SidebarProvider>
       <AppSidebar />
-      <main className="flex-1 flex flex-col min-h-screen bg-background">
-        <header className="h-20 bg-card border-b border-border px-8 flex items-center justify-between shrink-0">
+      <main className="flex-1 min-w-0 flex flex-col min-h-screen bg-background">
+        <header className="h-14 md:h-20 bg-card border-b border-border px-3 md:px-8 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-4">
             <CustomSidebarTrigger />
             <div>
-              <h1 className="text-xl font-black text-foreground">Dashboard</h1>
+              <h1 className="text-lg md:text-xl font-black text-foreground">Dashboard</h1>
             </div>
           </div>
           <div className="flex items-center gap-3">
           <AdminTheme />
-          <a
-            href={`${SITE_URL}/`}
-            target="_blank"
-            className="bg-[#2cb1e1] hover:bg-[#1fa1cf] text-white px-5 py-2.5 rounded-xl font-bold text-sm">
-            Bekijk App ↗
-          </a>
           </div>
         </header>
         <div className="flex-1 p-4 pb-24 md:p-8">{children}</div>

@@ -2,13 +2,13 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FileText, FilePlus, Home, Link2 } from "lucide-react";
+import { FileText, FilePlus, Link2, Menu } from "lucide-react";
 
 const ITEMS = [
   { id: "offertes", href: "/admin/offertes", label: "Offertes", icon: FileText },
   { id: "maken", href: "/meten/inmeten", label: "Offerte maken", icon: FilePlus },
   { id: "link", href: "/meten/reageer", label: "Link versturen", icon: Link2 },
-  { id: "start", href: "/meten", label: "Start", icon: Home },
+  { id: "meer", href: "/admin/offertes?menu=1", label: "Meer", icon: Menu },
 ] as const;
 
 /** Vaste balk onderin op een telefoon, zodat je tijdens het offerte maken niet op het pijltje terug hoeft. */
@@ -22,7 +22,6 @@ export function MonteurOnderbalk({ actief }: { actief: "maken" | "link" | null }
   }, []);
   return (
     <>
-      <div className="h-20 md:hidden" aria-hidden="true" />
       <nav
         aria-label="Hoofdmenu"
         className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-white pb-[env(safe-area-inset-bottom)] md:hidden">
