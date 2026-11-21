@@ -16,16 +16,16 @@ export default function MetenPage() {
       tekst: "Bekijk je verstuurde offertes en wie akkoord heeft gegeven.",
     },
     {
-      href: "/meten/reageer",
-      Icon: Link2,
-      titel: "Link versturen",
-      tekst: "Stuur je klant je linkje via WhatsApp of mail, om zelf zijn prijs te berekenen.",
-    },
-    {
       href: "/meten/inmeten",
       Icon: FilePlus,
       titel: "Offerte maken",
       tekst: "Bij de klant of aan de telefoon: maten per product invoeren en de offerte direct mailen.",
+    },
+    {
+      href: "/meten/reageer",
+      Icon: Link2,
+      titel: "Link versturen",
+      tekst: "Stuur je klant je linkje via WhatsApp of mail, om zelf zijn prijs te berekenen.",
     },
   ];
 

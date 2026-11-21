@@ -171,3 +171,10 @@
 }
 
 
+
+/* Met de balk onderin (Offerte maken op een telefoon) staan andere vaste balken er net boven. */
+@media (max-width: 767px) {
+  html[data-monteur-balk="1"] .fixed.bottom-0.z-40 {
+    bottom: 4rem;
+  }
+}

@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { FeedbackButton } from "../components/FeedbackButton";
+import { AppOnderbalk } from "../components/MonteurOnderbalk";
 
 /** De voorkant van de web app op de telefoon van Bart: naam, icoon en kleur van BartMooi. */
 export const metadata: Metadata = {
@@ -16,6 +17,7 @@ export default function MetenLayout({ children }: { children: React.ReactNode })
   return (
     <div className="flex min-h-dvh flex-col bg-white text-[#1a1a1a]">
       {children}
+      <AppOnderbalk />
       <FeedbackButton />
     </div>
   );

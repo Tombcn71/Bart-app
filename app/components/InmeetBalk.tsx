@@ -5,6 +5,7 @@ import { ArrowLeft, FileText, X } from "lucide-react";
 import Link from "next/link";
 import { useBron } from "@/lib/use-bron";
 import { getCart } from "@/lib/cart";
+import { MonteurOnderbalk } from "./MonteurOnderbalk";
 import { BART_SLUG, setInmeten } from "@/lib/inmeten";
 
 /** Balk bovenin de calculator bij Offerte maken (Onspot): naar de offerte met het aantal producten, stoppen. */
@@ -22,6 +23,8 @@ export function InmeetBalk() {
   if (bron !== "onspot") return null;
 
   return (
+    <>
+    <MonteurOnderbalk actief="maken" />
     <div className="bg-slate-900 text-white">
       <div className="mx-auto flex max-w-[1400px] items-center gap-2 px-3 py-2 text-sm md:px-6">
         <NextLink href="/meten" aria-label="Terug naar het startscherm" className="grid size-9 shrink-0 place-items-center rounded-full text-white/80 hover:bg-white/10 hover:text-white">
@@ -47,5 +50,6 @@ export function InmeetBalk() {
         </div>
       </div>
     </div>
+    </>
   );
 }
