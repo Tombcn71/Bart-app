@@ -52,8 +52,77 @@ export async function markeerGemonteerd(id: string) {
   }
 }
 
+async function alleenBart(): Promise<boolean> {
+  return !!process.env.ADMIN_TOKEN && (await cookies()).get("admin_token")?.value === process.env.ADMIN_TOKEN;
+}
+
+/** Bart zet de status van een aanvraag zelf: nieuw, verzonden, akkoord of gemonteerd. */
+export async function zetOfferteStatus(id: string, status: "nieuw" | "verzonden" | "akkoord" | "gemonteerd") {
+  if (!(await alleenBart())) return { success: false };
+  try {
+    const [o] = await db.select().from(offertes).where(eq(offertes.id, id));
+    if (!o) return { success: false };
+    const data = { ...(o.data as Record<string, any>) };
+    const nu = new Date().toISOString();
+    if (status === "nieuw") {
+      delete data.gezienAt; delete data.acceptedAt; delete data.acceptedByNaam; delete data.gemonteerdAt;
+    } else if (status === "verzonden") {
+      data.gezienAt = data.gezienAt ?? nu; delete data.acceptedAt; delete data.acceptedByNaam; delete data.gemonteerdAt;
+    } else if (status === "akkoord") {
+      data.gezienAt = data.gezienAt ?? nu; data.acceptedAt = data.acceptedAt ?? nu;
+      if (!data.acceptedByNaam) data.acceptedByNaam = "Bart (handmatig)";
+      delete data.gemonteerdAt;
+    } else {
+      data.gezienAt = data.gezienAt ?? nu; data.acceptedAt = data.acceptedAt ?? nu; data.gemonteerdAt = data.gemonteerdAt ?? nu;
+    }
+    await db.update(offertes).set({ data }).where(eq(offertes.id, id));
+    revalidatePath(`/admin/offertes/${id}`);
+    revalidatePath("/admin/offertes");
+    return { success: true };
+  } catch {
+    return { success: false };
+  }
+}
+
+/** Notitie bij een aanvraag: alleen zichtbaar voor Bart. */
+export async function saveOfferteNotitie(id: string, notitie: string) {
+  if (!(await alleenBart())) return { success: false };
+  try {
+    const [o] = await db.select().from(offertes).where(eq(offertes.id, id));
+    if (!o) return { success: false };
+    const data = { ...(o.data as Record<string, any>) };
+    const tekst = notitie.trim().slice(0, 2000);
+    if (tekst) data.notitie = tekst; else delete data.notitie;
+    await db.update(offertes).set({ data }).where(eq(offertes.id, id));
+    revalidatePath(`/admin/offertes/${id}`);
+    return { success: true };
+  } catch {
+    return { success: false };
+  }
+}
+
+/** Bart heeft de klant teruggebeld: het label "Terugbellen gevraagd" verdwijnt. */
+export async function markeerTeruggebeld(id: string) {
+  if (!(await alleenBart())) return { success: false };
+  try {
+    const [o] = await db.select().from(offertes).where(eq(offertes.id, id));
+    if (!o) return { success: false };
+    const data = { ...(o.data as Record<string, any>), terugbeldAt: new Date().toISOString() };
+    await db.update(offertes).set({ data }).where(eq(offertes.id, id));
+    revalidatePath(`/admin/offertes/${id}`);
+    revalidatePath("/admin/offertes");
+    return { success: true };
+  } catch {
+    return { success: false };
+  }
+}
+
 // Verwijder een offerte
 export async function deleteOfferte(id: string) {
+  // Alleen Bart zelf (ingelogd) mag een offerte verwijderen.
+  if ((await cookies()).get("admin_token")?.value !== process.env.ADMIN_TOKEN || !process.env.ADMIN_TOKEN) {
+    return { success: false };
+  }
   try {
     await db.delete(offertes).where(eq(offertes.id, id));
     return { success: true };

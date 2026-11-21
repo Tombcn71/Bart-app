@@ -28,7 +28,11 @@ export default function OffertesPagina() {
   }
 
   const telling = (k: "" | OfferteStatus) => (k ? alle.filter((o) => offerteStatus(o.data) === k).length : alle.length);
-  const offertes = filter ? alle.filter((o) => offerteStatus(o.data) === filter) : alle;
+  const wilTerugbellen = (o: any) => !!o.data?.terugbellenAt && !o.data?.terugbeldAt;
+  // Wie teruggebeld wil worden, staat bovenaan.
+  const offertes = [...(filter ? alle.filter((o) => offerteStatus(o.data) === filter) : alle)].sort(
+    (a, z) => Number(wilTerugbellen(z)) - Number(wilTerugbellen(a)),
+  );
 
   return (
     <div className="space-y-6">
@@ -80,6 +84,11 @@ export default function OffertesPagina() {
                       {STATUS_STIJL[offerteStatus(d)].label}
                     </span>
                 </div>
+                {wilTerugbellen(o) && (
+                  <span className="mt-2 inline-block rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-900">
+                    Terugbellen gevraagd{d?.terugbellenWanneer ? `: ${String(d.terugbellenWanneer).toLowerCase()}` : ""}
+                  </span>
+                )}
               </Link>
             );
           })
@@ -111,6 +120,7 @@ export default function OffertesPagina() {
                       <p className="font-semibold text-foreground">{d?.naam || "—"}</p>
                       <p className="text-xs text-muted-foreground">{o.email}</p>
                       {d?.telefoon && <a href={`tel:${d.telefoon}`} className="text-xs text-brand-text hover:underline">{d.telefoon}</a>}
+                      {wilTerugbellen(o) && <span className="mt-1 block w-fit rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-900">Terugbellen gevraagd</span>}
                     </td>
                     <td className="py-4 px-6 text-muted-foreground">{d?.product || d?.kozijnNaam || d?.deurNaam || "—"}</td>
                     <td className="py-4 px-6 font-semibold text-foreground">

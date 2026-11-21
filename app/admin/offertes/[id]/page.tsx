@@ -1,10 +1,11 @@
 import { db } from "@/db";
 import { offertes } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Download, ExternalLink, PartyPopper } from "lucide-react";
-import { markeerGemonteerd } from "@/app/actions";
+import { deleteOfferte, markeerTeruggebeld, saveOfferteNotitie, zetOfferteStatus } from "@/app/actions";
+import { DeleteButton } from "./delete-button";
 import { opbouwRegels, type Opbouw } from "@/lib/opbouw";
 import { STATUS_STIJL, offerteStatus } from "@/lib/offerte-status";
 
@@ -87,6 +88,23 @@ export default async function OfferteDetailPagina({ params }: { params: Promise<
           </Kaart>
       </div>
 
+      {d.terugbellenAt && !d.terugbeldAt && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <span>
+            <strong>Terugbellen gevraagd</strong> op {datumTijd(d.terugbellenAt)}
+            {d.terugbellenWanneer ? `, wanneer het uitkomt: ${String(d.terugbellenWanneer).toLowerCase()}` : ""}.
+            {tel ? <> Telefoon: <a href={`tel:${tel.replace(/[^\d+]/g, "")}`} className="font-semibold underline">{tel}</a></> : null}
+          </span>
+          <form
+            action={async () => {
+              "use server";
+              await markeerTeruggebeld(offerte.id);
+            }}>
+            <button type="submit" className="rounded-lg bg-brand px-4 py-2 text-sm font-bold text-white hover:bg-brand-dark">Teruggebeld</button>
+          </form>
+        </div>
+      )}
+
       {d.acceptedAt && (
         <div className="flex items-center gap-2 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-900">
           <PartyPopper className="size-4 shrink-0" />
@@ -94,24 +112,32 @@ export default async function OfferteDetailPagina({ params }: { params: Promise<
         </div>
       )}
 
-      {d.gemonteerdAt ? (
-        <div className="rounded-xl border border-border bg-muted/40 px-4 py-3 text-sm font-semibold text-foreground">
-          Gemonteerd op {datumTijd(d.gemonteerdAt)}
-          {d.reviewAt ? " · reviewverzoek verstuurd" : ""}
+      <div className="rounded-xl border border-border bg-muted/40 p-4">
+        <p className="mb-2 text-xs font-semibold text-muted-foreground">Status</p>
+        <div className="flex flex-wrap gap-2">
+          {(["nieuw", "verzonden", "akkoord", "gemonteerd"] as const)
+            .filter((k) => k !== "nieuw" || d.bron === "onlink")
+            .map((k) => (
+              <form
+                key={k}
+                action={async () => {
+                  "use server";
+                  await zetOfferteStatus(offerte.id, k);
+                }}>
+                <button
+                  type="submit"
+                  className={`rounded-lg border px-4 py-2.5 text-sm font-semibold ${status === k ? "border-brand bg-brand text-white" : "border-border bg-card text-foreground hover:bg-muted"}`}>
+                  {k === "akkoord" ? "Klant akkoord" : STATUS_STIJL[k].label}
+                </button>
+              </form>
+            ))}
         </div>
-      ) : (
-        <form
-          action={async () => {
-            "use server";
-            await markeerGemonteerd(offerte.id);
-          }}
-          className="rounded-xl border border-border bg-muted/40 p-4">
-          <button type="submit" className="w-full rounded-lg bg-brand px-4 py-3 text-sm font-bold text-white hover:bg-brand-dark sm:w-auto">
-            Markeer als gemonteerd
-          </button>
-          <p className="mt-2 text-xs text-muted-foreground">Een dag later krijgt de klant een mail met het verzoek om een Google-review achter te laten.</p>
-        </form>
-      )}
+        {d.gemonteerdAt ? (
+          <p className="mt-3 text-xs text-muted-foreground">Gemonteerd op {datumTijd(d.gemonteerdAt)}{d.reviewAt ? " · reviewverzoek verstuurd" : ""}</p>
+        ) : (
+          <p className="mt-3 text-xs text-muted-foreground">Zet je hem op Gemonteerd, dan krijgt de klant een dag later een mail met het verzoek om een Google-review achter te laten.</p>
+        )}
+      </div>
 
       <div className="grid gap-4 md:grid-cols-3">
         <div className="md:col-span-2">
@@ -173,6 +199,36 @@ export default async function OfferteDetailPagina({ params }: { params: Promise<
           </div>
         </div>
       </div>
+
+      <Kaart titel="Notitie" sub="Alleen zichtbaar voor jou.">
+        <form
+          action={async (fd: FormData) => {
+            "use server";
+            await saveOfferteNotitie(offerte.id, String(fd.get("notitie") ?? ""));
+          }}
+          className="space-y-3">
+          <textarea
+            name="notitie"
+            rows={3}
+            defaultValue={d.notitie ?? ""}
+            placeholder="Bijv. gebeld op 12/3, inmeten op dinsdag"
+            className="w-full rounded-xl border border-border bg-background px-3 py-2 text-base"
+          />
+          <button type="submit" className="rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-muted">
+            Notitie opslaan
+          </button>
+        </form>
+      </Kaart>
+
+      <form
+        action={async () => {
+          "use server";
+          const res = await deleteOfferte(offerte.id);
+          if (res.success) redirect("/admin/offertes");
+        }}
+        className="pt-2">
+        <DeleteButton />
+      </form>
     </div>
   );
 }
