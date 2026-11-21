@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import NextLink from "next/link";
-import { ArrowLeft, FileText, Ruler } from "lucide-react";
+import { ArrowLeft, FilePlus, FileText } from "lucide-react";
 import Link from "next/link";
 import { useBron } from "@/lib/use-bron";
 import { getCart } from "@/lib/cart";
@@ -28,7 +28,7 @@ export function InmeetBalk() {
           <ArrowLeft size={16} /> <span className="hidden sm:inline">Terug</span>
         </NextLink>
         <span className="flex items-center gap-1.5 font-semibold">
-          <Ruler size={16} /> Inmeten · {aantal} {aantal === 1 ? "raam" : "ramen"}
+          <FilePlus size={16} /> Offerte maken · {aantal} {aantal === 1 ? "raam" : "ramen"}
         </span>
         <div className="ml-auto flex items-center gap-2">
           <Link href="/offerte" className="flex items-center gap-1.5 bg-white text-slate-900 font-semibold rounded-lg px-3 py-1.5">

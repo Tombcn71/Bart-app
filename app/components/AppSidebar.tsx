@@ -8,7 +8,7 @@ import {
   Menu,
   X,
   LogOut,
-  Ruler,
+  FilePlus,
   Link2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -110,12 +110,12 @@ export function AppSidebar() {
               </SidebarMenuItem>
             </Collapsible>
 
-            {/* Zoals bij kozijnsoftware: Inmeten en Link versturen staan in het menu (ook in de web app op de telefoon) */}
+            {/* Zoals bij kozijnsoftware: Offerte maken en Link versturen staan in het menu (ook in de web app op de telefoon) */}
             <SidebarMenuItem>
               <SidebarMenuButton asChild className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
                 <a href="/meten/inmeten">
-                  <Ruler size={20} />
-                  <span>Inmeten</span>
+                  <FilePlus size={20} />
+                  <span>Offerte maken</span>
                 </a>
               </SidebarMenuButton>
             </SidebarMenuItem>

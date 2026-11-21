@@ -1,5 +1,5 @@
 import NextLink from "next/link";
-import { FileText, Link, MapPin } from "lucide-react";
+import { FilePlus, FileText, Link2 } from "lucide-react";
 import { InstallHint } from "./install-hint";
 import { StopInmeten } from "./stop-inmeten";
 
@@ -17,15 +17,15 @@ export default function MetenPage() {
     },
     {
       href: "/meten/reageer",
-      Icon: Link,
+      Icon: Link2,
       titel: "Link versturen",
       tekst: "Stuur je klant je linkje via WhatsApp of mail, om zelf zijn prijs te berekenen.",
     },
     {
       href: "/meten/inmeten",
-      Icon: MapPin,
-      titel: "Inmeten",
-      tekst: "Bij de klant: maten per raam invoeren en de offerte ter plekke mailen.",
+      Icon: FilePlus,
+      titel: "Offerte maken",
+      tekst: "Bij de klant of aan de telefoon: maten per raam invoeren en de offerte direct mailen.",
     },
   ];
 
