@@ -45,7 +45,12 @@ export default async function OfferteDetailPagina({ params }: { params: Promise<
   const [offerte] = await db.select().from(offertes).where(eq(offertes.id, id));
   if (!offerte) return notFound();
 
-  const d = (offerte.data ?? {}) as Record<string, any>;
+  let d = (offerte.data ?? {}) as Record<string, any>;
+  // Geopend door Bart: de aanvraag is niet meer "Nieuw".
+  if (d.bron === "onlink" && !d.gezienAt) {
+    d = { ...d, gezienAt: new Date().toISOString() };
+    await db.update(offertes).set({ data: d }).where(eq(offertes.id, offerte.id));
+  }
   const items: any[] = Array.isArray(d.items) ? d.items : [];
   const status = offerteStatus(d);
   const stijl = STATUS_STIJL[status];
@@ -69,6 +74,17 @@ export default async function OfferteDetailPagina({ params }: { params: Promise<
           <span className={`inline-block h-2 w-2 rounded-full ${stijl.punt}`} />
           {stijl.label}
         </span>
+      </div>
+
+      <div className="md:hidden">
+        <Kaart titel="Klant">
+            <div className="space-y-1 text-sm">
+              <p className="font-semibold text-foreground">{klant}</p>
+              <p><a href={`mailto:${offerte.email}`} className="text-brand-text hover:underline">{offerte.email}</a></p>
+              {tel && <p><a href={`tel:${tel.replace(/[^\d+]/g, "")}`} className="text-brand-text hover:underline">{tel}</a></p>}
+              {d.woonplaats && <p className="text-muted-foreground">{String(d.woonplaats).toLowerCase().replace(/(^|[\s'-])\S/g, (m: string) => m.toUpperCase())}</p>}
+            </div>
+          </Kaart>
       </div>
 
       {d.acceptedAt && (
@@ -123,6 +139,7 @@ export default async function OfferteDetailPagina({ params }: { params: Promise<
         </div>
 
         <div className="space-y-4">
+          <div className="hidden md:block">
           <Kaart titel="Klant">
             <div className="space-y-1 text-sm">
               <p className="font-semibold text-foreground">{klant}</p>
@@ -131,6 +148,7 @@ export default async function OfferteDetailPagina({ params }: { params: Promise<
               {d.woonplaats && <p className="text-muted-foreground">{String(d.woonplaats).toLowerCase().replace(/(^|[\s'-])\S/g, (m: string) => m.toUpperCase())}</p>}
             </div>
           </Kaart>
+          </div>
 
           {o && (
             <Kaart titel="Wat dit voor jou betekent" sub={`${o.kop}, exclusief btw. Alleen voor jou, de klant ziet dit niet.`}>
