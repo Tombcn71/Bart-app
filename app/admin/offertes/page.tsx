@@ -3,11 +3,13 @@ import { useState, useEffect } from "react";
 import { getOffertes, deleteOfferte } from "@/app/actions";
 import Link from "next/link";
 import { FilterKeuze } from "./filter-keuze";
+import { STATUSSEN, STATUS_STIJL, offerteStatus, type OfferteStatus } from "@/lib/offerte-status";
 
 export default function OffertesPagina() {
-  const [offertes, setOffertes] = useState<any[]>([]);
+  const [alle, setOffertes] = useState<any[]>([]);
   const [loading, setLoading]   = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [filter, setFilter] = useState<"" | OfferteStatus>("");
 
   async function load() {
     const res = await getOffertes();
@@ -25,21 +27,33 @@ export default function OffertesPagina() {
     setDeleting(null);
   }
 
+  const telling = (k: "" | OfferteStatus) => (k ? alle.filter((o) => offerteStatus(o.data) === k).length : alle.length);
+  const offertes = filter ? alle.filter((o) => offerteStatus(o.data) === filter) : alle;
+
   return (
     <div className="space-y-6">
       <div className="hidden md:block">
         <h1 className="text-2xl font-black text-foreground">Aanvragen</h1>
         <p className="text-sm text-muted-foreground">Alle offertes, nieuwste bovenaan.</p>
+        <div className="mt-4 inline-flex gap-1 rounded-lg bg-muted p-1">
+          {STATUSSEN.map((st) => (
+            <button
+              key={st.key}
+              type="button"
+              onClick={() => setFilter(st.key)}
+              className={`rounded-md px-3 py-1.5 text-sm font-semibold ${filter === st.key ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}>
+              {st.label} ({telling(st.key)})
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Telefoon: keuzemenu met aantallen en de offertes als compacte kaarten. */}
       <div className="space-y-2 md:hidden">
         <FilterKeuze
-          actief="/admin/offertes"
-          opties={[
-            { href: "/admin/offertes", label: "Alle aanvragen", aantal: offertes.length },
-            { href: "/admin/offertes/geaccepteerd", label: "Geaccepteerd", aantal: offertes.filter((o) => o.data?.acceptedAt).length },
-          ]}
+          waarde={filter}
+          onKies={(k) => setFilter(k as "" | OfferteStatus)}
+          opties={STATUSSEN.map((st) => ({ key: st.key, label: st.filterLabel, aantal: telling(st.key) }))}
         />
         {loading ? (
           <p className="p-6 text-center text-muted-foreground">Laden...</p>
@@ -61,17 +75,10 @@ export default function OffertesPagina() {
                   <span className="min-w-0 truncate text-xs text-muted-foreground">
                     {o.createdAt ? new Date(o.createdAt).toLocaleDateString("nl-NL", { day: "numeric", month: "short" }) : ""} · {d?.product || d?.kozijnNaam || d?.deurNaam || "—"}
                   </span>
-                  {isAccepted ? (
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-700 dark:bg-green-500/10 dark:text-green-400">
-                      <span className="inline-block h-1.5 w-1.5 rounded-full bg-green-500" />
-                      Geaccepteerd
+                  <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${STATUS_STIJL[offerteStatus(d)].badge}`}>
+                      <span className={`inline-block h-1.5 w-1.5 rounded-full ${STATUS_STIJL[offerteStatus(d)].punt}`} />
+                      {STATUS_STIJL[offerteStatus(d)].label}
                     </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-brand-text">
-                      <span className="inline-block h-1.5 w-1.5 rounded-full bg-brand" />
-                      Verzonden
-                    </span>
-                  )}
                 </div>
               </Link>
             );
@@ -113,17 +120,10 @@ export default function OffertesPagina() {
                       {o.createdAt ? new Date(o.createdAt).toLocaleDateString("nl-NL") : "—"}
                     </td>
                     <td className="py-4 px-6">
-                      {isAccepted ? (
-                        <span className="inline-flex items-center gap-1.5 bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-400 text-xs font-semibold px-2.5 py-1 rounded-full">
-                          <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block" />
-                          Geaccepteerd
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1.5 bg-blue-50 text-brand-text text-xs font-semibold px-2.5 py-1 rounded-full">
-                          <span className="w-1.5 h-1.5 rounded-full bg-brand inline-block" />
-                          Verzonden
-                        </span>
-                      )}
+                      <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${STATUS_STIJL[offerteStatus(d)].badge}`}>
+                      <span className={`inline-block h-1.5 w-1.5 rounded-full ${STATUS_STIJL[offerteStatus(d)].punt}`} />
+                      {STATUS_STIJL[offerteStatus(d)].label}
+                    </span>
                     </td>
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-3">
