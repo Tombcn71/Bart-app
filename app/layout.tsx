@@ -5,6 +5,7 @@ import Navbar from "./components/Navbar";
 import { CenterToast } from "./components/CenterToast";
 import { InmeetBalk } from "./components/InmeetBalk";
 import { NavGate } from "./components/NavGate";
+import { AssistentGlobaal } from "./components/AssistentGlobaal";
 
 // Huisstijl bartmooi.nl
 const overpass = Overpass({
@@ -40,6 +41,7 @@ export default async function RootLayout({
         {/* De rest van de pagina (children) komt hieronder */}
         <main className="flex-grow">{children}</main>
         <CenterToast />
+        <AssistentGlobaal />
       </body>
     </html>
   );

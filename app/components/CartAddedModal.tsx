@@ -1,10 +1,11 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { getCart, clearCart } from "@/lib/cart";
 import { saveOffertes } from "@/app/actions";
 import { showToast } from "@/app/components/CenterToast";
 import { useBron } from "@/lib/use-bron";
+import { formulier } from "@/lib/assistent-formulier";
 import { FileCheck, PiggyBank } from "lucide-react";
 
 interface Props {
@@ -37,6 +38,17 @@ export function CartAddedModal({ open, onClose, product, breedte, hoogte, aantal
   const [bezig, setBezig] = useState(false);
   const [klaar, setKlaar] = useState(false);
   const [offerteId, setOfferteId] = useState<string | null>(null);
+  // De assistent kan dit formulier zichtbaar invullen en versturen.
+  formulier.open = open;
+  useEffect(() => { window.dispatchEvent(new Event("assistent-formulier")); }, [open]);
+  formulier.waarden = { naam, woonplaats, telefoon, email };
+  formulier.vul = (p) => {
+    if (p.naam !== undefined) setNaam(p.naam);
+    if (p.woonplaats !== undefined) setWoonplaats(p.woonplaats);
+    if (p.telefoon !== undefined) setTelefoon(p.telefoon);
+    if (p.email !== undefined) setEmail(p.email);
+  };
+  formulier.verstuur = () => handleSubmit();
   if (!open) return null;
 
   // Inmeten (Onspot): geen klantformulier hier; de vakman verstuurt alles vanaf de offertepagina.
@@ -61,18 +73,23 @@ export function CartAddedModal({ open, onClose, product, breedte, hoogte, aantal
     </div>
   );
 
-  async function handleSubmit() {
+  async function handleSubmit(): Promise<{ ok: boolean; offerteId?: string | null; fout?: string }> {
     const emailOk = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email);
     const telOk = telefoon.replace(/\D/g, "").length >= 8;
     if (!naam.trim() || !emailOk || !telOk) {
       showToast("Vul a.u.b. uw naam, een geldig e-mailadres en uw telefoonnummer in.", "error");
-      return;
+      return { ok: false, fout: "Naam, een geldig e-mailadres of telefoonnummer ontbreekt of klopt niet." };
     }
     setBezig(true);
     const res = await saveOffertes({ naam, email, woonplaats, telefoon }, getCart(), bron);
     setBezig(false);
-    if (res.success) { clearCart(); setOfferteId(("offerteId" in res && res.offerteId) || null); setKlaar(true); }
-    else showToast("Er ging iets mis. Probeer opnieuw.", "error");
+    if (res.success) {
+      const id = ("offerteId" in res && res.offerteId) || null;
+      clearCart(); setOfferteId(id); setKlaar(true);
+      return { ok: true, offerteId: id };
+    }
+    showToast("Er ging iets mis. Probeer opnieuw.", "error");
+    return { ok: false, fout: "Versturen mislukt." };
   }
 
   // Na het aanvragen: een eigen eindscherm in dezelfde stijl als het beginscherm, met alleen de knop naar de offerte.
@@ -163,7 +180,7 @@ export function CartAddedModal({ open, onClose, product, breedte, hoogte, aantal
               <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="E-mailadres"
                 className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
 
-              <button onClick={handleSubmit} disabled={bezig}
+              <button onClick={() => handleSubmit()} disabled={bezig}
                 className="bg-brand hover:bg-brand-dark text-white font-bold text-center py-2.5 rounded-lg transition-colors disabled:opacity-50 mt-1 text-sm">
                 {bezig ? "Verzenden..." : `Offerte aanvragen${cartCount > 1 ? ` (${cartCount})` : ""}`}
               </button>

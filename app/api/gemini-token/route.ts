@@ -41,7 +41,9 @@ export async function POST(req: Request) {
         uses: 1,
         expireTime: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
         newSessionExpireTime: new Date(Date.now() + 60 * 1000).toISOString(),
-        liveConnectConstraints: { model, config: marleenConfig(stem, model) },
+        liveConnectConstraints: { model, config: marleenConfig(stem, model, new URL(req.url).searchParams.get("widget") === "1") },
+        // Vergrendel alle instellingen op de server. Zonder dit negeert Google de stem, de taal en het luisteren.
+        lockAdditionalFields: [],
         httpOptions: { apiVersion: "v1alpha" },
       },
     });

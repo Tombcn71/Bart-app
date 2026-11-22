@@ -200,7 +200,7 @@ export function OfferteWeergave({
           </section>
         )}
         {!klaar && (
-          <section className="rounded-2xl bg-white border border-slate-100 shadow-sm px-5 py-5">
+          <section id="digitaal-akkoord" className="rounded-2xl bg-white border border-slate-100 shadow-sm px-5 py-5">
             <h2 className="text-sm font-bold uppercase tracking-wider text-slate-700 mb-4">Digitaal akkoord</h2>
             <label className="block text-base font-semibold text-slate-700 mb-2">Naam</label>
             <input value={naam} onChange={(e) => setNaam(e.target.value)} placeholder="Voor- en achternaam"

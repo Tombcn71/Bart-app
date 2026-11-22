@@ -1,6 +1,10 @@
 "use client";
 import { useState, useMemo, useEffect, useRef } from "react";
-import { addToCart, getCart } from "@/lib/cart";
+import { addToCart, getCart, clearCart } from "@/lib/cart";
+import { brugRef } from "@/lib/assistent-brug";
+import { formulier } from "@/lib/assistent-formulier";
+import { saveOffertes } from "@/app/actions";
+import { useBron } from "@/lib/use-bron";
 import { CartAddedModal } from "@/app/components/CartAddedModal";
 import { NumberInput } from "@/app/components/NumberInput";
 import { FormField } from "@/app/components/FormField";
@@ -463,6 +467,9 @@ export function KozijnConfigurator({
   const [klantType, setKlantType] = useState<"particulier" | "zakelijk">("particulier");
   const [modalOpen, setModalOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
+  const bron = useBron();
+  // Het brugscherm is er alleen als deze calculator zichtbaar is.
+  useEffect(() => () => { brugRef.current = null; }, []);
 
   // Ander type kiezen op hetzelfde scherm: maten en opties blijven staan, de link gaat mee.
   function kiesType(nieuw: string) {
@@ -494,7 +501,7 @@ export function KozijnConfigurator({
     if (rij && actief) rij.scrollLeft = actief.offsetLeft - 16;
   }, [slug, matrix]);
 
-  function handleAdd() {
+  function handleAdd(toonModal = true) {
     addToCart({
       slug,
       product: `${alu ? "Aluminium " : ""}${kozijn?.name ?? "Kozijn"}`,
@@ -536,7 +543,7 @@ export function KozijnConfigurator({
       },
     });
     setCartCount(getCart().length);
-    setModalOpen(true);
+    if (toonModal) setModalOpen(true);
   }
 
   // Zonder prijzen van buiten: de opgeslagen prijzen van het bedrijf.
@@ -670,7 +677,8 @@ export function KozijnConfigurator({
     return { regels: [...opbouwBasis.regels, { label: `${extra.label} ${nl(extraMaat)} mm`, bedrag }], totaal: Math.round((opbouwBasis.totaal + bedrag * aantal) * 100) / 100 };
   })();
   // Horren erbij (kunststof en aluminium): een vaste prijs per hor die het bedrijf zelf instelt; leeg = geen keuze.
-  const horPrijs = isStandaardModel(matrix) ? matrix.horPrijs ?? 0 : 0;
+  // Op de echte site: de prijs die het bedrijf instelt. Alleen op jouw eigen computer (testen) staat er een voorbeeldprijs van 150, zodat je de hor kunt proberen.
+  const horPrijs = typeof matrix?.horPrijs === "number" ? matrix.horPrijs : process.env.NODE_ENV !== "production" ? 150 : 0;
   const horTotaal = horPrijs > 0 && horAantal > 0 ? Math.round(horPrijs * horAantal * 100) / 100 : 0;
   const opbouw =
     horTotaal > 0
@@ -688,6 +696,71 @@ export function KozijnConfigurator({
   const btwPct = isStandaardModel(matrix) ? btwPercentage(matrix) : alu ? 21 : 0;
   const metBtw = standaard && klantType === "particulier";
   const berekendePrijs = metBtw ? Math.round(opbouw.totaal * (1 + btwPct / 100) * 100) / 100 : opbouw.totaal;
+
+  // De assistent bedient deze calculator met precies deze functies; de prijs blijft die van de calculator.
+  const KEUZE_VELDEN: Record<string, [string, (v: string) => void]> = {
+    kleurBinnen: ["kleurBinnen", setKleur], kleurBuiten: ["kleurBuiten", setKleurBuitenkant], glas: ["glas", setGlas], profiel: ["profiel", setProfiel],
+    aanslag: ["aanslag", setAanslag], afstandshouder: ["afstandshouder", setAfstandshouder], roeden: ["roeden", setRoeden],
+    ventilatie: ["ventilatie", setVentilatieRooster], voorboren: ["voorboren", setVoorboren],
+  };
+  // Welke keuzes deze calculator echt heeft: de standaardlijst, of (oude prijstabel van een bedrijf) de keuzes uit zijn eigen prijzen.
+  const OPTIE_TABELLEN: Record<string, string> = { kleurBinnen: "kleurToeslag", glas: "glasToeslag", profiel: "profielToeslag", aanslag: "aanslagToeslag", afstandshouder: "afstandshouderToeslag", roeden: "roedenToeslag", ventilatie: "ventilatieRoosterToeslag", voorboren: "voorborenToeslag" };
+  const mogelijk = (veld: string): { id: string; naam: string }[] => {
+    if (standaard) return KOZIJN_CATALOGUS.keuzes.find((g) => g.id === veld)?.keuzes.map((k) => ({ id: k.id, naam: k.naam })) ?? [];
+    if (veld === "kleurBuiten") return KOZIJN_KLEUREN.map((k) => ({ id: k.id, naam: k.naam }));
+    return Object.keys(matrix?.[OPTIE_TABELLEN[veld]] ?? {}).map((id) => ({ id, naam: optieNaam(id) }));
+  };
+  const bediend = !alu && !voorbeeld;
+  if (bediend) brugRef.current = {
+    typen: () => lijst.map((k) => ({ slug: k.slug, naam: k.name })),
+    staat: () => ({
+      scherm: formulier.open ? "calculator met formulier" : "calculator",
+      type: { slug, naam: kozijn?.name },
+      breedte,
+      hoogte,
+      toegestaneMaten: grenzen ?? null,
+      maatIsToegestaan: !buitenMaat,
+      aantal,
+      horren: horAantal,
+      horPrijs,
+      klantType,
+      weergave,
+      opties: Object.fromEntries(Object.keys(KEUZE_VELDEN).map((v) => [v, mogelijk(v)])),
+      keuzes: {
+        kleurBinnen: kleur, kleurBuiten: kleurBuitenkant, glas, profiel, aanslag, afstandshouder, roeden, ventilatie: ventilatieRooster, voorboren,
+      },
+      prijsInEuro: berekendePrijs,
+      prijsInclusief: metBtw ? `montage en ${btwPct}% btw` : "montage, exclusief btw",
+    }),
+    zet: (p) => {
+      if (typeof p.type === "string" && lijst.some((k) => k.slug === p.type)) kiesType(p.type);
+      if (typeof p.breedte === "number" && p.breedte > 0) setBreedte(Math.round(p.breedte));
+      if (typeof p.hoogte === "number" && p.hoogte > 0) setHoogte(Math.round(p.hoogte));
+      if (typeof p.aantal === "number") setAantal(Math.min(50, Math.max(1, Math.round(p.aantal))));
+      if (typeof p.horren === "number") setHorAantal(horPrijs > 0 ? Math.min(50, Math.max(0, Math.round(p.horren))) : 0);
+      if (p.klantType === "particulier" || p.klantType === "zakelijk") setKlantType(p.klantType);
+      if (p.weergave === "tekening" || p.weergave === "foto") setWeergave(p.weergave);
+      for (const [veld, [groep, zet]] of Object.entries(KEUZE_VELDEN)) {
+        const v = p[veld];
+        if (typeof v === "string" && mogelijk(groep).some((k) => k.id === v)) zet(v);
+      }
+    },
+    toonFormulier: () => {
+      if (formulier.open || buitenMaat) return;
+      handleAdd(true);
+    },
+    verstuur: async (klant) => {
+      const emailOk = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(klant.email ?? "");
+      const telOk = (klant.telefoon ?? "").replace(/\D/g, "").length >= 8;
+      if (!klant.naam?.trim() || !emailOk || !telOk) return { ok: false, fout: "Naam, geldig e-mailadres of telefoonnummer ontbreekt of klopt niet." };
+      if (buitenMaat) return { ok: false, fout: "De maat is buiten wat standaard kan. Pas eerst de maat aan." };
+      handleAdd(false);
+      const res = await saveOffertes({ naam: klant.naam, email: klant.email, woonplaats: klant.woonplaats, telefoon: klant.telefoon }, getCart(), bron);
+      if (!res.success) return { ok: false, fout: "Versturen mislukt." };
+      clearCart();
+      return { ok: true, offerteId: ("offerteId" in res && res.offerteId) || null };
+    },
+  };
 
   if (!matrix)
     return <div className="p-10 text-center">Prijzen ophalen...</div>;
@@ -1132,7 +1205,7 @@ export function KozijnConfigurator({
 
               {!voorbeeld && (
                 <button
-                  onClick={handleAdd}
+                  onClick={() => handleAdd()}
                   disabled={buitenMaat || extraBuiten}
                   className="hidden lg:block lg:sticky lg:bottom-4 z-20 shadow-xl shadow-black/20 w-full bg-brand text-white py-4 rounded-lg font-bold uppercase text-[11px] tracking-widest hover:bg-brand-dark transition-colors disabled:opacity-40 disabled:hover:bg-brand">
                   Toevoegen aan offerte
@@ -1229,7 +1302,7 @@ export function KozijnConfigurator({
           )}
         </div>
         <button
-          onClick={handleAdd}
+          onClick={() => handleAdd()}
           disabled={buitenMaat || extraBuiten}
           className="bg-brand text-white px-5 py-3 rounded-lg font-bold text-sm hover:bg-brand-dark transition-colors disabled:opacity-40 disabled:hover:bg-brand">
           Toevoegen

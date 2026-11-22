@@ -70,9 +70,13 @@ function naarBase64(buf: ArrayBuffer) {
 
 type Stand = "uit" | "verbinden" | "aan";
 
-function Chat() {
-  const [open, setOpen] = useState(false);
+function Chat({ ingebed = false }: { ingebed?: boolean }) {
+  const [open, setOpen] = useState(ingebed);
   const [uitgeklapt, setUitgeklapt] = useState(false);
+  // Widget: eerst een klein kaartje, na de klik alleen nog de bal. Weggeklikt = alleen de bal.
+  const [klein, setKlein] = useState(false);
+  // In de app: tijdens het gesprek alleen de bal, zodat de klant de calculator ziet. Tik op het tekstballonnetje voor het gesprek.
+  const [toonGesprek, setToonGesprek] = useState(false);
   const [berichten, setBerichten] = useState<Bericht[]>([]);
   const [tekst, setTekst] = useState("");
   const [fout, setFout] = useState("");
@@ -256,6 +260,22 @@ function Chat() {
   async function bijToolCall(m: LiveServerMessage) {
     const calls = m.toolCall?.functionCalls;
     if (!calls?.length) return;
+    if (ingebed) {
+      for (const c of calls) {
+        if (c.name !== "naar_offerte") continue;
+        const samenvatting = String((c.args as { samenvatting?: string } | undefined)?.samenvatting ?? "");
+        try {
+          sessie.current?.sendToolResponse({ functionResponses: [{ id: c.id, name: c.name, response: { output: { ok: true } } }] });
+        } catch {}
+        // Even wachten, zodat Marleen haar zin kan afmaken voordat de pagina wisselt.
+        setTimeout(() => {
+          try {
+            window.parent.postMessage({ soort: "marleen-ga", samenvatting }, "*");
+          } catch {}
+        }, 2500);
+      }
+      return;
+    }
     const antwoorden: { id?: string; name?: string; response: Record<string, unknown> }[] = [];
     for (const c of calls) {
       let response: Record<string, unknown>;
@@ -327,7 +347,7 @@ function Chat() {
           return;
         }
       }
-      const r = await fetch("/api/gemini-token?stem=" + stem + "&model=" + model, { method: "POST" });
+      const r = await fetch("/api/gemini-token?stem=" + stem + "&model=" + model + (ingebed ? "&widget=1" : ""), { method: "POST" });
       const d = await r.json();
       if (afgebroken()) return;
       if (!d.token) throw new Error(d.fout || "Geen toegang");
@@ -394,7 +414,7 @@ function Chat() {
         laatsteRol.current = null;
         s.sendRealtimeInput({ text: eersteVraag });
       } else {
-        s.sendRealtimeInput({ text: "Zeg nu je vaste openingszin." });
+        s.sendRealtimeInput({ text: ingebed ? "Zeg nu je openingszin voor de website." : "Zeg nu je vaste openingszin." });
       }
     } catch (e) {
       setFout("Fout: " + (e instanceof Error ? e.message : "het lukte niet") + ". Probeer het opnieuw.");
@@ -417,6 +437,7 @@ function Chat() {
   }
 
   function sluit() {
+    setToonGesprek(false);
     opruimen();
     setTypen(false);
     setUitgeklapt(false);
@@ -497,8 +518,133 @@ function Chat() {
 
   const keyframes = <style>{`@keyframes orb-ademen{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}`}</style>;
 
+  // ---- Widget op een website: klein kaartje, daarna alleen de bal ----
+  const widgetModus = actief ? "bal" : klein && !fout ? "rust" : "kaart";
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  useEffect(() => {
+    if (!ingebed) return;
+    try {
+      if (sessionStorage.getItem("marleen-klein")) setKlein(true);
+    } catch {}
+  }, [ingebed]);
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  useEffect(() => {
+    if (!ingebed) return;
+    const maat = widgetModus === "kaart" ? { w: 360, h: fout ? 200 : 178 } : { w: 112, h: 112 };
+    try {
+      window.parent.postMessage({ soort: "marleen-maat", ...maat }, "*");
+    } catch {}
+  }, [ingebed, widgetModus, fout]);
+
+  if (ingebed) {
+    const naarRust = () => {
+      setKlein(true);
+      try {
+        sessionStorage.setItem("marleen-klein", "1");
+      } catch {}
+    };
+    const ophangen = () => {
+      opruimen();
+      naarRust();
+    };
+    if (widgetModus === "kaart") {
+      return (
+        <div className="fixed inset-0 p-1">
+          <style>{`html,body{background:transparent!important}`}</style>
+          <div className="relative flex h-full w-full gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-slate-900 shadow-lg">
+            <button
+              type="button"
+              onClick={naarRust}
+              aria-label="Sluiten"
+              className="absolute top-2 right-2 rounded-full p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700">
+              <X className="size-4" />
+            </button>
+            <div className="mt-0.5 size-11 shrink-0 rounded-full" style={{ background: BAL, boxShadow: "0 6px 16px rgba(39,146,220,0.35)" }} />
+            <div className="min-w-0 flex-1 pr-5">
+              <p className="text-[15px] font-bold leading-tight">Hallo, ik ben Marleen</p>
+              <p className={`mt-1 text-[13.5px] leading-snug ${fout ? "font-semibold text-red-700" : "text-slate-600"}`}>
+                {fout || "Zal ik je in één minuut aan een offerte helpen? Praat gewoon met me, dan loop ik met je door de calculator."}
+              </p>
+              <button
+                type="button"
+                onClick={startPraten}
+                className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-brand py-2.5 text-sm font-bold text-white transition hover:bg-brand-dark active:scale-[0.98]">
+                <Mic className="size-4" /> Praat met Marleen
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    return (
+      <div className="fixed inset-0 grid place-items-center">
+        <style>{`html,body{background:transparent!important}`}</style>
+        <button
+          type="button"
+          onClick={widgetModus === "rust" ? startPraten : undefined}
+          aria-label={widgetModus === "rust" ? "Praat met Marleen" : bezig ? "Verbinden" : praat ? "Marleen praat" : "Marleen luistert"}
+          className="relative transition active:scale-95">
+          <div
+            ref={bol}
+            className="size-[72px] rounded-full transition-transform duration-300 ease-out"
+            style={{
+              background: BAL,
+              boxShadow: "0 10px 26px rgba(39,146,220,0.4)",
+              animation: widgetModus === "rust" || bezig ? "orb-ademen 3.5s ease-in-out infinite" : undefined,
+            }}
+          />
+          {widgetModus === "rust" && <Mic className="absolute inset-0 m-auto size-7 text-white drop-shadow" />}
+        </button>
+        {widgetModus === "bal" && (
+          <button
+            type="button"
+            onClick={ophangen}
+            aria-label="Ophangen"
+            title="Ophangen"
+            className="absolute top-1.5 left-1.5 grid size-8 place-items-center rounded-full bg-red-600 text-white shadow-md hover:bg-red-700">
+            <PhoneOff className="size-4" />
+          </button>
+        )}
+        {keyframes}
+      </div>
+    );
+  }
+
+  // App: tijdens een gesproken gesprek alleen de bal rechtsonder.
+  if (open && actief && !typen && !toonGesprek) {
+    return (
+      <div className="fixed right-4 bottom-4 z-50 flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setToonGesprek(true)}
+          aria-label="Gesprek tonen"
+          title="Gesprek tonen"
+          className="grid size-10 place-items-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-md hover:bg-slate-50">
+          <Maximize2 className="size-4" />
+        </button>
+        <div className="relative">
+          <div
+            ref={bol}
+            className="size-[72px] rounded-full transition-transform duration-300 ease-out"
+            style={{ background: BAL, boxShadow: "0 10px 26px rgba(39,146,220,0.4)", animation: bezig ? "orb-ademen 3.5s ease-in-out infinite" : undefined }}
+          />
+          <button
+            type="button"
+            onClick={sluit}
+            aria-label="Ophangen"
+            title="Ophangen"
+            className="absolute -top-1 -left-1 grid size-8 place-items-center rounded-full bg-red-600 text-white shadow-md hover:bg-red-700">
+            <PhoneOff className="size-4" />
+          </button>
+        </div>
+        {keyframes}
+      </div>
+    );
+  }
+
   // Gesloten: knopje, praatwolkje en de bal.
   if (!open) {
+    if (ingebed) return null;
     return (
       <div className="fixed right-5 bottom-5 z-50 flex flex-col items-end gap-3">
         <button
@@ -533,6 +679,11 @@ function Chat() {
               title="Ophangen"
               className="rounded-full p-2 text-red-600 hover:bg-red-50">
               <PhoneOff className="size-5" />
+            </button>
+          )}
+          {actief && !typen && (
+            <button onClick={() => setToonGesprek(false)} aria-label="Alleen de bal" title="Alleen de bal" className="rounded-full p-2 text-slate-600 hover:bg-slate-100">
+              <Minimize2 className="size-5" />
             </button>
           )}
           <button
@@ -620,6 +771,6 @@ function Chat() {
   );
 }
 
-export function GeminiAssistent() {
-  return <Chat />;
+export function GeminiAssistent({ ingebed = false }: { ingebed?: boolean }) {
+  return <Chat ingebed={ingebed} />;
 }
