@@ -1,5 +1,6 @@
 import { EndSensitivity, Modality, StartSensitivity, ThinkingLevel } from "@google/genai";
 import { MARLEEN_PROMPT } from "./marleen-prompt";
+import { MARLEEN_TOOLS } from "./marleen-tools";
 
 export const MODELLEN = ["gemini-3.8-live", "gemini-3.8-live-extended-thinking", "gemini-3.1-flash-live-preview"] as const;
 export const MARLEEN_MODEL = MODELLEN[0];
@@ -11,6 +12,7 @@ export function marleenConfig(stem: string = "Kore", model: string = MARLEEN_MOD
   return {
     ...(model.includes("extended-thinking") ? { thinkingConfig: { thinkingLevel: ThinkingLevel.LOW } } : {}),
     responseModalities: [Modality.AUDIO],
+    tools: MARLEEN_TOOLS,
     systemInstruction: MARLEEN_PROMPT,
     speechConfig: {
       languageCode: "nl-NL",

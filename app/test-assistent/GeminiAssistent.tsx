@@ -2,6 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import { GoogleGenAI, type Session, type LiveServerMessage } from "@google/genai";
+import { useRouter } from "next/navigation";
+import { brugRef } from "@/lib/assistent-brug";
+import { formulier } from "@/lib/assistent-formulier";
+import { KOZIJN_TYPEN } from "@/lib/kozijntypen";
 import { Maximize2, Mic, Minimize2, PhoneOff, Send, Sparkles, X } from "lucide-react";
 
 const STEMMEN = ["Sulafat", "Gacrux", "Vindemiatrix", "Despina", "Achernar", "Callirrhoe", "Erinome", "Kore", "Aoede", "Leda"];
@@ -76,7 +80,7 @@ function Chat() {
   const [stand, setStand] = useState<Stand>("uit");
   const [praat, setPraat] = useState(false);
   const [stem] = useState("Kore");
-  const [model] = useState("gemini-3.1-flash-live-preview");
+  const [model] = useState("gemini-3.8-live");
 
   const bol = useRef<HTMLDivElement>(null);
   const lijst = useRef<HTMLDivElement>(null);
@@ -149,7 +153,126 @@ function Chat() {
     };
   }
 
+  const router = useRouter();
+
+  // Overdracht vanaf de website: de klant komt binnen met ?marleen=... (wat al besproken is).
+  const [overdracht, setOverdracht] = useState("");
+  const [autoStart, setAutoStart] = useState(false);
+  useEffect(() => {
+    // Blokkeert de browser het geluid na de doorstap, dan start een klik of aanraking het meteen.
+    const hervat = () => ctxUit.current?.resume().catch(() => {});
+    window.addEventListener("pointerdown", hervat);
+    window.addEventListener("keydown", hervat);
+    return () => {
+      window.removeEventListener("pointerdown", hervat);
+      window.removeEventListener("keydown", hervat);
+    };
+  }, []);
+  useEffect(() => {
+    if (autoStart && overdracht) {
+      setAutoStart(false);
+      verderPraten(); // geen knop: meteen verder praten
+    }
+  }, [autoStart, overdracht]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    try {
+      const p = new URLSearchParams(window.location.search).get("marleen");
+      if (p) {
+        setOverdracht(p);
+        setOpen(true);
+        setAutoStart(true);
+        window.history.replaceState(null, "", window.location.pathname);
+      }
+    } catch {}
+  }, []);
+  function verderPraten() {
+    if (!overdracht) return;
+    const tekst =
+      "[Overdracht van de website] De klant praatte net met je op de website van BartMooi en is nu doorgestuurd naar de offerte-app. Dit is al besproken: " +
+      overdracht +
+      ". Begroet de klant NIET opnieuw en stel je niet opnieuw voor. Ga direct door alsof het één gesprek is. Zet alleen in de calculator wat de klant echt heeft gezegd, met open_kozijn en zet_keuzes. Heeft de klant nog geen kozijntype genoemd, open dan niets en vraag welk kozijn hij wil. Verzin nooit een type of maat.";
+    setOverdracht("");
+    void begin(false, tekst, true);
+  }
+
+  /** Marleen bedient de calculator en het formulier. Prijzen worden niet teruggegeven: die noemt ze nooit. */
+  async function voerUit(naam: string, input: Record<string, unknown>): Promise<Record<string, unknown>> {
+    const zonderPrijs = (x: unknown) => {
+      if (!x || typeof x !== "object") return x;
+      const { prijsInEuro, prijsInclusief, horPrijs, ...rest } = x as Record<string, unknown>;
+      void prijsInEuro; void prijsInclusief;
+      return { ...rest, horrenBeschikbaar: typeof horPrijs === "number" && horPrijs > 0 };
+    };
+    const wacht = (ms: number) => new Promise((r) => setTimeout(r, ms));
+    const brug = () => brugRef.current;
+    if (naam === "open_kozijn") {
+      if (!KOZIJN_TYPEN.some((t) => t.slug === input.type)) return { fout: "Onbekend kozijntype. Vraag de klant welk kozijn hij wil en kies een type uit de lijst." };
+      const slug = String(input.type);
+      if (!brug()) {
+        router.push(`/kozijnconfigurator/${slug}`);
+        for (let i = 0; i < 30 && !brug(); i++) await wacht(150);
+      } else brug()!.zet({ type: slug });
+      await wacht(350);
+      return (zonderPrijs(brug()?.staat()) as Record<string, unknown>) ?? { fout: "De calculator kon niet geopend worden." };
+    }
+    if (naam === "lees_offerte") {
+      const el = document.querySelector("main") ?? document.body;
+      const t = (el as HTMLElement).innerText.replace(/\n{2,}/g, "\n").trim().slice(0, 6000);
+      return t ? { tekst: t } : { fout: "De offerte is nog niet te zien." };
+    }
+    if (naam === "ga_naar_akkoord") {
+      const el = document.getElementById("digitaal-akkoord");
+      if (!el) return { fout: "Het akkoordvak is hier niet te zien." };
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      return { ok: true };
+    }
+    if (naam === "lees_formulier") return { formulierOpen: formulier.open, ...formulier.waarden };
+    if (naam === "vul_formulier") {
+      if (!formulier.open) return { fout: "Het formulier is nog niet open. Gebruik eerst open_formulier." };
+      formulier.vul?.(input as never);
+      await wacht(250);
+      return { ok: true, ...formulier.waarden };
+    }
+    if (naam === "verstuur_formulier") {
+      if (!formulier.open || !formulier.verstuur) return { fout: "Het formulier is niet open." };
+      const r = await formulier.verstuur();
+      if (r.ok && r.offerteId) setTimeout(() => router.push(`/offerte/${r.offerteId}`), 1200);
+      return r.ok ? { ok: true, opmerking: "De offerte opent nu." } : { ...r };
+    }
+    if (!brug()) return { fout: "Er is nog geen kozijn open. Gebruik eerst open_kozijn." };
+    if (naam === "open_formulier") {
+      brug()!.toonFormulier();
+      await wacht(400);
+      return { ok: true, formulierOpen: formulier.open };
+    }
+    if (naam === "zet_keuzes") {
+      brug()!.zet(input);
+      await wacht(350);
+      return zonderPrijs(brug()!.staat()) as Record<string, unknown>;
+    }
+    return { fout: "Onbekende functie" };
+  }
+
+  async function bijToolCall(m: LiveServerMessage) {
+    const calls = m.toolCall?.functionCalls;
+    if (!calls?.length) return;
+    const antwoorden: { id?: string; name?: string; response: Record<string, unknown> }[] = [];
+    for (const c of calls) {
+      let response: Record<string, unknown>;
+      try {
+        response = { output: await voerUit(c.name ?? "", (c.args ?? {}) as Record<string, unknown>) };
+      } catch (e) {
+        response = { fout: String((e as Error)?.message ?? e) };
+      }
+      antwoorden.push({ id: c.id, name: c.name, response });
+    }
+    try {
+      sessie.current?.sendToolResponse({ functionResponses: antwoorden });
+    } catch {}
+  }
+
   function bij(m: LiveServerMessage) {
+    if (m.toolCall) void bijToolCall(m);
     const sc = m.serverContent;
     if (!sc) return;
     if (sc.interrupted) stopAfspelen();
@@ -180,7 +303,7 @@ function Chat() {
     setStand("uit");
   }
 
-  async function begin(modusTypen: boolean, eersteVraag?: string) {
+  async function begin(modusTypen: boolean, eersteVraag?: string, verborgen = false) {
     if (actief) return;
     const mijn = ++ronde.current;
     const afgebroken = () => ronde.current !== mijn;
@@ -259,6 +382,7 @@ function Chat() {
         bron.connect(node);
       }
 
+      ctxUit.current?.resume().catch(() => {});
       setStand("aan");
       timer.current = setTimeout(() => {
         setFout("Het gesprek is na vier minuten gestopt.");
@@ -266,7 +390,7 @@ function Chat() {
       }, MAX_SECONDEN * 1000);
 
       if (eersteVraag) {
-        setBerichten((b) => [...b, { rol: "jij", tekst: eersteVraag }]);
+        if (!verborgen) setBerichten((b) => [...b, { rol: "jij", tekst: eersteVraag }]);
         laatsteRol.current = null;
         s.sendRealtimeInput({ text: eersteVraag });
       } else {
@@ -462,9 +586,9 @@ function Chat() {
         {actief ? null : (
           <button
             type="button"
-            onClick={startPraten}
+            onClick={overdracht ? verderPraten : startPraten}
             className="flex w-full items-center justify-center gap-2 rounded-full bg-brand py-4 text-base font-bold text-white transition hover:bg-brand-dark active:scale-[0.98]">
-            <Mic className="size-5" /> Start gesprek
+            <Mic className="size-5" /> {overdracht ? "Verder praten met Marleen" : "Start gesprek"}
           </button>
         )}
       </div>
