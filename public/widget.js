@@ -3,6 +3,8 @@
    Eerst een klein kaartje onderaan; na de klik alleen nog de bal rechtsonder. */
 (function () {
   if (window.__marleenWidget) return;
+  // Tijdelijk uit (Tom, 23 nov 2026): alleen op de eigen computer actief.
+  if (location.hostname !== "localhost") return;
   window.__marleenWidget = true;
   var script = document.currentScript;
   var base = new URL(script.src).origin;
