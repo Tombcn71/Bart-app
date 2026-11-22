@@ -1,0 +1,501 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { GoogleGenAI, type Session, type LiveServerMessage } from "@google/genai";
+import { Maximize2, Mic, Minimize2, PhoneOff, Send, Sparkles, X } from "lucide-react";
+
+const STEMMEN = ["Sulafat", "Gacrux", "Vindemiatrix", "Despina", "Achernar", "Callirrhoe", "Erinome", "Kore", "Aoede", "Leda"];
+const MODELLEN = [
+  ["gemini-3.8-live", "Nieuw (3.8)"],
+  ["gemini-3.8-live-extended-thinking", "Slimmer (3.8, iets trager)"],
+  ["gemini-3.1-flash-live-preview", "Snel (3.1)"],
+];
+const MAX_SECONDEN = 240; // een gesprek stopt vanzelf na vier minuten
+const BAL = "radial-gradient(circle at 30% 28%, #ffffff 0%, #9ce6e6 28%, #2792dc 75%, #1b6fb0 100%)";
+const VOORBEELDEN = [
+  { kort: "Dubbel of triple glas?", vraag: "Wat is het verschil tussen dubbel en triple glas?" },
+  { kort: "Welk kozijn past bij mij?", vraag: "Welk kozijn past bij mijn woonkamer?" },
+  { kort: "Hoe werkt de offerte?", vraag: "Hoe werkt de offerte?" },
+];
+
+type Bericht = { rol: "marleen" | "jij"; tekst: string };
+
+function Orb({ refEl, groot = false, ademen = true }: { refEl?: React.RefObject<HTMLDivElement | null>; groot?: boolean; ademen?: boolean }) {
+  return (
+    <div
+      ref={refEl}
+      className={`${groot ? "size-36" : "size-20"} rounded-full transition-transform duration-300 ease-out`}
+      style={{
+        background: BAL,
+        boxShadow: "0 12px 30px rgba(39,146,220,0.35)",
+        animation: ademen ? "orb-ademen 4s ease-in-out infinite" : undefined,
+      }}
+    />
+  );
+}
+
+
+const CAPTURE_WORKLET = `
+class Cap extends AudioWorkletProcessor {
+  constructor(){ super(); this.ratio = sampleRate / 16000; this.acc = 0; this.n = 0; this.out = []; }
+  process(inputs){
+    const ch = inputs[0] && inputs[0][0];
+    if (!ch) return true;
+    for (let i = 0; i < ch.length; i++) {
+      this.acc += ch[i]; this.n++;
+      if (this.n >= this.ratio) { this.out.push(this.acc / this.n); this.acc = 0; this.n = 0; }
+    }
+    if (this.out.length >= 1600) {
+      const i16 = new Int16Array(this.out.length);
+      for (let j = 0; j < this.out.length; j++) { const v = Math.max(-1, Math.min(1, this.out[j])); i16[j] = v < 0 ? v * 32768 : v * 32767; }
+      this.port.postMessage(i16.buffer, [i16.buffer]);
+      this.out = [];
+    }
+    return true;
+  }
+}
+registerProcessor("cap", Cap);
+`;
+
+function naarBase64(buf: ArrayBuffer) {
+  const bytes = new Uint8Array(buf);
+  let bin = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(bin);
+}
+
+type Stand = "uit" | "verbinden" | "aan";
+
+function Chat() {
+  const [open, setOpen] = useState(false);
+  const [uitgeklapt, setUitgeklapt] = useState(false);
+  const [berichten, setBerichten] = useState<Bericht[]>([]);
+  const [tekst, setTekst] = useState("");
+  const [fout, setFout] = useState("");
+  const [typen, setTypen] = useState(false);
+  const [stand, setStand] = useState<Stand>("uit");
+  const [praat, setPraat] = useState(false);
+  const [stem] = useState("Kore");
+  const [model] = useState("gemini-3.1-flash-live-preview");
+
+  const bol = useRef<HTMLDivElement>(null);
+  const lijst = useRef<HTMLDivElement>(null);
+  const sessie = useRef<Session | null>(null);
+  const typenRef = useRef(false);
+  const ctxIn = useRef<AudioContext | null>(null);
+  const ctxUit = useRef<AudioContext | null>(null);
+  const analyserIn = useRef<AnalyserNode | null>(null);
+  const analyserUit = useRef<AnalyserNode | null>(null);
+  const stream = useRef<MediaStream | null>(null);
+  const volgende = useRef(0);
+  const bronnen = useRef<AudioBufferSourceNode[]>([]);
+  const laatsteRol = useRef<"marleen" | "jij" | null>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const ronde = useRef(0); // wordt verhoogd bij elke stop, zodat een gesprek dat nog verbindt ook stopt
+
+  const verbonden = stand === "aan";
+  const bezig = stand === "verbinden";
+  const actief = verbonden || bezig;
+
+  function voegToe(rol: "marleen" | "jij", tekstDeel: string) {
+    const vorige = laatsteRol.current;
+    laatsteRol.current = rol;
+    setBerichten((b) => {
+      if (vorige === rol && b.length > 0) {
+        const kopie = b.slice();
+        kopie[kopie.length - 1] = { rol, tekst: kopie[kopie.length - 1].tekst + tekstDeel };
+        return kopie;
+      }
+      return [...b, { rol, tekst: tekstDeel.trimStart() }];
+    });
+  }
+
+  function stopAfspelen() {
+    bronnen.current.forEach((s) => {
+      try {
+        s.stop();
+      } catch {}
+    });
+    bronnen.current = [];
+    volgende.current = 0;
+    setPraat(false);
+  }
+
+  function speel(b64: string) {
+    if (typenRef.current) return; // in typen-modus blijft het geluid uit
+    const ctx = ctxUit.current;
+    if (!ctx || !analyserUit.current) return;
+    const bin = atob(b64);
+    const n = bin.length >> 1;
+    const buf = ctx.createBuffer(1, n, 24000);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) {
+      const v = (bin.charCodeAt(i * 2) | (bin.charCodeAt(i * 2 + 1) << 8)) << 16 >> 16;
+      data[i] = v / 32768;
+    }
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.connect(analyserUit.current);
+    // Een klein voorsprongetje (150 ms) voorkomt haperen als er even geen geluid binnenkomt.
+    const eerste = bronnen.current.length === 0 || volgende.current < ctx.currentTime;
+    const t = eerste ? ctx.currentTime + 0.15 : volgende.current;
+    src.start(t);
+    volgende.current = t + buf.duration;
+    bronnen.current.push(src);
+    setPraat(true);
+    src.onended = () => {
+      bronnen.current = bronnen.current.filter((x) => x !== src);
+      if (bronnen.current.length === 0) setPraat(false);
+    };
+  }
+
+  function bij(m: LiveServerMessage) {
+    const sc = m.serverContent;
+    if (!sc) return;
+    if (sc.interrupted) stopAfspelen();
+    for (const p of sc.modelTurn?.parts ?? []) if (p.inlineData?.data) speel(p.inlineData.data);
+    if (sc.inputTranscription?.text) voegToe("jij", sc.inputTranscription.text);
+    if (sc.outputTranscription?.text) voegToe("marleen", sc.outputTranscription.text);
+    if (sc.turnComplete) laatsteRol.current = null;
+  }
+
+  function opruimen() {
+    ronde.current++;
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = null;
+    try {
+      sessie.current?.close();
+    } catch {}
+    sessie.current = null;
+    stream.current?.getTracks().forEach((t) => t.stop());
+    stream.current = null;
+    ctxIn.current?.close().catch(() => {});
+    ctxIn.current = null;
+    stopAfspelen();
+    ctxUit.current?.close().catch(() => {});
+    ctxUit.current = null;
+    analyserIn.current = null;
+    analyserUit.current = null;
+    laatsteRol.current = null;
+    setStand("uit");
+  }
+
+  async function begin(modusTypen: boolean, eersteVraag?: string) {
+    if (actief) return;
+    const mijn = ++ronde.current;
+    const afgebroken = () => ronde.current !== mijn;
+    setFout("");
+    setTypen(modusTypen);
+    typenRef.current = modusTypen;
+    setStand("verbinden");
+    try {
+      if (!modusTypen) {
+        try {
+          stream.current = await navigator.mediaDevices.getUserMedia({
+            audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+          });
+        } catch {
+          setFout("Zet je microfoon aan om te praten, of kies Liever typen.");
+          setStand("uit");
+          return;
+        }
+        if (afgebroken()) {
+          stream.current?.getTracks().forEach((t) => t.stop());
+          return;
+        }
+      }
+      const r = await fetch("/api/gemini-token?stem=" + stem + "&model=" + model, { method: "POST" });
+      const d = await r.json();
+      if (afgebroken()) return;
+      if (!d.token) throw new Error(d.fout || "Geen toegang");
+
+      ctxUit.current = new AudioContext({ sampleRate: 24000 });
+      analyserUit.current = ctxUit.current.createAnalyser();
+      analyserUit.current.fftSize = 256;
+      analyserUit.current.connect(ctxUit.current.destination);
+
+      const ai = new GoogleGenAI({ apiKey: d.token, httpOptions: { apiVersion: "v1alpha" } });
+      const s = await ai.live.connect({
+        model: d.model,
+        config: { responseModalities: ["AUDIO" as never], outputAudioTranscription: {}, inputAudioTranscription: {} },
+        callbacks: {
+          onmessage: bij,
+          onerror: (e: { message?: string }) => {
+            setFout("Fout: " + (e?.message || "de verbinding is verbroken"));
+            opruimen();
+          },
+          onclose: () => {
+            if (sessie.current) opruimen();
+          },
+        },
+      });
+      if (afgebroken()) {
+        try {
+          s.close();
+        } catch {}
+        return;
+      }
+      sessie.current = s;
+
+      if (!modusTypen && stream.current) {
+        const ctx = new AudioContext();
+        ctxIn.current = ctx;
+        const url = URL.createObjectURL(new Blob([CAPTURE_WORKLET], { type: "application/javascript" }));
+        await ctx.audioWorklet.addModule(url);
+        if (afgebroken()) {
+          ctx.close().catch(() => {});
+          return;
+        }
+        const bron = ctx.createMediaStreamSource(stream.current);
+        analyserIn.current = ctx.createAnalyser();
+        analyserIn.current.fftSize = 256;
+        const node = new AudioWorkletNode(ctx, "cap");
+        node.port.onmessage = (e) => {
+          sessie.current?.sendRealtimeInput({
+            audio: { data: naarBase64(e.data as ArrayBuffer), mimeType: "audio/pcm;rate=16000" },
+          });
+        };
+        bron.connect(analyserIn.current);
+        bron.connect(node);
+      }
+
+      setStand("aan");
+      timer.current = setTimeout(() => {
+        setFout("Het gesprek is na vier minuten gestopt.");
+        opruimen();
+      }, MAX_SECONDEN * 1000);
+
+      if (eersteVraag) {
+        setBerichten((b) => [...b, { rol: "jij", tekst: eersteVraag }]);
+        laatsteRol.current = null;
+        s.sendRealtimeInput({ text: eersteVraag });
+      } else {
+        s.sendRealtimeInput({ text: "Zeg nu je vaste openingszin." });
+      }
+    } catch (e) {
+      setFout("Fout: " + (e instanceof Error ? e.message : "het lukte niet") + ". Probeer het opnieuw.");
+      opruimen();
+    }
+  }
+
+  const startPraten = () => begin(false);
+  const startTypen = (vraag?: string) => {
+    if (actief && vraag) {
+      setBerichten((b) => [...b, { rol: "jij", tekst: vraag }]);
+      laatsteRol.current = null;
+      sessie.current?.sendRealtimeInput({ text: vraag });
+    } else if (!actief) begin(true, vraag);
+  };
+
+  function stop() {
+    opruimen();
+    setTypen(false);
+  }
+
+  function sluit() {
+    opruimen();
+    setTypen(false);
+    setUitgeklapt(false);
+    setOpen(false);
+  }
+
+  function verstuur(e: React.FormEvent) {
+    e.preventDefault();
+    const t = tekst.trim();
+    if (!t || !verbonden) return;
+    setBerichten((b) => [...b, { rol: "jij", tekst: t }]);
+    laatsteRol.current = null;
+    sessie.current?.sendRealtimeInput({ text: t });
+    setTekst("");
+  }
+
+  // Het gesprek stopt altijd als je de pagina sluit of verlaat.
+  useEffect(() => {
+    window.addEventListener("pagehide", opruimen);
+    return () => {
+      window.removeEventListener("pagehide", opruimen);
+      opruimen();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Escape stopt het gesprek ook.
+  useEffect(() => {
+    const toets = (e: KeyboardEvent) => {
+      if (e.key === "Escape") opruimen();
+    };
+    window.addEventListener("keydown", toets);
+    return () => window.removeEventListener("keydown", toets);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // De bal beweegt mee met het geluid.
+  useEffect(() => {
+    if (!verbonden || typen) {
+      if (bol.current) bol.current.style.transform = "";
+      return;
+    }
+    const buf = new Uint8Array(128);
+    let raf = 0;
+    let zacht = 0; // gladgestreken volume, zodat de bal rustig pulseert
+    const tick = () => {
+      const an = praat ? analyserUit.current : analyserIn.current;
+      let vol = 0;
+      if (an) {
+        an.getByteTimeDomainData(buf);
+        let max = 0;
+        for (let i = 0; i < buf.length; i++) max = Math.max(max, Math.abs(buf[i] - 128));
+        vol = Math.min(max / 128 / (praat ? 0.6 : 0.4), 1);
+      }
+      zacht += (vol - zacht) * 0.06;
+      if (bol.current) bol.current.style.transform = `scale(${1 + zacht * 0.07})`;
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [verbonden, typen, praat]);
+
+  useEffect(() => {
+    lijst.current?.scrollTo({ top: lijst.current.scrollHeight, behavior: "smooth" });
+  }, [berichten]);
+
+  const status = fout
+    ? fout
+    : bezig
+      ? "Verbinden…"
+      : verbonden
+        ? typen
+          ? "Typ je vraag hieronder"
+          : praat
+            ? "Marleen praat…"
+            : "Ik luister. Je kunt ook typen"
+        : "Stel je vraag hardop of typ hem";
+
+  const keyframes = <style>{`@keyframes orb-ademen{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}`}</style>;
+
+  // Gesloten: knopje, praatwolkje en de bal.
+  if (!open) {
+    return (
+      <div className="fixed right-5 bottom-5 z-50 flex flex-col items-end gap-3">
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 shadow-xl hover:bg-slate-50">
+          <Sparkles className="size-4 text-brand-text" /> Stel een vraag
+        </button>
+        <button type="button" onClick={() => setOpen(true)} aria-label="Praat met Marleen" className="transition active:scale-95">
+          <Orb />
+        </button>
+        {keyframes}
+      </div>
+    );
+  }
+
+  const breedte = uitgeklapt ? "max-w-2xl h-[calc(100dvh-1.5rem)]" : "max-w-sm max-h-[calc(100dvh-1.5rem)]";
+
+  return (
+    <div
+      className={`fixed right-3 bottom-3 z-50 flex w-[calc(100vw-1.5rem)] ${breedte} flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white text-slate-900 shadow-2xl shadow-black/30`}>
+      <div className="flex items-start justify-between px-6 pt-5">
+        <div>
+          <p className="text-lg font-bold">Marleen</p>
+          <p className="text-sm text-slate-500">AI-assistent · praten of typen</p>
+        </div>
+        <div className="flex items-center gap-1">
+          {actief && (
+            <button
+              onClick={sluit}
+              aria-label="Ophangen"
+              title="Ophangen"
+              className="rounded-full p-2 text-red-600 hover:bg-red-50">
+              <PhoneOff className="size-5" />
+            </button>
+          )}
+          <button
+            onClick={() => setUitgeklapt((u) => !u)}
+            aria-label={uitgeklapt ? "Kleiner maken" : "Groter maken"}
+            className="rounded-full p-2 text-slate-600 hover:bg-slate-100">
+            {uitgeklapt ? <Minimize2 className="size-5" /> : <Maximize2 className="size-5" />}
+          </button>
+          <button onClick={sluit} aria-label="Sluiten en gesprek stoppen" className="rounded-full p-2 text-slate-600 hover:bg-slate-100">
+            <X className="size-5" />
+          </button>
+        </div>
+      </div>
+
+      <div className="grid place-items-center py-6">
+        <Orb refEl={bol} groot ademen={!(verbonden && !typen)} />
+      </div>
+
+      <p className={`px-6 pb-4 text-center text-[15px] ${fout ? "font-semibold text-red-700" : "text-slate-500"}`}>{status}</p>
+
+      {berichten.length > 0 && (
+        <div ref={lijst} className="min-h-0 flex-1 space-y-2 overflow-y-auto px-6 pb-3">
+          {berichten.map((b, i) => (
+            <div
+              key={i}
+              className={`max-w-[88%] rounded-2xl px-4 py-2.5 text-[15px] leading-snug ${
+                b.rol === "marleen" ? "bg-slate-100 text-slate-900" : "ml-auto bg-brand text-white"
+              }`}>
+              {b.tekst}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {verbonden && (
+        <form onSubmit={verstuur} className="mx-6 mb-3 flex items-center gap-2 rounded-full border border-slate-200 px-4 py-1.5">
+          <input
+            value={tekst}
+            onChange={(e) => setTekst(e.target.value)}
+            placeholder="Typ je vraag…"
+            autoFocus={typen}
+            className="min-w-0 flex-1 bg-transparent py-2 text-[15px] text-slate-900 outline-none placeholder:text-slate-400"
+          />
+          <button type="submit" disabled={!tekst.trim()} aria-label="Versturen" className="rounded-full p-1.5 text-slate-700 disabled:text-slate-300">
+            <Send className="size-5" />
+          </button>
+        </form>
+      )}
+
+      <div className="px-6">
+        {actief ? null : (
+          <button
+            type="button"
+            onClick={startPraten}
+            className="flex w-full items-center justify-center gap-2 rounded-full bg-brand py-4 text-base font-bold text-white transition hover:bg-brand-dark active:scale-[0.98]">
+            <Mic className="size-5" /> Start gesprek
+          </button>
+        )}
+      </div>
+
+      {!actief && (
+        <>
+          <button type="button" onClick={() => startTypen()} className="py-4 text-center text-[15px] font-medium text-slate-600 hover:text-slate-900">
+            Liever typen
+          </button>
+          <div className="flex flex-wrap justify-center gap-2 px-6 pb-3">
+            {VOORBEELDEN.map((v) => (
+              <button
+                key={v.kort}
+                type="button"
+                onClick={() => startTypen(v.vraag)}
+                className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                <Sparkles className="size-3.5 text-brand-text" /> {v.kort}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+
+      <p className="px-6 pt-1 pb-5 text-center text-sm text-slate-400">
+        Je praat met een AI. Je microfoon wordt alleen gebruikt tijdens het gesprek.
+      </p>
+      {keyframes}
+    </div>
+  );
+}
+
+export function GeminiAssistent() {
+  return <Chat />;
+}
