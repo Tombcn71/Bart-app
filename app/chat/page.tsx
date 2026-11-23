@@ -65,7 +65,7 @@ export default function Chat() {
       <div className="flex-1 space-y-3 overflow-y-auto bg-[#f4f7fa] p-4">
         {berichten.map((b, i) => (
           <div key={i} className={`flex ${b.rol === "klant" ? "justify-end" : "justify-start"}`}>
-            <p className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-[15px] leading-snug ${b.rol === "klant" ? "bg-[#1E5079] text-white" : "bg-white text-[#13334D] shadow-sm"}`}>{linkjes(b.tekst)}</p>
+            <p className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-[15px] leading-snug ${b.rol === "klant" ? "bg-[#dbe8f4] text-[#13334D]" : "bg-white text-[#13334D] shadow-sm"}`}>{linkjes(b.tekst)}</p>
           </div>
         ))}
         {bezig && <p className="text-sm text-black/40">Even denken…</p>}
