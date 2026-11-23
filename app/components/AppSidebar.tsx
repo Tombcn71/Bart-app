@@ -9,6 +9,7 @@ import {
   FilePlus,
   Link2,
   Users,
+  Bot,
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import { adminLogout } from "@/app/actions";
@@ -43,6 +44,7 @@ const GROEPEN = [
     items: [
       { href: "/admin/offertes", label: "Aanvragen", icon: FileText },
       { href: "/admin/bezoekers", label: "Bezoekers", icon: Users },
+      { href: "/admin/assistent", label: "AI-assistent", icon: Bot },
       { href: "/meten/inmeten", label: "Offerte maken", icon: FilePlus },
       { href: "/meten/reageer", label: "Link versturen", icon: Link2 },
     ],
