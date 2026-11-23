@@ -43,6 +43,7 @@ export const PRODUCT_TOOL = {
       breedte_mm: { type: "number", description: "Breedte in millimeters" },
       hoogte_mm: { type: "number", description: "Hoogte in millimeters" },
       aantal: { type: "number", description: "Aantal. Standaard 1." },
+      toon_link: { type: "boolean", description: "Alleen true nadat de bezoeker heeft gezegd dat hij naar Roos wil voor de offerte. Anders weglaten." },
       andere_producten: { type: "string", description: "Alleen voor het eerste product van een bestelling met meer producten: kort in woorden wat er verder bij komt. Anders leeg." },
     },
     required: ["product", "type", "breedte_mm", "hoogte_mm"],
@@ -80,5 +81,5 @@ export async function berekenChatProduct(inv: any): Promise<string> {
   const totaal = Math.round(r.totaal * (1 + btwPercentage(model) / 100) * 100) / 100;
   const montage = montageVoor(model, aantal, { kraan: false }).totaal > 0 ? " inclusief montage en btw" : " inclusief btw";
   const stuk = Math.round((totaal / aantal) * 100) / 100;
-  return `[offerte-link: ${productLink(inv)}] ${aantal} × ${hoort}, ${b} × ${h} mm, standaarduitvoering: totaal ${euro(totaal)}${montage}${aantal > 1 ? ` (${euro(stuk)} per stuk)` : ""}.`;
+  return `${inv.toon_link === true ? `[offerte-link: ${productLink(inv)}] ` : ""}${aantal} × ${hoort}, ${b} × ${h} mm, standaarduitvoering: totaal ${euro(totaal)}${montage}${aantal > 1 ? ` (${euro(stuk)} per stuk)` : ""}.`;
 }

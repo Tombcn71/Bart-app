@@ -20,6 +20,7 @@ export const PRIJS_TOOL = {
       glas: { type: "string", enum: [...GLAS_KEUZES], description: "dubbel (HR++) of triple. Standaard dubbel." },
       kleur_buiten: { type: "string", enum: [...KLEUR_BUITEN], description: "Kleur buitenkant. Standaard wit." },
       aantal: { type: "number", description: "Aantal kozijnen. Standaard 1." },
+      toon_link: { type: "boolean", description: "Alleen true nadat de bezoeker heeft gezegd dat hij naar Roos wil voor de offerte. Anders weglaten." },
       andere_producten: { type: "string", description: "Alleen voor het eerste product van een bestelling met meer producten: kort in woorden de andere producten die de bezoeker ook wil, bijvoorbeeld '2 × vast kozijn 100 bij 100 cm triple glas en 1 voordeur'. Anders leeg." },
     },
     required: ["type", "breedte_mm", "hoogte_mm"],
@@ -117,5 +118,5 @@ export async function berekenChatPrijs(inv: any): Promise<string> {
     if (!totaal) return "De prijs kon niet berekend worden.";
   }
   const stuk = Math.round((totaal / aantal) * 100) / 100;
-  return `[offerte-link: ${offerteLink(inv)}] ${aantal} × ${naam}, ${b} × ${h} mm, ${glasKeuze === "triple" ? "triple glas" : "dubbel glas (HR++)"}, kleur buiten ${kleurBuiten}: totaal ${euro(totaal)}${toelichting}${aantal > 1 ? ` (${euro(stuk)} per stuk)` : ""}.`;
+  return `${inv.toon_link === true ? `[offerte-link: ${offerteLink(inv)}] ` : ""}${aantal} × ${naam}, ${b} × ${h} mm, ${glasKeuze === "triple" ? "triple glas" : "dubbel glas (HR++)"}, kleur buiten ${kleurBuiten}: totaal ${euro(totaal)}${toelichting}${aantal > 1 ? ` (${euro(stuk)} per stuk)` : ""}.`;
 }
