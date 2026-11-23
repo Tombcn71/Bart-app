@@ -10,7 +10,7 @@ function linkjes(t: string) {
 type Bericht = { rol: "klant" | "chat"; tekst: string };
 
 export default function Chat() {
-  const [berichten, setBerichten] = useState<Bericht[]>([{ rol: "chat", tekst: "Goedendag! Ik beantwoord uw vragen over kozijnen, glas, onderhoud en subsidie, en help u met de aanvraag. Waarmee kan ik u helpen?" }]);
+  const [berichten, setBerichten] = useState<Bericht[]>([{ rol: "chat", tekst: "Goedendag! Ik ben de AI-assistent van BartMooi. Ik beantwoord uw vragen over kozijnen, glas, onderhoud en subsidie, en help u met de aanvraag. Waarmee kan ik u helpen?" }]);
   const [invoer, setInvoer] = useState("");
   const [bezig, setBezig] = useState(false);
   const onder = useRef<HTMLDivElement>(null);
@@ -61,7 +61,15 @@ export default function Chat() {
 
   return (
     <div className="mx-auto flex h-[100dvh] max-w-sm flex-col bg-white sm:my-6 sm:h-[min(520px,calc(100dvh-3rem))] sm:overflow-hidden sm:rounded-2xl sm:shadow-xl">
-      <div className="bg-[#1E5079] px-4 py-3 text-white"><p className="font-black">BartMooi</p><p className="text-xs opacity-80">Vragen over kozijnen of subsidie</p></div>
+      <div className="flex items-center gap-3 bg-[#1E5079] px-4 py-3 text-white">
+        <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-lg font-black text-[#1E5079]">B
+          <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-[#1E5079] bg-[#4ade80]" />
+        </div>
+        <div className="min-w-0">
+          <p className="font-black leading-tight">De slimme assistent van BartMooi</p>
+          <p className="text-xs opacity-80">Kozijnen, glas en subsidie. Vraag maar raak.</p>
+        </div>
+      </div>
       <div className="flex-1 space-y-3 overflow-y-auto bg-[#f4f7fa] p-4">
         {berichten.map((b, i) => (
           <div key={i} className={`flex ${b.rol === "klant" ? "justify-end" : "justify-start"}`}>
