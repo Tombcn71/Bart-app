@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { BEDRIJFSKENNIS } from "@/lib/bedrijfskennis";
+import { PRIJS_TOOL, berekenChatPrijs } from "@/lib/chat-prijs";
 import { CHAT_KENNIS } from "@/lib/chat-kennis";
 
 const MODEL = "claude-haiku-5-5";
@@ -20,7 +21,7 @@ const SYSTEEM = `Je bent de chat op de website van BartMooi B.V., een kozijnenbe
 Regels
 - Bedrijfsfeiten (producten, werkwijze, voorwaarden, contact) komen alleen uit "Over BartMooi". Staat iets daar niet, zeg dan dat Bart het graag uitlegt en noem alleen het e-mailadres. Noem nooit een telefoonnummer van BartMooi.
 - Algemene uitleg over kozijnen, glas, materialen, onderhoud en regels komt uit het handboek. Zeg daarbij "over het algemeen" als het niet over BartMooi zelf gaat.
-- Noem de prijs van BartMooi nooit een indicatie of richtprijs: het is gewoon een goede prijs. Noem nooit een prijs, korting of subsidiebedrag dat niet in de tekst staat. Wil iemand een prijs, verwijs naar de prijscalculator op de website: daar staat de prijs inclusief montage, en Roos kan helpen.
+- Noem de prijs van BartMooi nooit een indicatie of richtprijs: het is gewoon een goede prijs. Noem nooit een prijs, korting of subsidiebedrag dat niet in de tekst staat. Wil iemand een prijs van een kozijn, vraag dan (één vraag per keer, in gewone woorden) hoe het raam eruitziet (wat open kan, wat vast is), de breedte en hoogte (ook in centimeters of meters) en of het dubbel of triple glas moet zijn. Gebruik daarna bereken_prijs en noem de prijs inclusief montage en btw. Zeg daarbij dat dit een kozijn in standaardkleur wit is, tenzij de bezoeker een kleur noemde. Vertaal het raam naar het juiste type. Een prijs die niet uit bereken_prijs komt, noem je nooit. Wil de bezoeker daarna een offerte, verwijs dan naar Roos op offerte.bartmooi.nl: zij maakt de offerte samen met hem.
 - Subsidie: noem de bedragen uit "Subsidie (ISDE)" hieronder, met erbij "volgens RVO". Beloof nooit dat iemand de subsidie krijgt; de klant vraagt die zelf aan met DigiD op rvo.nl. Voor andere bedragen of situaties verwijs je naar rvo.nl.
 - Doe geen bindende toezeggingen over levertijd, prijs of afspraken die niet in "Over BartMooi" staan.
 - Blijf bij het onderwerp kozijnen, deuren, rolluiken en de offerte. Bij andere vragen zeg je vriendelijk dat je daar niet bij kunt helpen.
@@ -54,13 +55,25 @@ export async function POST(req: Request) {
   if (!berichten.length || berichten[berichten.length - 1].role !== "user") return Response.json({ fout: "Stel een vraag." }, { status: 400 });
   try {
     const client = new Anthropic({ apiKey: key });
-    const r = await client.messages.create({
-      model: MODEL,
-      max_tokens: 900,
-      system: [{ type: "text", text: SYSTEEM, cache_control: { type: "ephemeral" } }],
-      messages: berichten,
-    });
-    const tekst = r.content.map((c) => (c.type === "text" ? c.text : "")).join("").trim();
+    const gesprek: Anthropic.MessageParam[] = [...berichten];
+    let tekst = "";
+    for (let ronde = 0; ronde < 4; ronde++) {
+      const r = await client.messages.create({
+        model: MODEL,
+        max_tokens: 900,
+        system: [{ type: "text", text: SYSTEEM, cache_control: { type: "ephemeral" } }],
+        tools: [PRIJS_TOOL],
+        messages: gesprek,
+      });
+      tekst = r.content.map((c) => (c.type === "text" ? c.text : "")).join("").trim();
+      if (r.stop_reason !== "tool_use") break;
+      gesprek.push({ role: "assistant", content: r.content });
+      const uitkomsten: Anthropic.ToolResultBlockParam[] = [];
+      for (const blok of r.content) {
+        if (blok.type === "tool_use") uitkomsten.push({ type: "tool_result", tool_use_id: blok.id, content: await berekenChatPrijs(blok.input).catch(() => "De prijs kon niet berekend worden.") });
+      }
+      gesprek.push({ role: "user", content: uitkomsten });
+    }
     return Response.json({ tekst: tekst || "Daar kan ik u zo niet mee helpen. Mail gerust naar info@bartmooi.nl." });
   } catch (e) {
     console.error("chat fout", e);
