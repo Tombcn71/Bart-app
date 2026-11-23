@@ -71,7 +71,7 @@ export default function Chat() {
   }
 
   return (
-    <div className="mx-auto flex h-[100dvh] max-w-sm flex-col bg-white sm:my-6 sm:h-[min(520px,calc(100dvh-3rem))] sm:overflow-hidden sm:rounded-2xl sm:shadow-xl">
+    <div className="mx-auto flex h-[100dvh] max-w-sm flex-col bg-white sm:my-6 sm:h-[min(560px,calc(100dvh-3rem))] sm:overflow-hidden sm:rounded-2xl sm:shadow-xl">
       <div className="flex items-center gap-3 bg-[#1E5079] px-4 py-3 text-white">
         <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-lg font-black text-[#1E5079]">B
           <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-[#1E5079] bg-[#4ade80]" />

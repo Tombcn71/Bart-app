@@ -12,6 +12,7 @@ export function NavGate({ children }: { children: React.ReactNode }) {
     pad.startsWith("/meten") ||
     pad.startsWith("/terugbellen") ||
     pad === "/widget" ||
+    pad === "/chat" ||
     /^\/offerte\/[0-9a-f-]{36}/i.test(pad);
   return verberg ? null : <>{children}</>;
 }
