@@ -39,5 +39,20 @@ export async function funnel(dagen: number) {
   const uit: Record<string, number> = {};
   for (const r of rows) uit[r.soort] = r.n;
   const bronnen = (await db.execute(sql`SELECT COALESCE(bron,'direct') AS bron, COUNT(DISTINCT sid)::int AS n FROM "Bezoek" WHERE soort='site_bezoek' AND dag >= CURRENT_DATE - ${dagen - 1}::int GROUP BY 1 ORDER BY 2 DESC`)) as unknown as { bron: string; n: number }[];
-  return { n: uit, bronnen };
+  const wpBronnen = (await db.execute(sql`SELECT COALESCE(bron,'direct') AS bron, COUNT(DISTINCT sid)::int AS n FROM "Bezoek" WHERE soort='wp_bezoek' AND dag >= CURRENT_DATE - ${dagen - 1}::int GROUP BY 1 ORDER BY 2 DESC`)) as unknown as { bron: string; n: number }[];
+  return { n: uit, bronnen, wpBronnen };
+}
+
+/** Maakt van de site waar iemand vandaan kwam een leesbare naam. */
+export function bronVan(ref?: string) {
+  const h = (ref ?? "").toLowerCase().replace(/^www\./, "").replace(/^(m|l|lm)\./, "");
+  if (!h || h.endsWith("bartmooi.nl")) return "direct";
+  const namen: [RegExp, string][] = [
+    [/google\./, "Google"], [/bing\.com/, "Bing"], [/duckduckgo|ecosia|yahoo/, "Andere zoekmachine"],
+    [/facebook\.com|fb\.com|fb\.me/, "Facebook"], [/instagram\.com/, "Instagram"], [/whatsapp/, "WhatsApp"],
+    [/linkedin|lnkd\.in/, "LinkedIn"], [/t\.co$|twitter|x\.com/, "X"], [/youtube|youtu\.be/, "YouTube"],
+    [/pinterest/, "Pinterest"], [/marktplaats/, "Marktplaats"],
+  ];
+  for (const [re, naam] of namen) if (re.test(h)) return naam;
+  return h.slice(0, 40);
 }

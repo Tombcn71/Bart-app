@@ -6,9 +6,10 @@
     if (/[?&]wel-tellen=1/.test(location.search)) localStorage.removeItem("niet_tellen");
     if (localStorage.getItem("niet_tellen")) return;
   } catch (e) {}
+  function refHost() { try { return document.referrer ? new URL(document.referrer).hostname : ""; } catch (e) { return ""; } }
   function stuur(soort, pad) {
     try {
-      var d = JSON.stringify({ soort: soort, pad: pad || location.pathname });
+      var d = JSON.stringify({ soort: soort, pad: pad || location.pathname, ref: soort === "wp_bezoek" ? refHost() : "" });
       if (navigator.sendBeacon) navigator.sendBeacon(HOST + "/api/tel", new Blob([d], { type: "text/plain" }));
       else fetch(HOST + "/api/tel", { method: "POST", body: d, keepalive: true });
     } catch (e) {}

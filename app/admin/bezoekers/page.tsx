@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 
 export default async function Bezoekers({ searchParams }: { searchParams: Promise<{ dagen?: string }> }) {
   const dagen = [1, 7, 30].includes(Number((await searchParams).dagen)) ? Number((await searchParams).dagen) : 7;
-  const { n, bronnen } = await funnel(dagen);
+  const { n, bronnen, wpBronnen } = await funnel(dagen);
   const stappen = [
     { label: "Bezoekers op bartmooi.nl", w: n.wp_bezoek ?? 0 },
     { label: "Klikten naar de offerte-site", w: n.wp_klik ?? 0 },
@@ -37,13 +37,19 @@ export default async function Bezoekers({ searchParams }: { searchParams: Promis
           </div>
         ))}
       </div>
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-3 sm:grid-cols-3">
         <div className="rounded-2xl border border-black/10 bg-white p-5">
           <p className="text-sm text-black/60">Gesprekken met Roos</p>
           <p className="text-3xl font-black text-[#1E5079]">{n.roos ?? 0}</p>
         </div>
         <div className="rounded-2xl border border-black/10 bg-white p-5">
-          <p className="text-sm text-black/60">Waar bezoekers vandaan kwamen</p>
+          <p className="text-sm text-black/60">Waar bezoekers van bartmooi.nl vandaan kwamen</p>
+          {wpBronnen.length === 0 ? <p className="text-sm">Nog niets geteld.</p> : wpBronnen.map((b) => (
+            <p key={b.bron} className="flex justify-between text-sm font-bold"><span>{b.bron === "wordpress" ? "Via bartmooi.nl" : b.bron}</span><span>{b.n}</span></p>
+          ))}
+        </div>
+        <div className="rounded-2xl border border-black/10 bg-white p-5">
+          <p className="text-sm text-black/60">Waar bezoekers van de offerte-site vandaan kwamen</p>
           {bronnen.length === 0 ? <p className="text-sm">Nog niets geteld.</p> : bronnen.map((b) => (
             <p key={b.bron} className="flex justify-between text-sm font-bold"><span>{b.bron === "wordpress" ? "Via bartmooi.nl" : b.bron}</span><span>{b.n}</span></p>
           ))}
