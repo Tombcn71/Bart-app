@@ -1,7 +1,13 @@
+import { Fragment } from "react";
 import Link from "next/link";
 import { funnel } from "@/lib/bezoek";
 
 export const dynamic = "force-dynamic";
+
+const HERKOMST = ["Google", "Facebook", "Instagram", "WhatsApp", "LinkedIn", "YouTube", "Bing", "Marktplaats", "Via bartmooi.nl", "Direct", "Andere sites"];
+const BEKEND: Record<string, string> = { direct: "Direct", wordpress: "Via bartmooi.nl" };
+const bekend = (b: string) => BEKEND[b] ?? (HERKOMST.includes(b) ? b : "Andere sites");
+const tel = (lijst: { bron: string; n: number }[], naam: string) => lijst.filter((r) => bekend(r.bron) === naam).reduce((t, r) => t + r.n, 0);
 
 export default async function Bezoekers({ searchParams }: { searchParams: Promise<{ dagen?: string }> }) {
   const dagen = [1, 7, 30].includes(Number((await searchParams).dagen)) ? Number((await searchParams).dagen) : 7;
@@ -37,21 +43,24 @@ export default async function Bezoekers({ searchParams }: { searchParams: Promis
           </div>
         ))}
       </div>
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-1">
         <div className="rounded-2xl border border-black/10 bg-white p-5">
           <p className="text-sm text-black/60">Gesprekken met Roos</p>
           <p className="text-3xl font-black text-[#1E5079]">{n.roos ?? 0}</p>
         </div>
-        <div className="rounded-2xl border border-black/10 bg-white p-5">
-          <p className="text-sm text-black/60">Waar bezoekers van bartmooi.nl vandaan kwamen</p>
-          {wpBronnen.length === 0 ? <p className="text-sm">Nog niets geteld.</p> : wpBronnen.map((b) => (
-            <p key={b.bron} className="flex justify-between text-sm font-bold"><span>{b.bron === "wordpress" ? "Via bartmooi.nl" : b.bron}</span><span>{b.n}</span></p>
-          ))}
-        </div>
-        <div className="rounded-2xl border border-black/10 bg-white p-5">
-          <p className="text-sm text-black/60">Waar bezoekers van de offerte-site vandaan kwamen</p>
-          {bronnen.length === 0 ? <p className="text-sm">Nog niets geteld.</p> : bronnen.map((b) => (
-            <p key={b.bron} className="flex justify-between text-sm font-bold"><span>{b.bron === "wordpress" ? "Via bartmooi.nl" : b.bron}</span><span>{b.n}</span></p>
+      </div>
+      <div className="rounded-2xl border border-black/10 bg-white p-5">
+        <p className="mb-3 text-sm font-bold text-foreground">Waar bezoekers vandaan komen</p>
+        <div className="grid grid-cols-[1fr_auto_auto] gap-x-6 gap-y-2 text-sm">
+          <span />
+          <span className="text-right text-xs text-black/50">bartmooi.nl</span>
+          <span className="text-right text-xs text-black/50">offerte-site</span>
+          {HERKOMST.map((naam) => (
+            <Fragment key={naam}>
+              <span className="font-bold text-foreground">{naam}</span>
+              <span className={`text-right font-bold ${tel(wpBronnen, naam) ? "text-[#1E5079]" : "text-black/30"}`}>{tel(wpBronnen, naam)}</span>
+              <span className={`text-right font-bold ${tel(bronnen, naam) ? "text-[#1E5079]" : "text-black/30"}`}>{tel(bronnen, naam)}</span>
+            </Fragment>
           ))}
         </div>
       </div>
