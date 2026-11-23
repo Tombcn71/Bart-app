@@ -9,7 +9,7 @@
     "#bm-chat-knop{position:fixed;right:20px;bottom:20px;z-index:2147483000;width:60px;height:60px;border-radius:50%;border:0;background:#1E5079;color:#fff;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.28);display:flex;align-items:center;justify-content:center}" +
     "#bm-chat-knop svg{width:28px;height:28px}" +
     "#bm-chat-ballon{position:fixed;right:90px;bottom:30px;z-index:2147483000;background:#fff;color:#13334D;font:600 14px/1.3 Arial,sans-serif;padding:10px 14px;border-radius:14px;box-shadow:0 4px 16px rgba(0,0,0,.18);cursor:pointer;max-width:200px}" +
-    "#bm-chat-venster{position:fixed;right:20px;bottom:92px;z-index:2147483000;width:380px;height:min(600px,calc(100vh - 120px));border:0;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.3);background:#fff;display:none;overflow:hidden}" +
+    "#bm-chat-venster{position:fixed;right:20px;bottom:92px;z-index:2147483000;width:340px;height:min(480px,calc(100vh - 120px));border:0;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.3);background:#fff;display:none;overflow:hidden}" +
     "@media(max-width:600px){#bm-chat-venster{right:0;bottom:0;width:100vw;height:100dvh;border-radius:0}#bm-chat-ballon{display:none}}";
   document.head.appendChild(css);
   var knop = document.createElement("button");
