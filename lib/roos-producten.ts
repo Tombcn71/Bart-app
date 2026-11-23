@@ -1,5 +1,5 @@
-/** De andere producten die Marleen kan openen: waar hun calculator staat en welke typen er zijn (slug = naam). */
-export const MARLEEN_PRODUCTEN: Record<string, { pad: string; typen: Record<string, string> }> = {
+/** De andere producten die Roos kan openen: waar hun calculator staat en welke typen er zijn (slug = naam). */
+export const ROOS_PRODUCTEN: Record<string, { pad: string; typen: Record<string, string> }> = {
   schuifpui: { pad: "/schuifpuiconfigurator/", typen: { "schuifpui-2-vaks": "tweedelige schuifpui", "schuifpui-4-vaks": "vierdelige schuifpui" } },
   deur: {
     pad: "/deurconfigurator/",

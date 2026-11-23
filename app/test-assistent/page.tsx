@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { GeminiAssistent } from "./GeminiAssistent";
 
-// Verborgen testpagina voor de assistent Marleen. Geen link ernaartoe en Google mag hem niet tonen.
+// Verborgen testpagina voor de assistent Roos. Geen link ernaartoe en Google mag hem niet tonen.
 export const metadata: Metadata = {
   title: "Test assistent",
   robots: { index: false, follow: false },
@@ -21,7 +21,7 @@ export default function TestAssistentPage() {
       <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-slate-500">Testpagina</p>
       <h1 className="text-3xl font-bold tracking-tight text-slate-900">Praat met de assistent</h1>
       <p className="mt-3 text-slate-600">
-        Klik op de bal rechtsonder en praat met Marleen. Deze pagina staat nergens op de site en is alleen om te testen.
+        Klik op de bal rechtsonder en praat met Roos. Deze pagina staat nergens op de site en is alleen om te testen.
       </p>
 
       <h2 className="mt-10 text-sm font-semibold text-slate-900">Probeer bijvoorbeeld</h2>

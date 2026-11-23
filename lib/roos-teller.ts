@@ -2,11 +2,11 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { instellingen } from "@/db/schema";
 
-/** Hoeveel gesprekken met Marleen per maand mogen (kosten begrenzen). Na dit aantal verdwijnt de bal tot de volgende maand. */
-export const MAX_PER_MAAND = Number(process.env.MARLEEN_MAX_PER_MAAND ?? 65);
+/** Hoeveel gesprekken met Roos per maand mogen (kosten begrenzen). Na dit aantal verdwijnt de bal tot de volgende maand. */
+export const MAX_PER_MAAND = Number(process.env.ROOS_MAX_PER_MAAND ?? 65);
 /** En per dag maximaal zoveel gesprekken, zodat een gekke dag nooit veel kost. */
-export const MAX_PER_DAG = Number(process.env.MARLEEN_MAX_PER_DAG ?? 10);
-const SLEUTEL = "marleen_gesprekken";
+export const MAX_PER_DAG = Number(process.env.ROOS_MAX_PER_DAG ?? 10);
+const SLEUTEL = "roos_gesprekken";
 
 function vandaag() {
   return new Intl.DateTimeFormat("sv-SE", { year: "numeric", month: "2-digit", day: "2-digit", timeZone: "Europe/Amsterdam" }).format(new Date()); // bijv. 2026-11-23

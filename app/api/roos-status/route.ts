@@ -1,6 +1,6 @@
-import { nogBeschikbaar } from "@/lib/marleen-teller";
+import { nogBeschikbaar } from "@/lib/roos-teller";
 
-/** Of Marleen deze maand nog gesprekken over heeft (anders verdwijnt de bal). */
+/** Of Roos deze maand nog gesprekken over heeft (anders verdwijnt de bal). */
 export async function GET() {
   try {
     return Response.json({ beschikbaar: await nogBeschikbaar() }, { headers: { "cache-control": "no-store" } });

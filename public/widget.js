@@ -1,11 +1,11 @@
-/* Marleen-widget. Plak op de website:
+/* Roos-widget. Plak op de website:
    <script src="https://JOUW-ADRES/widget.js" async></script>
    Eerst een klein kaartje onderaan; na de klik alleen nog de bal rechtsonder. */
 (function () {
-  if (window.__marleenWidget) return;
+  if (window.__roosWidget) return;
   // Tijdelijk uit (Tom, 23 nov 2026): alleen op de eigen computer actief.
   if (location.hostname !== "localhost") return;
-  window.__marleenWidget = true;
+  window.__roosWidget = true;
   var script = document.currentScript;
   var base = new URL(script.src).origin;
   // De widget komt van de offerte-app zelf; daar gaat het gesprek ook verder.
@@ -15,7 +15,7 @@
   var frame = document.createElement("iframe");
   frame.src = base + "/widget";
   frame.allow = "microphone; autoplay";
-  frame.title = "Marleen, assistent";
+  frame.title = "Roos, assistent";
   frame.setAttribute("allowtransparency", "true");
 
   function pas() {
@@ -31,12 +31,12 @@
 
   window.addEventListener("message", function (e) {
     if (e.origin !== base || !e.data) return;
-    if (e.data.soort === "marleen-maat") {
+    if (e.data.soort === "roos-maat") {
       maat = { w: e.data.w, h: e.data.h };
       pas();
     }
-    if (e.data.soort === "marleen-ga")
-      location.href = app + "/?marleen=" + encodeURIComponent(String(e.data.samenvatting || "").slice(0, 1500));
+    if (e.data.soort === "roos-ga")
+      location.href = app + "/?roos=" + encodeURIComponent(String(e.data.samenvatting || "").slice(0, 1500));
   });
   window.addEventListener("resize", pas);
 

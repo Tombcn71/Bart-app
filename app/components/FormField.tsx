@@ -21,8 +21,8 @@ export function FormField({ label, value, children, defaultOpen = false }: Props
       const scroll = typeof d === "string" ? true : d?.scroll !== false;
       if (scroll) setTimeout(() => vak.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 80);
     };
-    window.addEventListener("marleen-open-vak", bij);
-    return () => window.removeEventListener("marleen-open-vak", bij);
+    window.addEventListener("roos-open-vak", bij);
+    return () => window.removeEventListener("roos-open-vak", bij);
   }, [label]);
   return (
     <div ref={vak} className="border-b border-slate-200 last:border-0">

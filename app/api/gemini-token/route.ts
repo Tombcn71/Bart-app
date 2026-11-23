@@ -1,5 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
-import { MODELLEN, STEMMEN, marleenConfig } from "@/lib/marleen-live";
+import { MODELLEN, STEMMEN, roosConfig } from "@/lib/roos-live";
 
 const bezoeken = new Map<string, number[]>();
 function toegestaan(req: Request) {
@@ -38,7 +38,7 @@ export async function POST(req: Request) {
         newSessionExpireTime: new Date(Date.now() + 60 * 1000).toISOString(),
         liveConnectConstraints: {
           model,
-          config: marleenConfig(stem, model, new URL(req.url).searchParams.get("widget") === "1"),
+          config: roosConfig(stem, model, new URL(req.url).searchParams.get("widget") === "1"),
         },
         // Gemini stelde een vergrendeling van alleen de stem voor, maar die weigert Google ("field_mask is invalid").
         // Daarom alles vergrendelen: dan liggen de stem en alle instellingen vast.

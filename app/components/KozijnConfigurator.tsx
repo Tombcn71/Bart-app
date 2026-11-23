@@ -736,7 +736,7 @@ export function KozijnConfigurator({
       prijsInclusief: metBtw ? `montage en ${btwPct}% btw` : "montage, exclusief btw",
     }),
     zet: (p) => {
-      // Klap het vak open waar Marleen iets verandert, zodat de klant het ziet gebeuren.
+      // Klap het vak open waar Roos iets verandert, zodat de klant het ziet gebeuren.
       const VAK: Record<string, string> = {
         breedte: "Afmetingen", hoogte: "Afmetingen", profiel: "Profiel en aanslag", aanslag: "Profiel en aanslag",
         kleurBinnen: "Kleur", kleurBuiten: "Kleur", glas: "Vulling", afstandshouder: "Vulling",
@@ -744,12 +744,12 @@ export function KozijnConfigurator({
       };
       if (p.weergave === "foto" || p.weergave === "tekening") {
         // Bij de gevel of tekening: het beeld netjes in beeld houden, geen vakken openklappen.
-        setTimeout(() => document.getElementById("marleen-beeld")?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
+        setTimeout(() => document.getElementById("roos-beeld")?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
       } else {
         const vakken = Array.from(new Set(Object.keys(p).map((k) => VAK[k]).filter(Boolean)));
         // Staat de gevelfoto in beeld, dan het vak wel openklappen maar niet wegscrollen van de foto.
         const scroll = weergave !== "foto";
-        setTimeout(() => vakken.forEach((v) => window.dispatchEvent(new CustomEvent("marleen-open-vak", { detail: { label: v, scroll } }))), 50);
+        setTimeout(() => vakken.forEach((v) => window.dispatchEvent(new CustomEvent("roos-open-vak", { detail: { label: v, scroll } }))), 50);
       }
       if (typeof p.type === "string" && lijst.some((k) => k.slug === p.type)) kiesType(p.type);
       if (typeof p.breedte === "number" && p.breedte > 0) setBreedte(Math.round(p.breedte));
@@ -914,7 +914,7 @@ export function KozijnConfigurator({
           {alu ? "Aluminium — " : ""}{kozijn.name}
         </h1>
         <div className={voorbeeld ? "grid grid-cols-1 gap-4" : "grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-12"}>
-          <div id="marleen-beeld" className={voorbeeld ? "min-w-0 space-y-3 scroll-mt-20" : "lg:col-span-7 min-w-0 space-y-3 scroll-mt-20"}>
+          <div id="roos-beeld" className={voorbeeld ? "min-w-0 space-y-3 scroll-mt-20" : "lg:col-span-7 min-w-0 space-y-3 scroll-mt-20"}>
             {/* Bovenaan de tekening van het gekozen kozijn; de foto op een gevel komt pas bij het formulier */}
             {/* Het kozijn bovenaan: de technische tekening, of (waar die er is) een foto op een gevel */}
             {(() => {

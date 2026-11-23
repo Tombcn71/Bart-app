@@ -1,8 +1,8 @@
 import { GoogleGenAI } from "@google/genai";
-import { OPENING_PCM_BASE64, OPENING_TEKST } from "@/lib/marleen-opening";
+import { OPENING_PCM_BASE64, OPENING_TEKST } from "@/lib/roos-opening";
 
 /**
- * De stem van Marleen: Gemini's voorleesstem (gemini-3.8-flash-tts, stem Kore), de stem die Tom koos ("nummer 5").
+ * De stem van Roos: Gemini's voorleesstem (gemini-3.8-flash-tts, stem Kore), de stem die Tom koos ("nummer 5").
  * De browser stuurt één zin; wij sturen het geluid (24 kHz, 16-bit PCM) terug zodra het binnenkomt.
  */
 // Geen stijlinstructie: Tom koos versie B (Kore, gewoon voorgelezen) op 22 nov 2026.

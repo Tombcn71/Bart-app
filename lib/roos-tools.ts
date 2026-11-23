@@ -5,8 +5,8 @@ const tekst = (beschrijving: string) => ({
   description: beschrijving,
 });
 
-/** De functies waarmee Marleen de calculator en het offerteformulier bedient. */
-export const MARLEEN_TOOLS: Tool[] = [
+/** De functies waarmee Roos de calculator en het offerteformulier bedient. */
+export const ROOS_TOOLS: Tool[] = [
   {
     functionDeclarations: [
       {

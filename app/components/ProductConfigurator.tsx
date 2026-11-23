@@ -94,7 +94,7 @@ export function ProductConfigurator({
     getMatrix(matrixSleutel).then((data: unknown) => setOpgehaald(isStandaardModel(data) ? data : startModelVoor(matrixSleutel)));
   }, [matrixProp, matrixSleutel]);
 
-  // De koppeling met Marleen bestaat alleen zolang deze calculator op het scherm staat.
+  // De koppeling met Roos bestaat alleen zolang deze calculator op het scherm staat.
   const ik = useRef({}).current;
   useEffect(() => () => { if (brugRef.current?.eigenaar === ik) brugRef.current = null; }, [ik]);
 
@@ -161,7 +161,7 @@ export function ProductConfigurator({
     if (toonModal) setModalOpen(true);
   }
 
-  // Marleen bedient deze calculator met dezelfde functies als de kozijncalculator.
+  // Roos bedient deze calculator met dezelfde functies als de kozijncalculator.
   const groepen = catalogus.keuzes.filter((g) => !g.typen || g.typen.includes(slug));
   const fotoGroep = catalogus.keuzes.find((g) => /^kleur(Profiel)?Buiten|^kleurLamellen$|^kleur$/.test(g.id) && (!g.typen || g.typen.includes(slug)));
   const fotoBeschikbaar = !voorbeeld && FOTO_TYPES.has(slug) && !!(fotoGroep ? fotoKleurVan(keuzes[fotoGroep.id]) : "wit");
@@ -205,11 +205,11 @@ export function ProductConfigurator({
       geldig.forEach((x) => vakken.add(sectieVan(String(x.groep))));
       if (p.weergave === "foto" || p.weergave === "tekening") {
         // Bij de foto: het beeld netjes in beeld houden, vakken wel openklappen maar niet wegscrollen.
-        setTimeout(() => document.getElementById("marleen-beeld")?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
-        setTimeout(() => vakken.forEach((v) => window.dispatchEvent(new CustomEvent("marleen-open-vak", { detail: { label: v, scroll: false } }))), 50);
+        setTimeout(() => document.getElementById("roos-beeld")?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
+        setTimeout(() => vakken.forEach((v) => window.dispatchEvent(new CustomEvent("roos-open-vak", { detail: { label: v, scroll: false } }))), 50);
       } else {
         const scroll = weergave !== "foto";
-        setTimeout(() => vakken.forEach((v) => window.dispatchEvent(new CustomEvent("marleen-open-vak", { detail: { label: v, scroll } }))), 50);
+        setTimeout(() => vakken.forEach((v) => window.dispatchEvent(new CustomEvent("roos-open-vak", { detail: { label: v, scroll } }))), 50);
       }
     },
     toonFormulier: () => {
@@ -243,7 +243,7 @@ export function ProductConfigurator({
           </div>
         )}
         <div className={voorbeeld ? "grid grid-cols-1 gap-4" : "grid grid-cols-1 gap-4 lg:grid-cols-12 lg:gap-12"}>
-          <div id="marleen-beeld" className={voorbeeld ? "min-w-0 space-y-3 scroll-mt-20" : "min-w-0 space-y-3 lg:col-span-7 scroll-mt-20"}>
+          <div id="roos-beeld" className={voorbeeld ? "min-w-0 space-y-3 scroll-mt-20" : "min-w-0 space-y-3 lg:col-span-7 scroll-mt-20"}>
             {(() => {
               // Foto van het product op een gevel, in de gekozen kleur (wit, antraciet of zwart); anders alleen de tekening.
               const kleurGroep = catalogus.keuzes.find((g) => /^kleur(Profiel)?Buiten|^kleurLamellen$|^kleur$/.test(g.id) && (!g.typen || g.typen.includes(slug)));

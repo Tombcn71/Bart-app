@@ -21,7 +21,7 @@ const euro = (n: number) => `€ ${n.toLocaleString("nl-NL", { minimumFractionDi
 
 function ItemKaart({ item, nummer, totaalItems }: { item: OfferteItemWeergave; nummer: number; totaalItems: number }) {
   return (
-    <section data-marleen-product={item.product} data-marleen-prijs={item.prijs} data-marleen-btw={item.btw} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+    <section data-roos-product={item.product} data-roos-prijs={item.prijs} data-roos-btw={item.btw} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
       <div className="px-5 pt-5 pb-3">
         <p className="text-sm font-bold uppercase tracking-wider text-slate-700">
           {totaalItems > 1 ? `Product ${nummer} van ${totaalItems}` : "Uw product"}
@@ -179,7 +179,7 @@ export function OfferteWeergave({
         ))}
 
         {items.length > 1 && (
-          <div data-marleen-totaal={totaal} className="bg-white rounded-2xl border border-slate-100 shadow-sm px-5 py-4 flex justify-between text-base">
+          <div data-roos-totaal={totaal} className="bg-white rounded-2xl border border-slate-100 shadow-sm px-5 py-4 flex justify-between text-base">
             <span className="font-semibold text-slate-700">Totaal</span>
             <span className="font-bold text-brand-text">
               {euro(totaal)} <span className="font-normal text-slate-700">{btw}</span>

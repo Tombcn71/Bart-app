@@ -7,8 +7,8 @@ import { useRouter } from "next/navigation";
 import { brugRef } from "@/lib/assistent-brug";
 import { formulier } from "@/lib/assistent-formulier";
 import { KOZIJN_TYPEN } from "@/lib/kozijntypen";
-import { VULLERS } from "@/lib/marleen-vullers";
-import { MARLEEN_PRODUCTEN } from "@/lib/marleen-producten";
+import { VULLERS } from "@/lib/roos-vullers";
+import { ROOS_PRODUCTEN } from "@/lib/roos-producten";
 import { Maximize2, Mic, Minimize2, PhoneOff, Send, Sparkles, X } from "lucide-react";
 
 const MAX_SECONDEN = 15 * 60; // een gesprek stopt hoe dan ook na een kwartier
@@ -20,7 +20,7 @@ const VOORBEELDEN = [
   { kort: "Hoe werkt de offerte?", vraag: "Hoe werkt de offerte?" },
 ];
 
-type Bericht = { rol: "marleen" | "jij"; tekst: string };
+type Bericht = { rol: "roos" | "jij"; tekst: string };
 
 function Orb({ refEl, groot = false, ademen = true }: { refEl?: React.RefObject<HTMLDivElement | null>; groot?: boolean; ademen?: boolean }) {
   return (
@@ -98,7 +98,7 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
   const stream = useRef<MediaStream | null>(null);
   const volgende = useRef(0);
   const bronnen = useRef<AudioBufferSourceNode[]>([]);
-  const laatsteRol = useRef<"marleen" | "jij" | null>(null);
+  const laatsteRol = useRef<"roos" | "jij" | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const ronde = useRef(0);
 
@@ -106,7 +106,7 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
   const bezig = stand === "verbinden";
   const actief = verbonden || bezig;
 
-  function voegToe(rol: "marleen" | "jij", tekstDeel: string) {
+  function voegToe(rol: "roos" | "jij", tekstDeel: string) {
     laatsteGeluid.current = Date.now();
     const vorige = laatsteRol.current;
     laatsteRol.current = rol;
@@ -192,7 +192,7 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
   }, [autoStart, overdracht]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     try {
-      const p = new URLSearchParams(window.location.search).get("marleen");
+      const p = new URLSearchParams(window.location.search).get("roos");
       if (p) {
         setOverdracht(p);
         setOpen(true);
@@ -211,7 +211,7 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
     void begin(false, tekst, true);
   }
 
-  /** Marleen bedient de calculator en het formulier. Prijzen worden niet teruggegeven: die noemt ze nooit. */
+  /** Roos bedient de calculator en het formulier. Prijzen worden niet teruggegeven: die noemt ze nooit. */
   async function voerUit(naam: string, input: Record<string, unknown>): Promise<Record<string, unknown>> {
     const zonderPrijs = (x: unknown) => {
       if (!x || typeof x !== "object") return x;
@@ -231,7 +231,7 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
       return { ok: true, pagina: String(input.groep) };
     }
     if (naam === "open_product") {
-      const prod = MARLEEN_PRODUCTEN[String(input.product)];
+      const prod = ROOS_PRODUCTEN[String(input.product)];
       if (!prod) return { fout: "Onbekend product." };
       const type = String(input.type ?? "");
       if (!prod.typen[type]) return { fout: "Onbekend type. Kies uit: " + Object.keys(prod.typen).join(", ") };
@@ -259,19 +259,19 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
       return (zonderPrijs(brug()?.staat()) as Record<string, unknown>) ?? { fout: "De calculator kon niet geopend worden." };
     }
     if (naam === "lees_offerte") {
-      for (let i = 0; i < 25 && !document.querySelector("[data-marleen-product]"); i++) await wacht(150);
+      for (let i = 0; i < 25 && !document.querySelector("[data-roos-product]"); i++) await wacht(150);
       const zeg = (n: number) => {
         const euro = Math.floor(n + 0.0001);
         const cent = Math.round((n - euro) * 100);
         return `${euro} euro${cent ? ` en ${cent} cent` : ""}`;
       };
-      const producten = Array.from(document.querySelectorAll<HTMLElement>("[data-marleen-product]")).map((el) => {
-        const prijs = Number(el.dataset.marleenPrijs);
-        return { product: el.dataset.marleenProduct, prijsUitgesproken: zeg(prijs), btw: el.dataset.marleenBtw, specificaties: el.innerText.replace(/\n{2,}/g, "\n").trim().slice(0, 1200) };
+      const producten = Array.from(document.querySelectorAll<HTMLElement>("[data-roos-product]")).map((el) => {
+        const prijs = Number(el.dataset.roosPrijs);
+        return { product: el.dataset.roosProduct, prijsUitgesproken: zeg(prijs), btw: el.dataset.roosBtw, specificaties: el.innerText.replace(/\n{2,}/g, "\n").trim().slice(0, 1200) };
       });
       if (!producten.length) return { fout: "De offerte is nog niet te zien." };
-      const totEl = document.querySelector<HTMLElement>("[data-marleen-totaal]");
-      const totaal = totEl ? Number(totEl.dataset.marleenTotaal) : Array.from(document.querySelectorAll<HTMLElement>("[data-marleen-product]")).reduce((a, el) => a + Number(el.dataset.marleenPrijs), 0);
+      const totEl = document.querySelector<HTMLElement>("[data-roos-totaal]");
+      const totaal = totEl ? Number(totEl.dataset.roosTotaal) : Array.from(document.querySelectorAll<HTMLElement>("[data-roos-product]")).reduce((a, el) => a + Number(el.dataset.roosPrijs), 0);
       return { producten, totaalUitgesproken: zeg(totaal), btw: producten[0].btw, let_op: "Noem bedragen precies zoals bij 'Uitgesproken' staat. Reken nooit zelf." };
     }
     if (naam === "ga_naar_akkoord") {
@@ -330,7 +330,7 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
         } catch {}
         setTimeout(() => {
           try {
-            window.parent.postMessage({ soort: "marleen-ga", samenvatting }, "*");
+            window.parent.postMessage({ soort: "roos-ga", samenvatting }, "*");
           } catch {}
         }, 1800);
       }
@@ -342,7 +342,7 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
       let response: Record<string, unknown>;
       try {
         const uit = await voerUit(c.name ?? "", (c.args ?? {}) as Record<string, unknown>);
-        if (process.env.NODE_ENV !== "production") console.info("Marleen actie:", c.name, JSON.stringify(c.args ?? {}), "=>", JSON.stringify(uit).slice(0, 300));
+        if (process.env.NODE_ENV !== "production") console.info("Roos actie:", c.name, JSON.stringify(c.args ?? {}), "=>", JSON.stringify(uit).slice(0, 300));
         response = { output: uit };
       } catch (e) {
         response = { fout: String((e as Error)?.message ?? e) };
@@ -365,7 +365,7 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
     }
     for (const p of sc.modelTurn?.parts ?? []) if (p.inlineData?.data) speel(p.inlineData.data);
     if (sc.inputTranscription?.text) voegToe("jij", sc.inputTranscription.text);
-    if (sc.outputTranscription?.text) voegToe("marleen", sc.outputTranscription.text);
+    if (sc.outputTranscription?.text) voegToe("roos", sc.outputTranscription.text);
     if (sc.turnComplete) {
       laatsteRol.current = null;
       if (afsluiten.current) {
@@ -441,7 +441,7 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
             const p = { ...(params ?? {}) };
             if (p.soort !== undefined && p.type === undefined) p.type = p.soort; // bij ElevenLabs heet "type" hier "soort"
             const uit = await voerUit(naam, p);
-            if (process.env.NODE_ENV !== "production") console.info("Marleen actie:", naam, JSON.stringify(p), "=>", JSON.stringify(uit).slice(0, 300));
+            if (process.env.NODE_ENV !== "production") console.info("Roos actie:", naam, JSON.stringify(p), "=>", JSON.stringify(uit).slice(0, 300));
             return JSON.stringify(uit);
           },
         ]),
@@ -453,7 +453,7 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
         clientTools,
         onMessage: ({ message, source }: { message: string; source: "user" | "ai" }) => {
           laatsteRol.current = null;
-          voegToe(source === "ai" ? "marleen" : "jij", message);
+          voegToe(source === "ai" ? "roos" : "jij", message);
           laatsteRol.current = null;
         },
         onModeChange: ({ mode }: { mode: string }) => {
@@ -605,7 +605,7 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
         ? typen
           ? "Typ je vraag hieronder"
           : praat
-            ? "Marleen praat…"
+            ? "Roos praat…"
             : "Ik luister. Je kunt ook typen"
         : "Stel je vraag hardop of typ hem";
 
@@ -616,7 +616,7 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
   useEffect(() => {
     if (!ingebed) return;
     try {
-      if (sessionStorage.getItem("marleen-klein")) setKlein(true);
+      if (sessionStorage.getItem("roos-klein")) setKlein(true);
     } catch {}
   }, [ingebed]);
   // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -624,7 +624,7 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
     if (!ingebed) return;
     const maat = widgetModus === "kaart" ? { w: 360, h: fout ? 200 : 178 } : { w: 112, h: 112 };
     try {
-      window.parent.postMessage({ soort: "marleen-maat", ...maat }, "*");
+      window.parent.postMessage({ soort: "roos-maat", ...maat }, "*");
     } catch {}
   }, [ingebed, widgetModus, fout]);
 
@@ -632,7 +632,7 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
     const naarRust = () => {
       setKlein(true);
       try {
-        sessionStorage.setItem("marleen-klein", "1");
+        sessionStorage.setItem("roos-klein", "1");
       } catch {}
     };
     const ophangen = () => {
@@ -653,7 +653,7 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
             </button>
             <div className="mt-0.5 size-11 shrink-0 rounded-full" style={{ background: BAL, boxShadow: "0 6px 16px rgba(39,146,220,0.35)" }} />
             <div className="min-w-0 flex-1 pr-5">
-              <p className="text-[15px] font-bold leading-tight">Hallo, ik ben Marleen</p>
+              <p className="text-[15px] font-bold leading-tight">Hallo, ik ben Roos</p>
               <p className={`mt-1 text-[13.5px] leading-snug ${fout ? "font-semibold text-red-700" : "text-slate-600"}`}>
                 {fout || "Zal ik je in één minuut aan een offerte helpen? Praat gewoon met me, dan loop ik met je door de calculator."}
               </p>
@@ -661,7 +661,7 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
                 type="button"
                 onClick={startPraten}
                 className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-brand py-2.5 text-sm font-bold text-white transition hover:bg-brand-dark active:scale-[0.98]">
-                <Mic className="size-4" /> Praat met Marleen
+                <Mic className="size-4" /> Praat met Roos
               </button>
             </div>
           </div>
@@ -674,7 +674,7 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
         <button
           type="button"
           onClick={widgetModus === "rust" ? startPraten : undefined}
-          aria-label={widgetModus === "rust" ? "Praat met Marleen" : bezig ? "Verbinden" : praat ? "Marleen praat" : "Marleen luistert"}
+          aria-label={widgetModus === "rust" ? "Praat met Roos" : bezig ? "Verbinden" : praat ? "Roos praat" : "Roos luistert"}
           className="relative transition active:scale-95">
           <div
             ref={bol}
@@ -743,7 +743,7 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
           className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 shadow-xl hover:bg-slate-50">
           <Sparkles className="size-4 text-brand-text" /> Stel een vraag
         </button>
-        <button type="button" onClick={() => setOpen(true)} aria-label="Praat met Marleen" className="transition active:scale-95">
+        <button type="button" onClick={() => setOpen(true)} aria-label="Praat met Roos" className="transition active:scale-95">
           <Orb />
         </button>
         {keyframes}
@@ -758,7 +758,7 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
       className={`fixed right-3 bottom-3 z-50 flex w-[calc(100vw-1.5rem)] ${breedte} flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white text-slate-900 shadow-2xl shadow-black/30`}>
       <div className="flex items-start justify-between px-6 pt-5">
         <div>
-          <p className="text-lg font-bold">Marleen</p>
+          <p className="text-lg font-bold">Roos</p>
           <p className="text-sm text-slate-500">AI-assistent · praten of typen</p>
         </div>
         <div className="flex items-center gap-1">
@@ -800,7 +800,7 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
             <div
               key={i}
               className={`max-w-[88%] rounded-2xl px-4 py-2.5 text-[15px] leading-snug ${
-                b.rol === "marleen" ? "bg-slate-100 text-slate-900" : "ml-auto bg-brand text-white"
+                b.rol === "roos" ? "bg-slate-100 text-slate-900" : "ml-auto bg-brand text-white"
               }`}>
               {b.tekst}
             </div>
@@ -829,7 +829,7 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
             type="button"
             onClick={overdracht ? verderPraten : startPraten}
             className="flex w-full items-center justify-center gap-2 rounded-full bg-brand py-4 text-base font-bold text-white transition hover:bg-brand-dark active:scale-[0.98]">
-            <Mic className="size-5" /> {overdracht ? "Verder praten met Marleen" : "Start gesprek"}
+            <Mic className="size-5" /> {overdracht ? "Verder praten met Roos" : "Start gesprek"}
           </button>
         )}
       </div>
