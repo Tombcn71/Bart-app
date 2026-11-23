@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 function stuur(soort: string, bron?: string) {
   try {
     let ref = "";
-    try { ref = document.referrer ? new URL(document.referrer).hostname : ""; } catch {}
+    try { ref = document.referrer ? new URL(document.referrer).hostname : new URLSearchParams(location.search).get("utm_source") ?? ""; } catch {}
     const d = JSON.stringify({ soort, bron, pad: location.pathname, ref: soort === "site_bezoek" ? ref : "" });
     navigator.sendBeacon?.("/api/tel", new Blob([d], { type: "text/plain" }));
   } catch {}

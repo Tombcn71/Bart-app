@@ -6,7 +6,7 @@
     if (/[?&]wel-tellen=1/.test(location.search)) localStorage.removeItem("niet_tellen");
     if (localStorage.getItem("niet_tellen")) return;
   } catch (e) {}
-  function refHost() { try { return document.referrer ? new URL(document.referrer).hostname : ""; } catch (e) { return ""; } }
+  function refHost() { try { var u = (location.search.match(/[?&]utm_source=([^&]+)/) || [])[1]; return document.referrer ? new URL(document.referrer).hostname : (u ? decodeURIComponent(u) : ""); } catch (e) { return ""; } }
   function stuur(soort, pad) {
     try {
       var d = JSON.stringify({ soort: soort, pad: pad || location.pathname, ref: soort === "wp_bezoek" ? refHost() : "" });

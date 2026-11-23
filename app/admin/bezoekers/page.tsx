@@ -4,7 +4,7 @@ import { funnel } from "@/lib/bezoek";
 
 export const dynamic = "force-dynamic";
 
-const HERKOMST = ["Google", "Facebook", "Instagram", "WhatsApp", "LinkedIn", "YouTube", "Bing", "Marktplaats", "Via bartmooi.nl", "Direct", "Andere sites"];
+const HERKOMST = ["Google", "ChatGPT", "Gemini", "Perplexity", "Claude", "Copilot", "Facebook", "Instagram", "WhatsApp", "LinkedIn", "YouTube", "Bing", "Via bartmooi.nl", "Direct", "Andere sites"];
 const BEKEND: Record<string, string> = { direct: "Direct", wordpress: "Via bartmooi.nl" };
 const bekend = (b: string) => BEKEND[b] ?? (HERKOMST.includes(b) ? b : "Andere sites");
 const tel = (lijst: { bron: string; n: number }[], naam: string) => lijst.filter((r) => bekend(r.bron) === naam).reduce((t, r) => t + r.n, 0);
