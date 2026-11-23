@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { getCart, clearCart } from "@/lib/cart";
 import { saveOffertes } from "@/app/actions";
@@ -35,6 +35,13 @@ export function CartAddedModal({ open, onClose, product, breedte, hoogte, aantal
   const [woonplaats, setWoonplaats] = useState("");
   const [email, setEmail] = useState("");
   const [telefoon, setTelefoon] = useState("");
+  const emailRef = useRef<HTMLInputElement>(null);
+  // De klant tikt zelf: de assistent krijgt dat te horen (zie roos-assistent), zodat ze niet hoeft te wachten of te vragen.
+  const getikt = (veld: string) => window.dispatchEvent(new CustomEvent("roos-formulier-getikt", { detail: { veld } }));
+  // Staan naam, woonplaats en telefoon erin en het e-mailadres nog niet, dan staat de cursor meteen in het e-mailveld.
+  useEffect(() => {
+    if (open && naam && woonplaats && telefoon && !email) emailRef.current?.focus();
+  }, [open, naam, woonplaats, telefoon, email]);
   const [bezig, setBezig] = useState(false);
   const [klaar, setKlaar] = useState(false);
   const [offerteId, setOfferteId] = useState<string | null>(null);
@@ -171,13 +178,13 @@ export function CartAddedModal({ open, onClose, product, breedte, hoogte, aantal
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="3" strokeLinecap="round" className="flex-shrink-0"><polyline points="20 6 9 17 4 12"/></svg>
                 <span className="text-xs font-semibold text-green-800">Bij ons is montage in de prijs inbegrepen</span>
               </div>
-              <input value={naam} onChange={e => setNaam(e.target.value)} placeholder="Naam"
+              <input value={naam} onChange={e => { setNaam(e.target.value); getikt("naam"); }} placeholder="Naam"
                 className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
-              <input value={woonplaats} onChange={e => setWoonplaats(e.target.value)} placeholder="Woonplaats"
+              <input value={woonplaats} onChange={e => { setWoonplaats(e.target.value); getikt("woonplaats"); }} placeholder="Woonplaats"
                 className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
-              <input type="tel" value={telefoon} onChange={e => setTelefoon(e.target.value)} placeholder="Telefoonnummer"
+              <input type="tel" value={telefoon} onChange={e => { setTelefoon(e.target.value); getikt("telefoon"); }} placeholder="Telefoonnummer"
                 className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="E-mailadres"
+              <input ref={emailRef} type="email" value={email} onChange={e => { setEmail(e.target.value); getikt("email"); }} placeholder="E-mailadres"
                 className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
 
               <button onClick={() => handleSubmit()} disabled={bezig}

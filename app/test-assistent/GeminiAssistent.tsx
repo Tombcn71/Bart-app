@@ -173,6 +173,26 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
 
   const router = useRouter();
 
+  // De klant tikt zelf in het formulier: na een korte pauze laten we Roos dat weten, zodat ze meteen doorgaat.
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const bijTik = (e: Event) => {
+      const veld = (e as CustomEvent<{ veld: string }>).detail?.veld;
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        const w = formulier.waarden;
+        if (!sessie.current) return;
+        if (veld === "email" && !/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(w.email)) return; // pas melden als het adres compleet is
+        sessie.current.sendRealtimeInput({ text: veld === "email" ? "Ik heb mijn e-mailadres ingetypt." : "Ik heb het in het formulier aangepast." });
+      }, 1800);
+    };
+    window.addEventListener("roos-formulier-getikt", bijTik);
+    return () => {
+      window.removeEventListener("roos-formulier-getikt", bijTik);
+      if (timer) clearTimeout(timer);
+    };
+  }, []);
+
   const [overdracht, setOverdracht] = useState("");
   const [autoStart, setAutoStart] = useState(false);
   useEffect(() => {
