@@ -51,8 +51,8 @@ export function bronVan(ref?: string) {
     [/chatgpt|openai/, "ChatGPT"], [/perplexity/, "Perplexity"], [/gemini\.google|bard\.google/, "Gemini"],
     [/claude\.ai|anthropic/, "Claude"], [/copilot|bing\.com\/chat/, "Copilot"],
     [/google\./, "Google"], [/bing\.com/, "Bing"], [/duckduckgo|ecosia|yahoo/, "Andere zoekmachine"],
-    [/facebook\.com|fb\.com|fb\.me/, "Facebook"], [/instagram\.com/, "Instagram"], [/whatsapp/, "WhatsApp"],
-    [/linkedin|lnkd\.in/, "LinkedIn"], [/t\.co$|twitter|x\.com/, "X"], [/youtube|youtu\.be/, "YouTube"],
+    [/facebook\.com|fb\.com|fb\.me/, "Facebook"], [/whatsapp/, "WhatsApp"],
+    [/linkedin|lnkd\.in/, "LinkedIn"], [/t\.co$|twitter|x\.com/, "X"],
     [/pinterest/, "Pinterest"],   ];
   for (const [re, naam] of namen) if (re.test(h)) return naam;
   return h.slice(0, 40);
