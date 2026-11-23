@@ -466,6 +466,23 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
           },
         ]),
       );
+      // Komt de bezoeker uit de chat met een kozijn (?roos=1&b=..&h=..), dan weet Roos dat na haar begroeting.
+      const vanChat = (() => {
+        try {
+          const q = new URLSearchParams(window.location.search);
+          if (q.get("roos") !== "1") return "";
+          const type = window.location.pathname.split("/").filter(Boolean).pop() ?? "";
+          const naam = KOZIJN_TYPEN.find((t) => t.slug === type)?.naam ?? type.replace(/-/g, " ");
+          const glas = q.get("glas") === "triple" ? "triple glas" : "dubbel glas (HR++)";
+          const kleur = (q.get("kleur") ?? "wit").replace(/-/g, " ");
+          return `Ik kom uit de chat. Ik wil een offerte voor: ${q.get("n") ?? "1"} × ${naam}, ${q.get("b")} bij ${q.get("h")} mm, ${glas}, kleur buiten ${kleur}. Dit staat al ingevuld in de calculator, met de prijs. Open de calculator niet opnieuw en vraag niet opnieuw naar type, maat, kamer of glas. Zeg in één korte zin wat je ziet en vraag dan meteen naar mijn naam, woonplaats en telefoonnummer, en daarna mijn e-mailadres.`;
+        } catch {
+          return "";
+        }
+      })();
+      let contextVerstuurd = false;
+      let begroetGehoord = false;
+      let gesprekRef: { sendUserMessage: (t: string) => void } | null = null;
       const conv = await Conversation.startSession({
         signedUrl: d.signedUrl,
         connectionType: "websocket",
@@ -478,6 +495,12 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
         },
         onModeChange: ({ mode }: { mode: string }) => {
           setPraat(mode === "speaking");
+          if (mode === "speaking") begroetGehoord = true;
+          if (mode === "listening" && begroetGehoord && vanChat && !contextVerstuurd && gesprekRef) {
+            contextVerstuurd = true;
+            const g = gesprekRef;
+            setTimeout(() => g.sendUserMessage(vanChat), 400);
+          }
           if (mode === "speaking") laatsteUitGeluid.current = performance.now();
         },
         onDisconnect: () => {
@@ -493,6 +516,7 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
         conv.endSession().catch(() => {});
         return;
       }
+      gesprekRef = conv;
       if (modusTypen) conv.setVolume({ volume: 0 });
       // Kleine vertaler: de rest van de code (tekst sturen, ophangen) blijft gewoon werken.
       const meter = setInterval(() => {
