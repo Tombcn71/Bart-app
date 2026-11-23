@@ -20,7 +20,7 @@ function tel(soort: string) {
 type Bericht = { rol: "klant" | "chat"; tekst: string };
 
 export default function Chat() {
-  const [berichten, setBerichten] = useState<Bericht[]>([{ rol: "chat", tekst: "Goedendag! Ik ben de AI-assistent van BartMooi. Ik beantwoord uw vragen over kozijnen, glas, onderhoud en subsidie, en help u met de aanvraag. Waarmee kan ik u helpen?" }]);
+  const [berichten, setBerichten] = useState<Bericht[]>([{ rol: "chat", tekst: "Goedendag! Ik ben de slimme assistent van BartMooi. Vraag me gerust naar prijzen van kozijnen, deuren en rolluiken, naar glas, onderhoud of subsidie. Ik help u ook met de subsidieaanvraag. Waarmee kan ik u helpen?" }]);
   const [invoer, setInvoer] = useState("");
   const [bezig, setBezig] = useState(false);
   const onder = useRef<HTMLDivElement>(null);
@@ -51,9 +51,9 @@ export default function Chat() {
   }
   useEffect(() => { onder.current?.scrollIntoView({ behavior: "smooth" }); }, [berichten, bezig]);
 
-  async function stuur(e: React.FormEvent) {
-    e.preventDefault();
-    const tekst = invoer.trim();
+  async function stuur(e: React.FormEvent | null, vraag?: string) {
+    e?.preventDefault();
+    const tekst = (vraag ?? invoer).trim();
     if (!tekst || bezig) return;
     if (!berichten.some((b) => b.rol === "klant")) tel("chat");
     const nieuw = [...berichten, { rol: "klant" as const, tekst }];
@@ -87,6 +87,13 @@ export default function Chat() {
             <p className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-[15px] leading-snug ${b.rol === "klant" ? "bg-[#dbe8f4] text-[#13334D]" : "bg-white text-[#13334D] shadow-sm"}`}>{linkjes(b.tekst)}</p>
           </div>
         ))}
+        {!berichten.some((b) => b.rol === "klant") && (
+          <div className="flex flex-wrap gap-2 pt-1">
+            {["Wat kost een kozijn?", "Krijg ik subsidie?", "Dubbel of triple glas?", "Hoe vraag ik subsidie aan?"].map((v) => (
+              <button key={v} type="button" onClick={() => stuur(null, v)} className="rounded-full border border-[#1E5079]/40 bg-white px-3 py-1.5 text-sm font-semibold text-[#1E5079] hover:bg-[#1E5079] hover:text-white">{v}</button>
+            ))}
+          </div>
+        )}
         {bezig && <p className="text-sm text-black/40">Even denken…</p>}
         <div ref={onder} />
       </div>
