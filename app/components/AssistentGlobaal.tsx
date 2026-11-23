@@ -19,7 +19,8 @@ export function AssistentGlobaal() {
     pad.startsWith("/meten") ||
     pad.startsWith("/terugbellen") ||
     pad.startsWith("/widget") ||
-    pad.startsWith("/test-assistent");
+    pad.startsWith("/test-assistent") ||
+    pad === "/chat";
   if (verberg || !beschikbaar) return null;
   return <GeminiAssistent />;
 }
