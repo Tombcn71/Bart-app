@@ -1,39 +1,48 @@
-import { EndSensitivity, Modality, StartSensitivity, ThinkingLevel } from "@google/genai";
-import { MARLEEN_PROMPT } from "./marleen-prompt";
+import { EndSensitivity, Modality, StartSensitivity } from "@google/genai";
+import { MARLEEN_PROMPT, BASIS, AFSLUITING } from "./marleen-prompt";
 import { MARLEEN_TOOLS } from "./marleen-tools";
 import { WIDGET_PROMPT, WIDGET_TOOLS } from "./marleen-widget";
-import { BASIS, AFSLUITING } from "./marleen-prompt";
 
-export const MODELLEN = ["gemini-3.8-live", "gemini-3.8-live-extended-thinking", "gemini-3.1-flash-live-preview"] as const;
+export const MODELLEN = ["gemini-3.8-live", "gemini-3.1-flash-live-preview"] as const;
 export const MARLEEN_MODEL = MODELLEN[0];
 
-/** Instellingen van het gesprek. Alleen op de server gebruiken: de prompt blijft hier. */
-export const STEMMEN = ["Sulafat", "Gacrux", "Vindemiatrix", "Despina", "Achernar", "Callirrhoe", "Erinome", "Kore", "Aoede", "Leda"] as const;
+export const STEMMEN = [
+  "Aoede", "Leda", "Kore", "Sulafat", "Gacrux",
+  "Vindemiatrix", "Despina", "Achernar", "Callirrhoe", "Erinome"
+] as const;
 
-const WOORDEN = ["BartMooi", "Marleen", "kozijn", "kozijnen", "draai-kiepraam", "kiepraam", "schuifpui", "harmonicadeur", "rolluik", "hor", "HR++", "triple glas", "dubbel glas", "kunststof", "aluminium", "offerte", "inmeting"];
+export const DOMEIN_WOORDEN = [
+  "BartMooi", "Marleen", "kozijn", "kozijnen", "draai-kiepraam",
+  "kiepraam", "schuifpui", "schuifpuien", "harmonicadeur", "rolluik", "hor",
+  "maten", "breedte", "hoogte", "millimeter", "centimeter",
+  "tweede", "derde", "antraciet", "HR++", "triple glas", "dubbel glas",
+  "kunststof", "aluminium", "offerte", "inmeting"
+];
 
-export function marleenConfig(stem: string = "Kore", model: string = MARLEEN_MODEL, widget = false) {
+const WOORDEN_INSTRUCTIE = `\n# Herkenning en uitspraak\nBelangrijke woorden in dit gesprek: ${DOMEIN_WOORDEN.join(", ")}. Spreek "BartMooi" uit als één vloeiend woord en "HR++" als "H R plus plus".\n`;
+
+export function marleenConfig(stem: string = "Aoede", model: string = MARLEEN_MODEL, widget = false) {
+  const baseInstruction = widget ? BASIS + WIDGET_PROMPT + AFSLUITING : MARLEEN_PROMPT;
+  void model;
+
   return {
-    ...(model.includes("extended-thinking") ? { thinkingConfig: { thinkingLevel: ThinkingLevel.LOW } } : {}),
     responseModalities: [Modality.AUDIO],
     tools: widget ? WIDGET_TOOLS : MARLEEN_TOOLS,
-    systemInstruction: widget ? BASIS + WIDGET_PROMPT + AFSLUITING : MARLEEN_PROMPT,
+    systemInstruction: baseInstruction + WOORDEN_INSTRUCTIE,
     speechConfig: {
       languageCode: "nl-NL",
       voiceConfig: { prebuiltVoiceConfig: { voiceName: stem } },
     },
-    // Rustig luisteren: niet bij elk geluidje onderbreken, en antwoorden na een korte pauze.
     realtimeInputConfig: {
       automaticActivityDetection: {
         startOfSpeechSensitivity: StartSensitivity.START_SENSITIVITY_LOW,
         endOfSpeechSensitivity: EndSensitivity.END_SENSITIVITY_HIGH,
-        prefixPaddingMs: 100,
-        silenceDurationMs: 500,
+        prefixPaddingMs: 120,
+        silenceDurationMs: 650,
       },
     },
     contextWindowCompression: { slidingWindow: {} },
-    // Wat de klant zegt en wat Marleen zegt altijd als Nederlands uitschrijven, met de vakwoorden erbij.
-    inputAudioTranscription: { languageCodes: ["nl-NL"], customVocabulary: WOORDEN },
-    outputAudioTranscription: { languageCodes: ["nl-NL"], customVocabulary: WOORDEN },
+    inputAudioTranscription: {},
+    outputAudioTranscription: {},
   };
 }

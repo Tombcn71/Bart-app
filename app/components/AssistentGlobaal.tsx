@@ -1,4 +1,5 @@
 "use client";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { GeminiAssistent } from "@/app/test-assistent/GeminiAssistent";
 
@@ -8,14 +9,17 @@ import { GeminiAssistent } from "@/app/test-assistent/GeminiAssistent";
  */
 export function AssistentGlobaal() {
   const pad = usePathname() || "/";
-  // Tijdelijk uit op de live site (Tom, 23 nov 2026). Op de eigen computer (testen) blijft Marleen zichtbaar.
-  if (process.env.NODE_ENV === "production") return null;
+  // Na het maximum aantal gesprekken deze maand verdwijnt de bal.
+  const [beschikbaar, setBeschikbaar] = useState<boolean | null>(null);
+  useEffect(() => {
+    fetch("/api/marleen-status").then((r) => r.json()).then((d) => setBeschikbaar(!!d.beschikbaar)).catch(() => setBeschikbaar(false));
+  }, []);
   const verberg =
     pad.startsWith("/admin") ||
     pad.startsWith("/meten") ||
     pad.startsWith("/terugbellen") ||
     pad.startsWith("/widget") ||
     pad.startsWith("/test-assistent");
-  if (verberg) return null;
+  if (verberg || !beschikbaar) return null;
   return <GeminiAssistent />;
 }

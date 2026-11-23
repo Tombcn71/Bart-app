@@ -1,20 +1,18 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { GoogleGenAI, type Session, type LiveServerMessage } from "@google/genai";
+import { type Session, type LiveServerMessage } from "@google/genai";
+import { Conversation } from "@elevenlabs/client";
 import { useRouter } from "next/navigation";
 import { brugRef } from "@/lib/assistent-brug";
 import { formulier } from "@/lib/assistent-formulier";
 import { KOZIJN_TYPEN } from "@/lib/kozijntypen";
+import { VULLERS } from "@/lib/marleen-vullers";
+import { MARLEEN_PRODUCTEN } from "@/lib/marleen-producten";
 import { Maximize2, Mic, Minimize2, PhoneOff, Send, Sparkles, X } from "lucide-react";
 
-const STEMMEN = ["Sulafat", "Gacrux", "Vindemiatrix", "Despina", "Achernar", "Callirrhoe", "Erinome", "Kore", "Aoede", "Leda"];
-const MODELLEN = [
-  ["gemini-3.8-live", "Nieuw (3.8)"],
-  ["gemini-3.8-live-extended-thinking", "Slimmer (3.8, iets trager)"],
-  ["gemini-3.1-flash-live-preview", "Snel (3.1)"],
-];
-const MAX_SECONDEN = 240; // een gesprek stopt vanzelf na vier minuten
+const MAX_SECONDEN = 15 * 60; // een gesprek stopt hoe dan ook na een kwartier
+const STILTE_SECONDEN = 120; // en eerder als er twee minuten niemand iets zegt
 const BAL = "radial-gradient(circle at 30% 28%, #ffffff 0%, #9ce6e6 28%, #2792dc 75%, #1b6fb0 100%)";
 const VOORBEELDEN = [
   { kort: "Dubbel of triple glas?", vraag: "Wat is het verschil tussen dubbel en triple glas?" },
@@ -38,7 +36,6 @@ function Orb({ refEl, groot = false, ademen = true }: { refEl?: React.RefObject<
   );
 }
 
-
 const CAPTURE_WORKLET = `
 class Cap extends AudioWorkletProcessor {
   constructor(){ super(); this.ratio = sampleRate / 16000; this.acc = 0; this.n = 0; this.out = []; }
@@ -49,7 +46,7 @@ class Cap extends AudioWorkletProcessor {
       this.acc += ch[i]; this.n++;
       if (this.n >= this.ratio) { this.out.push(this.acc / this.n); this.acc = 0; this.n = 0; }
     }
-    if (this.out.length >= 1600) {
+    if (this.out.length >= 640) {
       const i16 = new Int16Array(this.out.length);
       for (let j = 0; j < this.out.length; j++) { const v = Math.max(-1, Math.min(1, this.out[j])); i16[j] = v < 0 ? v * 32768 : v * 32767; }
       this.port.postMessage(i16.buffer, [i16.buffer]);
@@ -73,9 +70,7 @@ type Stand = "uit" | "verbinden" | "aan";
 function Chat({ ingebed = false }: { ingebed?: boolean }) {
   const [open, setOpen] = useState(ingebed);
   const [uitgeklapt, setUitgeklapt] = useState(false);
-  // Widget: eerst een klein kaartje, na de klik alleen nog de bal. Weggeklikt = alleen de bal.
   const [klein, setKlein] = useState(false);
-  // In de app: tijdens het gesprek alleen de bal, zodat de klant de calculator ziet. Tik op het tekstballonnetje voor het gesprek.
   const [toonGesprek, setToonGesprek] = useState(false);
   const [berichten, setBerichten] = useState<Bericht[]>([]);
   const [tekst, setTekst] = useState("");
@@ -83,10 +78,16 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
   const [typen, setTypen] = useState(false);
   const [stand, setStand] = useState<Stand>("uit");
   const [praat, setPraat] = useState(false);
-  const [stem] = useState("Kore");
+  const praatRef = useRef(false);
+  useEffect(() => {
+    praatRef.current = praat;
+  }, [praat]);
+  const [stem] = useState("Aoede");
   const [model] = useState("gemini-3.8-live");
 
   const bol = useRef<HTMLDivElement>(null);
+  const laatsteGeluid = useRef(0);
+  const stilteTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const lijst = useRef<HTMLDivElement>(null);
   const sessie = useRef<Session | null>(null);
   const typenRef = useRef(false);
@@ -99,13 +100,14 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
   const bronnen = useRef<AudioBufferSourceNode[]>([]);
   const laatsteRol = useRef<"marleen" | "jij" | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const ronde = useRef(0); // wordt verhoogd bij elke stop, zodat een gesprek dat nog verbindt ook stopt
+  const ronde = useRef(0);
 
   const verbonden = stand === "aan";
   const bezig = stand === "verbinden";
   const actief = verbonden || bezig;
 
   function voegToe(rol: "marleen" | "jij", tekstDeel: string) {
+    laatsteGeluid.current = Date.now();
     const vorige = laatsteRol.current;
     laatsteRol.current = rol;
     setBerichten((b) => {
@@ -129,8 +131,19 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
     setPraat(false);
   }
 
+  const afsluiten = useRef(false);
+  const laatsteUitGeluid = useRef(0);
+  const VULLERS_UIT = true as boolean;
+  function speelVuller(soort: "reactie" | "wacht") {
+    if (VULLERS_UIT) return;
+    if (typenRef.current || bronnen.current.length) return;
+    const lijst = VULLERS[soort];
+    if (!lijst.length) return;
+    speel(lijst[Math.floor(Math.random() * lijst.length)].pcm);
+  }
+
   function speel(b64: string) {
-    if (typenRef.current) return; // in typen-modus blijft het geluid uit
+    if (typenRef.current) return;
     const ctx = ctxUit.current;
     if (!ctx || !analyserUit.current) return;
     const bin = atob(b64);
@@ -144,14 +157,15 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
     const src = ctx.createBufferSource();
     src.buffer = buf;
     src.connect(analyserUit.current);
-    // Een klein voorsprongetje (150 ms) voorkomt haperen als er even geen geluid binnenkomt.
     const eerste = bronnen.current.length === 0 || volgende.current < ctx.currentTime;
-    const t = eerste ? ctx.currentTime + 0.15 : volgende.current;
+    const t = eerste ? ctx.currentTime + 0.05 : volgende.current;
     src.start(t);
+    laatsteUitGeluid.current = performance.now();
     volgende.current = t + buf.duration;
     bronnen.current.push(src);
     setPraat(true);
     src.onended = () => {
+      laatsteUitGeluid.current = performance.now();
       bronnen.current = bronnen.current.filter((x) => x !== src);
       if (bronnen.current.length === 0) setPraat(false);
     };
@@ -159,11 +173,9 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
 
   const router = useRouter();
 
-  // Overdracht vanaf de website: de klant komt binnen met ?marleen=... (wat al besproken is).
   const [overdracht, setOverdracht] = useState("");
   const [autoStart, setAutoStart] = useState(false);
   useEffect(() => {
-    // Blokkeert de browser het geluid na de doorstap, dan start een klik of aanraking het meteen.
     const hervat = () => ctxUit.current?.resume().catch(() => {});
     window.addEventListener("pointerdown", hervat);
     window.addEventListener("keydown", hervat);
@@ -175,7 +187,7 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
   useEffect(() => {
     if (autoStart && overdracht) {
       setAutoStart(false);
-      verderPraten(); // geen knop: meteen verder praten
+      verderPraten();
     }
   }, [autoStart, overdracht]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
@@ -209,20 +221,58 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
     };
     const wacht = (ms: number) => new Promise((r) => setTimeout(r, ms));
     const brug = () => brugRef.current;
+    if (naam === "ga_naar_product") {
+      const groepen = ["kozijnen", "aluminium-kozijnen", "deuren", "schuifpui", "harmonicadeur", "rolluiken", "horren"];
+      if (!groepen.includes(String(input.groep))) return { fout: "Onbekende productgroep." };
+      router.push(input.groep === "aluminium-kozijnen" ? "/aluminium/kozijnen" : `/${input.groep}`);
+      if (input.groep === "aluminium-kozijnen") {
+        return { ok: true, pagina: "aluminium kozijnen", let_op: "Bij aluminium kun je de calculator niet zelf invullen. Laat de klant zelf een type kiezen en help hem met uitleg." };
+      }
+      return { ok: true, pagina: String(input.groep) };
+    }
+    if (naam === "open_product") {
+      const prod = MARLEEN_PRODUCTEN[String(input.product)];
+      if (!prod) return { fout: "Onbekend product." };
+      const type = String(input.type ?? "");
+      if (!prod.typen[type]) return { fout: "Onbekend type. Kies uit: " + Object.keys(prod.typen).join(", ") };
+      if (window.location.pathname.startsWith(prod.pad) && brug()) {
+        brug()!.zet({ type });
+        await wacht(40);
+        return zonderPrijs(brug()!.staat()) as Record<string, unknown>;
+      }
+      router.push(prod.pad + type);
+      const oud = brug();
+      for (let i = 0; i < 40 && (!brug() || brug() === oud); i++) await wacht(50);
+      return (zonderPrijs(brug()?.staat()) as Record<string, unknown>) ?? { fout: "De calculator kon niet geopend worden." };
+    }
     if (naam === "open_kozijn") {
       if (!KOZIJN_TYPEN.some((t) => t.slug === input.type)) return { fout: "Onbekend kozijntype. Vraag de klant welk kozijn hij wil en kies een type uit de lijst." };
       const slug = String(input.type);
-      if (!brug()) {
+      if (window.location.pathname.startsWith("/kozijnconfigurator") && brug()) {
+        brug()!.zet({ type: slug });
+      } else {
+        const oud = brug();
         router.push(`/kozijnconfigurator/${slug}`);
-        for (let i = 0; i < 30 && !brug(); i++) await wacht(150);
-      } else brug()!.zet({ type: slug });
-      await wacht(350);
+        for (let i = 0; i < 40 && (!brug() || brug() === oud); i++) await wacht(50);
+      }
+      await wacht(40);
       return (zonderPrijs(brug()?.staat()) as Record<string, unknown>) ?? { fout: "De calculator kon niet geopend worden." };
     }
     if (naam === "lees_offerte") {
-      const el = document.querySelector("main") ?? document.body;
-      const t = (el as HTMLElement).innerText.replace(/\n{2,}/g, "\n").trim().slice(0, 6000);
-      return t ? { tekst: t } : { fout: "De offerte is nog niet te zien." };
+      for (let i = 0; i < 25 && !document.querySelector("[data-marleen-product]"); i++) await wacht(150);
+      const zeg = (n: number) => {
+        const euro = Math.floor(n + 0.0001);
+        const cent = Math.round((n - euro) * 100);
+        return `${euro} euro${cent ? ` en ${cent} cent` : ""}`;
+      };
+      const producten = Array.from(document.querySelectorAll<HTMLElement>("[data-marleen-product]")).map((el) => {
+        const prijs = Number(el.dataset.marleenPrijs);
+        return { product: el.dataset.marleenProduct, prijsUitgesproken: zeg(prijs), btw: el.dataset.marleenBtw, specificaties: el.innerText.replace(/\n{2,}/g, "\n").trim().slice(0, 1200) };
+      });
+      if (!producten.length) return { fout: "De offerte is nog niet te zien." };
+      const totEl = document.querySelector<HTMLElement>("[data-marleen-totaal]");
+      const totaal = totEl ? Number(totEl.dataset.marleenTotaal) : Array.from(document.querySelectorAll<HTMLElement>("[data-marleen-product]")).reduce((a, el) => a + Number(el.dataset.marleenPrijs), 0);
+      return { producten, totaalUitgesproken: zeg(totaal), btw: producten[0].btw, let_op: "Noem bedragen precies zoals bij 'Uitgesproken' staat. Reken nooit zelf." };
     }
     if (naam === "ga_naar_akkoord") {
       const el = document.getElementById("digitaal-akkoord");
@@ -234,24 +284,34 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
     if (naam === "vul_formulier") {
       if (!formulier.open) return { fout: "Het formulier is nog niet open. Gebruik eerst open_formulier." };
       formulier.vul?.(input as never);
-      await wacht(250);
+      await wacht(60);
       return { ok: true, ...formulier.waarden };
     }
     if (naam === "verstuur_formulier") {
       if (!formulier.open || !formulier.verstuur) return { fout: "Het formulier is niet open." };
       const r = await formulier.verstuur();
-      if (r.ok && r.offerteId) setTimeout(() => router.push(`/offerte/${r.offerteId}`), 1200);
-      return r.ok ? { ok: true, opmerking: "De offerte opent nu." } : { ...r };
+      if (!r.ok) return { ...r };
+      if (r.offerteId) router.push(`/offerte/${r.offerteId}`);
+      afsluiten.current = true;
+      const offerte = await voerUit("lees_offerte", {});
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return { ok: true, opmerking: "Aangevraagd. De offerte staat nu op het scherm.", offerte };
+    }
+    if (naam === "voeg_product_toe") {
+      if (!brug()) return { fout: "Er is nog geen product open." };
+      brug()!.voegToeAanOfferte?.();
+      await wacht(60);
+      return { ok: true, opmerking: "Opgeslagen. Stel nu de maten en keuzes in voor het volgende product." };
     }
     if (!brug()) return { fout: "Er is nog geen kozijn open. Gebruik eerst open_kozijn." };
     if (naam === "open_formulier") {
       brug()!.toonFormulier();
-      await wacht(400);
+      await wacht(80);
       return { ok: true, formulierOpen: formulier.open };
     }
     if (naam === "zet_keuzes") {
       brug()!.zet(input);
-      await wacht(350);
+      await wacht(60);
       return zonderPrijs(brug()!.staat()) as Record<string, unknown>;
     }
     return { fout: "Onbekende functie" };
@@ -260,6 +320,7 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
   async function bijToolCall(m: LiveServerMessage) {
     const calls = m.toolCall?.functionCalls;
     if (!calls?.length) return;
+    const momentje = setTimeout(() => speelVuller("wacht"), 500);
     if (ingebed) {
       for (const c of calls) {
         if (c.name !== "naar_offerte") continue;
@@ -267,25 +328,29 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
         try {
           sessie.current?.sendToolResponse({ functionResponses: [{ id: c.id, name: c.name, response: { output: { ok: true } } }] });
         } catch {}
-        // Even wachten, zodat Marleen haar zin kan afmaken voordat de pagina wisselt.
         setTimeout(() => {
           try {
             window.parent.postMessage({ soort: "marleen-ga", samenvatting }, "*");
           } catch {}
-        }, 2500);
+        }, 1800);
       }
+      clearTimeout(momentje);
       return;
     }
     const antwoorden: { id?: string; name?: string; response: Record<string, unknown> }[] = [];
     for (const c of calls) {
       let response: Record<string, unknown>;
       try {
-        response = { output: await voerUit(c.name ?? "", (c.args ?? {}) as Record<string, unknown>) };
+        const uit = await voerUit(c.name ?? "", (c.args ?? {}) as Record<string, unknown>);
+        if (process.env.NODE_ENV !== "production") console.info("Marleen actie:", c.name, JSON.stringify(c.args ?? {}), "=>", JSON.stringify(uit).slice(0, 300));
+        response = { output: uit };
       } catch (e) {
         response = { fout: String((e as Error)?.message ?? e) };
       }
-      antwoorden.push({ id: c.id, name: c.name, response });
+      const opAchtergrond = ["ga_naar_product", "open_product", "open_kozijn", "zet_keuzes", "voeg_product_toe", "open_formulier", "vul_formulier", "ga_naar_akkoord"].includes(c.name ?? "");
+      antwoorden.push({ id: c.id, name: c.name, response: opAchtergrond ? { ...response, scheduling: "WHEN_IDLE" } : response });
     }
+    clearTimeout(momentje);
     try {
       sessie.current?.sendToolResponse({ functionResponses: antwoorden });
     } catch {}
@@ -295,16 +360,30 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
     if (m.toolCall) void bijToolCall(m);
     const sc = m.serverContent;
     if (!sc) return;
-    if (sc.interrupted) stopAfspelen();
+    if (sc.interrupted) {
+      stopAfspelen();
+    }
     for (const p of sc.modelTurn?.parts ?? []) if (p.inlineData?.data) speel(p.inlineData.data);
     if (sc.inputTranscription?.text) voegToe("jij", sc.inputTranscription.text);
     if (sc.outputTranscription?.text) voegToe("marleen", sc.outputTranscription.text);
-    if (sc.turnComplete) laatsteRol.current = null;
+    if (sc.turnComplete) {
+      laatsteRol.current = null;
+      if (afsluiten.current) {
+        afsluiten.current = false;
+        const klaar = setInterval(() => {
+          if (bronnen.current.length || performance.now() - laatsteUitGeluid.current < 800) return;
+          clearInterval(klaar);
+          setTimeout(() => sluit(), 350);
+        }, 250);
+      }
+    }
   }
 
   function opruimen() {
     ronde.current++;
     if (timer.current) clearTimeout(timer.current);
+    if (stilteTimer.current) clearInterval(stilteTimer.current);
+    stilteTimer.current = null;
     timer.current = null;
     try {
       sessie.current?.close();
@@ -347,74 +426,91 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
           return;
         }
       }
-      const r = await fetch("/api/gemini-token?stem=" + stem + "&model=" + model + (ingebed ? "&widget=1" : ""), { method: "POST" });
+      // ---- ElevenLabs: de agent luistert, denkt en praat; de acties voert de browser uit (client tools) ----
+      const r = await fetch("/api/elevenlabs-token", { method: "POST" });
       const d = await r.json();
       if (afgebroken()) return;
-      if (!d.token) throw new Error(d.fout || "Geen toegang");
-
-      ctxUit.current = new AudioContext({ sampleRate: 24000 });
-      analyserUit.current = ctxUit.current.createAnalyser();
-      analyserUit.current.fftSize = 256;
-      analyserUit.current.connect(ctxUit.current.destination);
-
-      const ai = new GoogleGenAI({ apiKey: d.token, httpOptions: { apiVersion: "v1alpha" } });
-      const s = await ai.live.connect({
-        model: d.model,
-        config: { responseModalities: ["AUDIO" as never], outputAudioTranscription: {}, inputAudioTranscription: {} },
-        callbacks: {
-          onmessage: bij,
-          onerror: (e: { message?: string }) => {
-            setFout("Fout: " + (e?.message || "de verbinding is verbroken"));
-            opruimen();
+      if (!d.signedUrl) throw new Error(d.fout || "Geen toegang");
+      const uur = Number(new Intl.DateTimeFormat("nl-NL", { hour: "numeric", hour12: false, timeZone: "Europe/Amsterdam" }).format(new Date()));
+      const groet = uur < 6 ? "Goedenavond" : uur < 12 ? "Goedemorgen" : uur < 18 ? "Goedemiddag" : "Goedenavond";
+      const NAMEN = ["ga_naar_product", "open_product", "open_kozijn", "zet_keuzes", "voeg_product_toe", "open_formulier", "vul_formulier", "lees_formulier", "verstuur_formulier", "lees_offerte", "ga_naar_akkoord"];
+      const clientTools = Object.fromEntries(
+        NAMEN.map((naam) => [
+          naam,
+          async (params: Record<string, unknown>) => {
+            const p = { ...(params ?? {}) };
+            if (p.soort !== undefined && p.type === undefined) p.type = p.soort; // bij ElevenLabs heet "type" hier "soort"
+            const uit = await voerUit(naam, p);
+            if (process.env.NODE_ENV !== "production") console.info("Marleen actie:", naam, JSON.stringify(p), "=>", JSON.stringify(uit).slice(0, 300));
+            return JSON.stringify(uit);
           },
-          onclose: () => {
-            if (sessie.current) opruimen();
-          },
+        ]),
+      );
+      const conv = await Conversation.startSession({
+        signedUrl: d.signedUrl,
+        connectionType: "websocket",
+        dynamicVariables: { groet },
+        clientTools,
+        onMessage: ({ message, source }: { message: string; source: "user" | "ai" }) => {
+          laatsteRol.current = null;
+          voegToe(source === "ai" ? "marleen" : "jij", message);
+          laatsteRol.current = null;
         },
+        onModeChange: ({ mode }: { mode: string }) => {
+          setPraat(mode === "speaking");
+          if (mode === "speaking") laatsteUitGeluid.current = performance.now();
+        },
+        onDisconnect: () => {
+          if (sessie.current) {
+            sessie.current = null;
+            opruimen();
+            setOpen(false);
+          }
+        },
+        onError: (m: unknown) => setFout("Fout: " + String(m)),
       });
       if (afgebroken()) {
-        try {
-          s.close();
-        } catch {}
+        conv.endSession().catch(() => {});
         return;
       }
-      sessie.current = s;
-
-      if (!modusTypen && stream.current) {
-        const ctx = new AudioContext();
-        ctxIn.current = ctx;
-        const url = URL.createObjectURL(new Blob([CAPTURE_WORKLET], { type: "application/javascript" }));
-        await ctx.audioWorklet.addModule(url);
-        if (afgebroken()) {
-          ctx.close().catch(() => {});
-          return;
-        }
-        const bron = ctx.createMediaStreamSource(stream.current);
-        analyserIn.current = ctx.createAnalyser();
-        analyserIn.current.fftSize = 256;
-        const node = new AudioWorkletNode(ctx, "cap");
-        node.port.onmessage = (e) => {
-          sessie.current?.sendRealtimeInput({
-            audio: { data: naarBase64(e.data as ArrayBuffer), mimeType: "audio/pcm;rate=16000" },
-          });
-        };
-        bron.connect(analyserIn.current);
-        bron.connect(node);
-      }
+      if (modusTypen) conv.setVolume({ volume: 0 });
+      // Kleine vertaler: de rest van de code (tekst sturen, ophangen) blijft gewoon werken.
+      const meter = setInterval(() => {
+        const vol = praatRef.current ? conv.getOutputVolume() : conv.getInputVolume();
+        if (bol.current) bol.current.style.transform = `scale(${1 + Math.min(1, vol) * 0.07})`;
+      }, 80);
+      const adapter = {
+        sendRealtimeInput: (x: { text?: string }) => {
+          if (x?.text) conv.sendUserMessage(x.text);
+        },
+        sendToolResponse: () => {},
+        close: () => {
+          clearInterval(meter);
+          conv.endSession().catch(() => {});
+        },
+      };
+      sessie.current = adapter as unknown as Session;
+      const s = adapter;
+      void s;
 
       ctxUit.current?.resume().catch(() => {});
       setStand("aan");
       timer.current = setTimeout(() => {
-        setFout("Het gesprek is na vier minuten gestopt.");
+        setFout("Het gesprek is na een kwartier gestopt. Start gerust opnieuw.");
         opruimen();
       }, MAX_SECONDEN * 1000);
+      laatsteGeluid.current = Date.now();
+      stilteTimer.current = setInterval(() => {
+        if (Date.now() - laatsteGeluid.current > STILTE_SECONDEN * 1000) {
+          setFout("Het gesprek is gestopt omdat het even stil was. Start gerust opnieuw.");
+          opruimen();
+        }
+      }, 5000);
 
       if (eersteVraag) {
         if (!verborgen) setBerichten((b) => [...b, { rol: "jij", tekst: eersteVraag }]);
         laatsteRol.current = null;
-        s.sendRealtimeInput({ text: eersteVraag });
-      } else {
-        s.sendRealtimeInput({ text: ingebed ? "Zeg nu je openingszin voor de website." : "Zeg nu je vaste openingszin." });
+        adapter.sendRealtimeInput({ text: eersteVraag });
       }
     } catch (e) {
       setFout("Fout: " + (e instanceof Error ? e.message : "het lukte niet") + ". Probeer het opnieuw.");
@@ -430,11 +526,6 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
       sessie.current?.sendRealtimeInput({ text: vraag });
     } else if (!actief) begin(true, vraag);
   };
-
-  function stop() {
-    opruimen();
-    setTypen(false);
-  }
 
   function sluit() {
     setToonGesprek(false);
@@ -454,7 +545,6 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
     setTekst("");
   }
 
-  // Het gesprek stopt altijd als je de pagina sluit of verlaat.
   useEffect(() => {
     window.addEventListener("pagehide", opruimen);
     return () => {
@@ -464,7 +554,6 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Escape stopt het gesprek ook.
   useEffect(() => {
     const toets = (e: KeyboardEvent) => {
       if (e.key === "Escape") opruimen();
@@ -474,7 +563,6 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // De bal beweegt mee met het geluid.
   useEffect(() => {
     if (!verbonden || typen) {
       if (bol.current) bol.current.style.transform = "";
@@ -482,9 +570,14 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
     }
     const buf = new Uint8Array(128);
     let raf = 0;
-    let zacht = 0; // gladgestreken volume, zodat de bal rustig pulseert
+    let zacht = 0;
     const tick = () => {
       const an = praat ? analyserUit.current : analyserIn.current;
+      if (!an) {
+        // Bij ElevenLabs beweegt de bal via het volume van het gesprek zelf.
+        raf = requestAnimationFrame(tick);
+        return;
+      }
       let vol = 0;
       if (an) {
         an.getByteTimeDomainData(buf);
@@ -518,7 +611,6 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
 
   const keyframes = <style>{`@keyframes orb-ademen{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}`}</style>;
 
-  // ---- Widget op een website: klein kaartje, daarna alleen de bal ----
   const widgetModus = actief ? "bal" : klein && !fout ? "rust" : "kaart";
   // eslint-disable-next-line react-hooks/rules-of-hooks
   useEffect(() => {
@@ -610,7 +702,6 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
     );
   }
 
-  // App: tijdens een gesproken gesprek alleen de bal rechtsonder.
   if (open && actief && !typen && !toonGesprek) {
     return (
       <div className="fixed right-4 bottom-4 z-50 flex items-center gap-2">
@@ -642,7 +733,6 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
     );
   }
 
-  // Gesloten: knopje, praatwolkje en de bal.
   if (!open) {
     if (ingebed) return null;
     return (

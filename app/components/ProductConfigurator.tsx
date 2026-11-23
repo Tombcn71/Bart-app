@@ -1,9 +1,11 @@
 "use client";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
 import { FOTO_TYPES, fotoKleurVan, kozijnFotoPad } from "@/lib/kozijnfotos";
 import { addToCart, getCart } from "@/lib/cart";
 import { CartAddedModal } from "@/app/components/CartAddedModal";
+import { brugRef } from "@/lib/assistent-brug";
+import { formulier } from "@/lib/assistent-formulier";
 import { NumberInput } from "@/app/components/NumberInput";
 import { FormField } from "@/app/components/FormField";
 import { getMatrix } from "@/lib/matrix";
@@ -92,6 +94,10 @@ export function ProductConfigurator({
     getMatrix(matrixSleutel).then((data: unknown) => setOpgehaald(isStandaardModel(data) ? data : startModelVoor(matrixSleutel)));
   }, [matrixProp, matrixSleutel]);
 
+  // De koppeling met Marleen bestaat alleen zolang deze calculator op het scherm staat.
+  const ik = useRef({}).current;
+  useEffect(() => () => { if (brugRef.current?.eigenaar === ik) brugRef.current = null; }, [ik]);
+
   const matrix = matrixProp ?? opgehaald;
   const model = isStandaardModel(matrix) ? matrix : null;
 
@@ -123,7 +129,7 @@ export function ProductConfigurator({
   const prijs = metBtw ? Math.round(opbouw.totaal * (1 + btwPct / 100) * 100) / 100 : opbouw.totaal;
   const prijsTekst = prijs.toLocaleString("nl-NL", { minimumFractionDigits: 2 });
 
-  function handleAdd() {
+  function handleAdd(toonModal = true) {
     addToCart({
       slug,
       product: `${productNaam}${slugs.length > 1 ? ` · ${namen[slug] ?? slug}` : ""}`,
@@ -152,8 +158,70 @@ export function ProductConfigurator({
       },
     });
     setCartCount(getCart().length);
-    setModalOpen(true);
+    if (toonModal) setModalOpen(true);
   }
+
+  // Marleen bedient deze calculator met dezelfde functies als de kozijncalculator.
+  const groepen = catalogus.keuzes.filter((g) => !g.typen || g.typen.includes(slug));
+  const fotoGroep = catalogus.keuzes.find((g) => /^kleur(Profiel)?Buiten|^kleurLamellen$|^kleur$/.test(g.id) && (!g.typen || g.typen.includes(slug)));
+  const fotoBeschikbaar = !voorbeeld && FOTO_TYPES.has(slug) && !!(fotoGroep ? fotoKleurVan(keuzes[fotoGroep.id]) : "wit");
+  if (!voorbeeld && matrix) brugRef.current = {
+    eigenaar: ik,
+    typen: () => slugs.map((s) => ({ slug: s, naam: namen[s] ?? s })),
+    staat: () => ({
+      scherm: formulier.open ? "calculator met formulier" : "calculator",
+      product: productNaam,
+      type: { slug, naam: namen[slug] ?? slug },
+      typen: slugs.map((s) => ({ slug: s, naam: namen[s] ?? s })),
+      breedte,
+      hoogte,
+      toegestaneMaten: grens ?? null,
+      maatIsToegestaan: !buitenMaat,
+      aantal,
+      opties: Object.fromEntries(groepen.map((g) => [g.id, { titel: g.titel, keuzes: g.keuzes.map((k) => ({ id: k.id, naam: k.naam })) }])),
+      keuzes,
+      ...(tuintoegangVraag ? { viaDeTuinBereikbaar: !geenTuin } : {}),
+      weergave,
+      gevelFotoBeschikbaar: fotoBeschikbaar,
+      prijsInEuro: prijs,
+      prijsInclusief: metBtw ? `montage en ${btwPct}% btw` : "montage, exclusief btw",
+    }),
+    zet: (p) => {
+      if (typeof p.type === "string" && slugs.includes(p.type)) kiesType(p.type);
+      if (typeof p.breedte === "number" && p.breedte > 0) setBreedte(Math.round(p.breedte));
+      if (typeof p.hoogte === "number" && p.hoogte > 0) setHoogte(Math.round(p.hoogte));
+      if (typeof p.aantal === "number") setAantal(Math.min(50, Math.max(1, Math.round(p.aantal))));
+      if (p.klantType === "particulier" || p.klantType === "zakelijk") setKlantType(p.klantType);
+      if (typeof p.viaDeTuinBereikbaar === "boolean") setGeenTuin(!p.viaDeTuinBereikbaar);
+      if (p.weergave === "tekening" || p.weergave === "foto") setWeergave(p.weergave);
+      const lijst: { groep?: unknown; id?: unknown }[] = Array.isArray(p.keuzes) ? (p.keuzes as { groep?: unknown; id?: unknown }[]) : [];
+      for (const [k, v] of Object.entries(p)) if (typeof v === "string" && groepen.some((g) => g.id === k)) lijst.push({ groep: k, id: v });
+      const geldig = lijst.filter((x) => groepen.find((g) => g.id === x.groep)?.keuzes.some((k) => k.id === x.id));
+      if (geldig.length) setKeuzes((oud) => ({ ...oud, ...Object.fromEntries(geldig.map((x) => [String(x.groep), String(x.id)])) }));
+      // Het vak openklappen waar iets verandert, zodat de klant het ziet.
+      const vakken = new Set<string>();
+      if (p.breedte !== undefined || p.hoogte !== undefined) vakken.add("Afmetingen");
+      if (p.aantal !== undefined) vakken.add("Aantal");
+      geldig.forEach((x) => vakken.add(sectieVan(String(x.groep))));
+      if (p.weergave === "foto" || p.weergave === "tekening") {
+        // Bij de foto: het beeld netjes in beeld houden, vakken wel openklappen maar niet wegscrollen.
+        setTimeout(() => document.getElementById("marleen-beeld")?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
+        setTimeout(() => vakken.forEach((v) => window.dispatchEvent(new CustomEvent("marleen-open-vak", { detail: { label: v, scroll: false } }))), 50);
+      } else {
+        const scroll = weergave !== "foto";
+        setTimeout(() => vakken.forEach((v) => window.dispatchEvent(new CustomEvent("marleen-open-vak", { detail: { label: v, scroll } }))), 50);
+      }
+    },
+    toonFormulier: () => {
+      if (formulier.open || buitenMaat) return;
+      handleAdd();
+    },
+    voegToeAanOfferte: () => {
+      if (buitenMaat) return;
+      handleAdd(false);
+    },
+    verstuur: async () => ({ ok: false, fout: "Gebruik open_formulier, vul_formulier en verstuur_formulier." }),
+  };
 
   if (!matrix) return <div className="p-10 text-center">Prijzen ophalen...</div>;
 
@@ -175,7 +243,7 @@ export function ProductConfigurator({
           </div>
         )}
         <div className={voorbeeld ? "grid grid-cols-1 gap-4" : "grid grid-cols-1 gap-4 lg:grid-cols-12 lg:gap-12"}>
-          <div className={voorbeeld ? "min-w-0 space-y-3" : "min-w-0 space-y-3 lg:col-span-7"}>
+          <div id="marleen-beeld" className={voorbeeld ? "min-w-0 space-y-3 scroll-mt-20" : "min-w-0 space-y-3 lg:col-span-7 scroll-mt-20"}>
             {(() => {
               // Foto van het product op een gevel, in de gekozen kleur (wit, antraciet of zwart); anders alleen de tekening.
               const kleurGroep = catalogus.keuzes.find((g) => /^kleur(Profiel)?Buiten|^kleurLamellen$|^kleur$/.test(g.id) && (!g.typen || g.typen.includes(slug)));
@@ -358,7 +426,7 @@ export function ProductConfigurator({
               {!voorbeeld && (
                 <button
                   type="button"
-                  onClick={handleAdd}
+                  onClick={() => handleAdd()}
                   disabled={buitenMaat}
                   className="hidden w-full rounded-lg bg-brand py-4 text-[11px] font-bold tracking-widest text-white uppercase shadow-xl shadow-black/20 transition-colors hover:bg-brand-dark disabled:opacity-40 disabled:hover:bg-brand lg:sticky lg:bottom-4 lg:z-20 lg:block">
                   Toevoegen aan offerte
@@ -396,7 +464,7 @@ export function ProductConfigurator({
             </div>
             <button
               type="button"
-              onClick={handleAdd}
+              onClick={() => handleAdd()}
               disabled={buitenMaat}
               className="rounded-lg bg-brand px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-brand-dark disabled:opacity-40">
               Toevoegen
