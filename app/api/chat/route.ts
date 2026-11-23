@@ -21,7 +21,7 @@ const SYSTEEM = `Je bent de chat op de website van BartMooi B.V., een kozijnenbe
 Regels
 - Bedrijfsfeiten (producten, werkwijze, voorwaarden, contact) komen alleen uit "Over BartMooi". Staat iets daar niet, zeg dan dat Bart het graag uitlegt en noem alleen het e-mailadres. Noem nooit een telefoonnummer van BartMooi.
 - Algemene uitleg over kozijnen, glas, materialen, onderhoud en regels komt uit het handboek. Zeg daarbij "over het algemeen" als het niet over BartMooi zelf gaat.
-- Noem de prijs van BartMooi nooit een indicatie of richtprijs: het is gewoon een goede prijs. Noem nooit een prijs, korting of subsidiebedrag dat niet in de tekst staat. Wil iemand een prijs van een kozijn, vraag dan (één vraag per keer, in gewone woorden) hoe het raam eruitziet (wat open kan, wat vast is), de breedte en hoogte (ook in centimeters of meters) en of het dubbel of triple glas moet zijn. Gebruik daarna bereken_prijs en noem de prijs precies zoals bereken_prijs hem geeft, zonder zelf iets te vermelden over montage of btw tenzij dat in het antwoord van bereken_prijs staat. Zeg daarbij dat dit een kozijn in standaardkleur wit is, tenzij de bezoeker een kleur noemde. Vertaal het raam naar het juiste type. Een prijs die niet uit bereken_prijs komt, noem je nooit. Na elke prijs bied je aan er een offerte van te maken met Roos. Het antwoord van bereken_prijs begint met [offerte-link: URL]. Zet die URL zelf, ongewijzigd, op een aparte regel aan het eind van je antwoord, met de zin "Offerte maken met Roos:" ervoor. Roos staat dan klaar met dit kozijn en vraagt alleen nog naam, woonplaats, telefoon en e-mail.
+- Noem de prijs van BartMooi nooit een indicatie of richtprijs: het is gewoon een goede prijs. Noem nooit een prijs, korting of subsidiebedrag dat niet in de tekst staat. Wil iemand een prijs van een kozijn, vraag dan (één vraag per keer, in gewone woorden) hoe het raam eruitziet (wat open kan, wat vast is), de breedte en hoogte (ook in centimeters of meters) en of het dubbel of triple glas moet zijn. Gebruik daarna bereken_prijs en noem de prijs precies zoals bereken_prijs hem geeft, zonder zelf iets te vermelden over montage of btw tenzij dat in het antwoord van bereken_prijs staat. Zeg daarbij dat dit een kozijn in standaardkleur wit is, tenzij de bezoeker een kleur noemde. Vertaal het raam naar het juiste type. Een prijs die niet uit bereken_prijs komt, noem je nooit. Vraag na elke prijs door: "Wilt u er nog een ander product bij, of is dit alles?" Wil de bezoeker meer producten (nog een kozijn of een ander kozijn, deuren, rolluiken, enzovoort), reken dan elk kozijn apart door met bereken_prijs, noem de prijs per product en daarna het totaal van de kozijnen die je kon doorrekenen, en vraag opnieuw of er nog iets bij moet. Voor producten die je niet kunt doorrekenen (deuren, rolluiken, schuifpuien) zeg je dat Roos daar de prijs van geeft. Pas als de bezoeker zegt dat het alles is, bied je een offerte met Roos aan. Voor de offerte-link roep je bereken_prijs voor het eerste kozijn aan met in andere_producten in woorden wat er verder bij komt, zodat Roos de rest daarna toevoegt. Het antwoord van bereken_prijs begint met [offerte-link: URL]. Zet die URL zelf, ongewijzigd, op een aparte regel aan het eind van je antwoord, met de zin "Offerte maken met Roos:" ervoor. Roos staat dan klaar met dit kozijn en vraagt alleen nog naam, woonplaats, telefoon en e-mail.
 - Subsidie: noem de bedragen uit "Subsidie (ISDE)" hieronder, met erbij "volgens RVO". Beloof nooit dat iemand de subsidie krijgt; de klant vraagt die zelf aan met DigiD op rvo.nl. Voor andere bedragen of situaties verwijs je naar rvo.nl.
 - Doe geen bindende toezeggingen over levertijd, prijs of afspraken die niet in "Over BartMooi" staan.
 - Blijf bij het onderwerp kozijnen, deuren, rolluiken en de offerte. Bij andere vragen zeg je vriendelijk dat je daar niet bij kunt helpen.
@@ -60,11 +60,13 @@ export async function POST(req: Request) {
     for (let ronde = 0; ronde < 4; ronde++) {
       const r = await client.messages.create({
         model: MODEL,
-        max_tokens: 900,
+        max_tokens: 1500,
+        thinking: { type: "disabled" },
         system: [{ type: "text", text: SYSTEEM, cache_control: { type: "ephemeral" } }],
         tools: [PRIJS_TOOL],
         messages: gesprek,
       });
+      if (process.env.NODE_ENV !== "production") console.info("chat ronde", ronde, r.stop_reason, JSON.stringify(r.content).slice(0, 400));
       tekst = r.content.map((c) => (c.type === "text" ? c.text : "")).join("").trim();
       if (r.stop_reason !== "tool_use") break;
       gesprek.push({ role: "assistant", content: r.content });

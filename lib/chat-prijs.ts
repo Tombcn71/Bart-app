@@ -20,6 +20,7 @@ export const PRIJS_TOOL = {
       glas: { type: "string", enum: [...GLAS_KEUZES], description: "dubbel (HR++) of triple. Standaard dubbel." },
       kleur_buiten: { type: "string", enum: [...KLEUR_BUITEN], description: "Kleur buitenkant. Standaard wit." },
       aantal: { type: "number", description: "Aantal kozijnen. Standaard 1." },
+      andere_producten: { type: "string", description: "Alleen voor het eerste product van een bestelling met meer producten: kort in woorden de andere producten die de bezoeker ook wil, bijvoorbeeld '2 × vast kozijn 100 bij 100 cm triple glas en 1 voordeur'. Anders leeg." },
     },
     required: ["type", "breedte_mm", "hoogte_mm"],
   },
@@ -55,6 +56,7 @@ const eerste = (t: any) => Object.keys(t || {})[0] || "";
 export function offerteLink(inv: any): string {
   const q = new URLSearchParams({ b: String(Math.round(Number(inv.breedte_mm))), h: String(Math.round(Number(inv.hoogte_mm))), glas: inv.glas === "triple" ? "triple" : "dubbel", n: String(Math.max(1, Math.round(Number(inv.aantal) || 1))), roos: "1" });
   if ((KLEUR_BUITEN as readonly string[]).includes(inv.kleur_buiten)) q.set("kleur", inv.kleur_buiten);
+  if (typeof inv.andere_producten === "string" && inv.andere_producten.trim()) q.set("meer", inv.andere_producten.trim().slice(0, 200));
   return `https://offerte.bartmooi.nl/kozijnconfigurator/${inv.type}?${q}`;
 }
 
