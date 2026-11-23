@@ -55,7 +55,7 @@ export async function POST(req: Request) {
     const client = new Anthropic({ apiKey: key });
     const r = await client.messages.create({
       model: MODEL,
-      max_tokens: 500,
+      max_tokens: 900,
       system: [{ type: "text", text: SYSTEEM, cache_control: { type: "ephemeral" } }],
       messages: berichten,
     });
