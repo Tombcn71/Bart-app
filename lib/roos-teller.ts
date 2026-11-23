@@ -44,3 +44,9 @@ export async function telGesprek(): Promise<boolean> {
     .onConflictDoUpdate({ target: instellingen.key, set: { value, updatedAt: new Date() } });
   return true;
 }
+
+/** Voor het scherm van Bart: hoeveel gesprekken er zijn geweest en wat het maximum is. */
+export async function roosStand() {
+  const n = await lees();
+  return { maand: n.aantal, maxMaand: MAX_PER_MAAND, dag: n.dagAantal, maxDag: MAX_PER_DAG };
+}
