@@ -15,7 +15,7 @@ function stuur(soort: string, bron?: string) {
 export function Telling() {
   const pad = usePathname();
   useEffect(() => {
-    if (/^\/(admin|meten|terugbellen|widget|test-assistent)/.test(pad)) return;
+    if (/^\/(admin|meten|terugbellen|widget|test-assistent|chat)/.test(pad)) return;
     let bron: string | undefined;
     try {
       const q = new URLSearchParams(location.search);

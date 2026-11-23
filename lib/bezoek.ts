@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import { sql } from "drizzle-orm";
 import { db } from "@/db";
 
-export const SOORTEN = ["wp_bezoek", "wp_klik", "site_bezoek", "calc", "offerte", "roos"] as const;
+export const SOORTEN = ["wp_bezoek", "wp_klik", "site_bezoek", "calc", "offerte", "roos", "chat", "chat_roos"] as const;
 export type Soort = (typeof SOORTEN)[number];
 
 let klaar: Promise<unknown> | null = null;

@@ -6,9 +6,15 @@ function linkjes(t: string) {
     if (!/^https?:\/\//.test(d)) return d;
     const url = d.replace(/[.,)]+$/, "");
     if (url.includes("/kozijnconfigurator/"))
-      return <a key={i} href={url} target="_top" className="mt-2 block rounded-full bg-[#1E5079] px-4 py-2 text-center text-sm font-bold text-white no-underline">Offerte maken met Roos</a>;
+      return <a key={i} href={url} target="_top" onClick={() => tel("chat_roos")} className="mt-2 block rounded-full bg-[#1E5079] px-4 py-2 text-center text-sm font-bold text-white no-underline">Offerte maken met Roos</a>;
     return <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="underline break-all">{d}</a>;
   });
+}
+
+function tel(soort: string) {
+  try {
+    navigator.sendBeacon?.("/api/tel", new Blob([JSON.stringify({ soort })], { type: "text/plain" }));
+  } catch {}
 }
 
 type Bericht = { rol: "klant" | "chat"; tekst: string };
@@ -49,6 +55,7 @@ export default function Chat() {
     e.preventDefault();
     const tekst = invoer.trim();
     if (!tekst || bezig) return;
+    if (!berichten.some((b) => b.rol === "klant")) tel("chat");
     const nieuw = [...berichten, { rol: "klant" as const, tekst }];
     setBerichten(nieuw);
     setInvoer("");
@@ -83,7 +90,7 @@ export default function Chat() {
         {bezig && <p className="text-sm text-black/40">Even denken…</p>}
         <div ref={onder} />
       </div>
-      <div className="border-t border-black/5 bg-white px-3 pt-2"><a href="https://offerte.bartmooi.nl" target="_top" className="block rounded-full border border-[#1E5079] py-2 text-center text-sm font-bold text-[#1E5079]">Prijs berekenen met Roos</a></div>
+      <div className="border-t border-black/5 bg-white px-3 pt-2"><a href="https://offerte.bartmooi.nl" target="_top" onClick={() => tel("chat_roos")} className="block rounded-full border border-[#1E5079] py-2 text-center text-sm font-bold text-[#1E5079]">Prijs berekenen met Roos</a></div>
       <form onSubmit={stuur} className="flex gap-2 bg-white p-3">
         <input value={invoer} onChange={(e) => setInvoer(e.target.value)} placeholder="Typ uw vraag…" className="min-w-0 flex-1 rounded-full border border-black/15 px-4 py-2.5 text-[15px] outline-none focus:border-[#1E5079]" />
         {kanSpraak && (

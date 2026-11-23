@@ -44,6 +44,13 @@ export default async function Bezoekers({ searchParams }: { searchParams: Promis
         ))}
       </div>
       <div className="rounded-2xl border border-black/10 bg-white p-5">
+        <p className="mb-3 text-sm font-bold text-foreground">Chat op bartmooi.nl</p>
+        <div className="grid grid-cols-2 gap-4">
+          <div><p className="text-xs text-black/50">Eerste vraag gesteld</p><p className="text-3xl font-black text-[#1E5079]">{n.chat ?? 0}</p></div>
+          <div><p className="text-xs text-black/50">Doorgeklikt naar Roos</p><p className="text-3xl font-black text-[#1E5079]">{n.chat_roos ?? 0}</p></div>
+        </div>
+      </div>
+      <div className="rounded-2xl border border-black/10 bg-white p-5">
         <p className="mb-3 text-sm font-bold text-foreground">Waar bezoekers vandaan komen</p>
         <div className="grid grid-cols-[1fr_auto_auto] gap-x-6 gap-y-2 text-sm">
           <span />
