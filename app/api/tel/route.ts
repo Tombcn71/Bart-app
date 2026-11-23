@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import { noteer, SOORTEN, type Soort } from "@/lib/bezoek";
 
 const CORS = {
@@ -12,6 +13,8 @@ export function OPTIONS() {
 
 export async function POST(req: Request) {
   try {
+    // Bart zelf (ingelogd in de admin) telt niet mee.
+    if (process.env.ADMIN_TOKEN && (await cookies()).get("admin_token")?.value === process.env.ADMIN_TOKEN) return new Response(null, { status: 204, headers: CORS });
     const b = await req.json();
     const soort = b?.soort as Soort;
     if ((SOORTEN as readonly string[]).includes(soort)) {

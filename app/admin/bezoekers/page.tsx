@@ -13,7 +13,7 @@ export default async function Bezoekers({ searchParams }: { searchParams: Promis
     { label: "Calculator geopend", w: n.calc ?? 0 },
     { label: "Offerte aangevraagd", w: n.offerte ?? 0 },
   ];
-  const top = Math.max(1, ...stappen.map((s) => s.w));
+  const top = Math.max(20, ...stappen.map((s) => s.w));
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-3">

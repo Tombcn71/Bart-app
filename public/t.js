@@ -1,6 +1,11 @@
 /* Telt bezoekers op bartmooi.nl en klikken naar de offerte-site. Zonder cookies, zonder persoonsgegevens. */
 (function () {
   var HOST = "https://offerte.bartmooi.nl";
+  try {
+    if (/[?&]niet-tellen=1/.test(location.search)) localStorage.setItem("niet_tellen", "1");
+    if (/[?&]wel-tellen=1/.test(location.search)) localStorage.removeItem("niet_tellen");
+    if (localStorage.getItem("niet_tellen")) return;
+  } catch (e) {}
   function stuur(soort, pad) {
     try {
       var d = JSON.stringify({ soort: soort, pad: pad || location.pathname });
