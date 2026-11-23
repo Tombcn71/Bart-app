@@ -1,6 +1,12 @@
 "use client";
 import { useRef, useState, useEffect } from "react";
 
+function linkjes(t: string) {
+  return t.split(/(https?:\/\/[^\s]+)/g).map((d, i) =>
+    /^https?:\/\//.test(d) ? <a key={i} href={d.replace(/[.,)]+$/, "")} target="_blank" rel="noopener noreferrer" className="underline break-all">{d}</a> : d,
+  );
+}
+
 type Bericht = { rol: "klant" | "chat"; tekst: string };
 
 export default function Chat() {
@@ -34,7 +40,7 @@ export default function Chat() {
       <div className="flex-1 space-y-3 overflow-y-auto bg-[#f4f7fa] p-4">
         {berichten.map((b, i) => (
           <div key={i} className={`flex ${b.rol === "klant" ? "justify-end" : "justify-start"}`}>
-            <p className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-[15px] leading-snug ${b.rol === "klant" ? "bg-[#1E5079] text-white" : "bg-white text-[#13334D] shadow-sm"}`}>{b.tekst}</p>
+            <p className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-[15px] leading-snug ${b.rol === "klant" ? "bg-[#1E5079] text-white" : "bg-white text-[#13334D] shadow-sm"}`}>{linkjes(b.tekst)}</p>
           </div>
         ))}
         {bezig && <p className="text-sm text-black/40">Even denken…</p>}
