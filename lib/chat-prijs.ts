@@ -51,6 +51,13 @@ function maakMatrix(data: any) {
 
 const eerste = (t: any) => Object.keys(t || {})[0] || "";
 
+/** Link naar de calculator met dit kozijn al ingevuld, zodat Roos en de bezoeker er direct mee verder kunnen. */
+export function offerteLink(inv: any): string {
+  const q = new URLSearchParams({ b: String(Math.round(Number(inv.breedte_mm))), h: String(Math.round(Number(inv.hoogte_mm))), glas: inv.glas === "triple" ? "triple" : "dubbel", n: String(Math.max(1, Math.round(Number(inv.aantal) || 1))), roos: "1" });
+  if ((KLEUR_BUITEN as readonly string[]).includes(inv.kleur_buiten)) q.set("kleur", inv.kleur_buiten);
+  return `https://offerte.bartmooi.nl/kozijnconfigurator/${inv.type}?${q}`;
+}
+
 export async function berekenChatPrijs(inv: any): Promise<string> {
   const slug = String(inv?.type ?? "");
   const vak = KOZIJN_VAKKEN[slug];
@@ -108,5 +115,5 @@ export async function berekenChatPrijs(inv: any): Promise<string> {
     if (!totaal) return "De prijs kon niet berekend worden.";
   }
   const stuk = Math.round((totaal / aantal) * 100) / 100;
-  return `${aantal} × ${naam}, ${b} × ${h} mm, ${glasKeuze === "triple" ? "triple glas" : "dubbel glas (HR++)"}, kleur buiten ${kleurBuiten}: totaal ${euro(totaal)}${toelichting}${aantal > 1 ? ` (${euro(stuk)} per stuk)` : ""}.`;
+  return `[offerte-link: ${offerteLink(inv)}] ${aantal} × ${naam}, ${b} × ${h} mm, ${glasKeuze === "triple" ? "triple glas" : "dubbel glas (HR++)"}, kleur buiten ${kleurBuiten}: totaal ${euro(totaal)}${toelichting}${aantal > 1 ? ` (${euro(stuk)} per stuk)` : ""}.`;
 }

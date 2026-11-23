@@ -2,9 +2,13 @@
 import { useRef, useState, useEffect } from "react";
 
 function linkjes(t: string) {
-  return t.split(/(https?:\/\/[^\s]+)/g).map((d, i) =>
-    /^https?:\/\//.test(d) ? <a key={i} href={d.replace(/[.,)]+$/, "")} target="_blank" rel="noopener noreferrer" className="underline break-all">{d}</a> : d,
-  );
+  return t.split(/(https?:\/\/[^\s]+)/g).map((d, i) => {
+    if (!/^https?:\/\//.test(d)) return d;
+    const url = d.replace(/[.,)]+$/, "");
+    if (url.includes("/kozijnconfigurator/"))
+      return <a key={i} href={url} target="_top" className="mt-2 block rounded-full bg-[#1E5079] px-4 py-2 text-center text-sm font-bold text-white no-underline">Offerte maken met Roos</a>;
+    return <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="underline break-all">{d}</a>;
+  });
 }
 
 type Bericht = { rol: "klant" | "chat"; tekst: string };

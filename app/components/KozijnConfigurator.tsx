@@ -586,6 +586,25 @@ export function KozijnConfigurator({
     setVoorboren(Object.keys(matrix.voorborenToeslag || {})[0] || "");
   }, [matrix]);
 
+  // Komt de bezoeker uit de chat (of van Roos) met een kozijn, dan staat het hier al ingevuld: ?b=breedte&h=hoogte&glas=dubbel|triple&kleur=wit&n=aantal
+  const voorgevuld = useRef(false);
+  useEffect(() => {
+    if (!matrix || voorgevuld.current || alu || typeof window === "undefined") return;
+    voorgevuld.current = true;
+    const q = new URLSearchParams(window.location.search);
+    const getal = (k: string) => {
+      const n = Number(q.get(k));
+      return Number.isFinite(n) && n > 0 ? Math.round(n) : 0;
+    };
+    if (getal("b")) setBreedte(getal("b"));
+    if (getal("h")) setHoogte(getal("h"));
+    if (getal("n")) setAantal(Math.min(50, getal("n")));
+    const g = q.get("glas");
+    if (g === "dubbel" || g === "triple") setGlas(isStandaardModel(matrix) ? g : g === "triple" ? "triple-glas" : "hr-plus-plus");
+    const k = q.get("kleur");
+    if (k && /^[a-z-]{2,30}$/.test(k)) setKleurBuitenkant(k);
+  }, [matrix, alu]);
+
   // Binnenwerkse maten: buitenwerkse - 54mm (27mm aanslag per zijde)
   const binnenwerksBreedte = Math.max(0, breedte - 54);
   const binnenwerkseHoogte = Math.max(0, hoogte - 54);
