@@ -221,6 +221,20 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
       }
     } catch {}
   }, []);
+  // Komt de bezoeker uit de chat met een prijs (?uitchat=1), dan opent Roos meteen en begint het gesprek.
+  const uitChatGestart = useRef(false);
+  useEffect(() => {
+    if (uitChatGestart.current) return;
+    try {
+      if (new URLSearchParams(window.location.search).get("uitchat") !== "1") return;
+    } catch {
+      return;
+    }
+    uitChatGestart.current = true;
+    setOpen(true);
+    setTimeout(() => void begin(false), 800);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   function verderPraten() {
     if (!overdracht) return;
     const tekst =
@@ -466,11 +480,11 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
           },
         ]),
       );
-      // Komt de bezoeker uit de chat met een kozijn (?roos=1&b=..&h=..), dan weet Roos dat na haar begroeting.
+      // Komt de bezoeker uit de chat met een kozijn (?uitchat=1&b=..&h=..), dan weet Roos dat na haar begroeting.
       const vanChat = (() => {
         try {
           const q = new URLSearchParams(window.location.search);
-          if (q.get("roos") !== "1") return "";
+          if (q.get("uitchat") !== "1") return "";
           const type = window.location.pathname.split("/").filter(Boolean).pop() ?? "";
           const naam = KOZIJN_TYPEN.find((t) => t.slug === type)?.naam ?? Object.values(ROOS_PRODUCTEN).map((p) => p.typen[type]).find(Boolean) ?? type.replace(/-/g, " ");
           const glasTekst = q.get("glas") ? `, ${q.get("glas") === "triple" ? "triple glas" : "dubbel glas (HR++)"}` : ", standaarduitvoering";
