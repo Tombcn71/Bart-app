@@ -1,0 +1,984 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { GoogleGenAI, type Session, type LiveServerMessage } from "@google/genai";
+import { useRouter } from "next/navigation";
+import { brugRef } from "@/lib/assistent-brug";
+import { formulier } from "@/lib/assistent-formulier";
+import { KOZIJN_TYPEN } from "@/lib/kozijntypen";
+import { VULLERS } from "@/lib/marleen-vullers";
+import { MARLEEN_PRODUCTEN } from "@/lib/marleen-producten";
+import { Maximize2, Mic, Minimize2, PhoneOff, Send, Sparkles, X } from "lucide-react";
+
+const STEMMEN = ["Sulafat", "Gacrux", "Vindemiatrix", "Despina", "Achernar", "Callirrhoe", "Erinome", "Kore", "Aoede", "Leda"];
+const MODELLEN = [
+  ["gemini-3.8-live", "Nieuw (3.8)"],
+  ["gemini-3.8-live-extended-thinking", "Slimmer (3.8, iets trager)"],
+  ["gemini-3.1-flash-live-preview", "Snel (3.1)"],
+];
+const MAX_SECONDEN = 15 * 60; // een gesprek stopt hoe dan ook na een kwartier
+const STILTE_SECONDEN = 120; // en eerder als er twee minuten niemand iets zegt
+const BAL = "radial-gradient(circle at 30% 28%, #ffffff 0%, #9ce6e6 28%, #2792dc 75%, #1b6fb0 100%)";
+const VOORBEELDEN = [
+  { kort: "Dubbel of triple glas?", vraag: "Wat is het verschil tussen dubbel en triple glas?" },
+  { kort: "Welk kozijn past bij mij?", vraag: "Welk kozijn past bij mijn woonkamer?" },
+  { kort: "Hoe werkt de offerte?", vraag: "Hoe werkt de offerte?" },
+];
+
+type Bericht = { rol: "marleen" | "jij"; tekst: string };
+
+function Orb({ refEl, groot = false, ademen = true }: { refEl?: React.RefObject<HTMLDivElement | null>; groot?: boolean; ademen?: boolean }) {
+  return (
+    <div
+      ref={refEl}
+      className={`${groot ? "size-36" : "size-20"} rounded-full transition-transform duration-300 ease-out`}
+      style={{
+        background: BAL,
+        boxShadow: "0 12px 30px rgba(39,146,220,0.35)",
+        animation: ademen ? "orb-ademen 4s ease-in-out infinite" : undefined,
+      }}
+    />
+  );
+}
+
+
+const CAPTURE_WORKLET = `
+class Cap extends AudioWorkletProcessor {
+  constructor(){ super(); this.ratio = sampleRate / 16000; this.acc = 0; this.n = 0; this.out = []; }
+  process(inputs){
+    const ch = inputs[0] && inputs[0][0];
+    if (!ch) return true;
+    for (let i = 0; i < ch.length; i++) {
+      this.acc += ch[i]; this.n++;
+      if (this.n >= this.ratio) { this.out.push(this.acc / this.n); this.acc = 0; this.n = 0; }
+    }
+    if (this.out.length >= 640) {
+      const i16 = new Int16Array(this.out.length);
+      for (let j = 0; j < this.out.length; j++) { const v = Math.max(-1, Math.min(1, this.out[j])); i16[j] = v < 0 ? v * 32768 : v * 32767; }
+      this.port.postMessage(i16.buffer, [i16.buffer]);
+      this.out = [];
+    }
+    return true;
+  }
+}
+registerProcessor("cap", Cap);
+`;
+
+function naarBase64(buf: ArrayBuffer) {
+  const bytes = new Uint8Array(buf);
+  let bin = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(bin);
+}
+
+type Stand = "uit" | "verbinden" | "aan";
+
+function Chat({ ingebed = false }: { ingebed?: boolean }) {
+  const [open, setOpen] = useState(ingebed);
+  const [uitgeklapt, setUitgeklapt] = useState(false);
+  // Widget: eerst een klein kaartje, na de klik alleen nog de bal. Weggeklikt = alleen de bal.
+  const [klein, setKlein] = useState(false);
+  // In de app: tijdens het gesprek alleen de bal, zodat de klant de calculator ziet. Tik op het tekstballonnetje voor het gesprek.
+  const [toonGesprek, setToonGesprek] = useState(false);
+  const [berichten, setBerichten] = useState<Bericht[]>([]);
+  const [tekst, setTekst] = useState("");
+  const [fout, setFout] = useState("");
+  const [typen, setTypen] = useState(false);
+  const [stand, setStand] = useState<Stand>("uit");
+  const [praat, setPraat] = useState(false);
+  const [stem] = useState("Kore");
+  const [model] = useState("gemini-3.8-live");
+
+  const bol = useRef<HTMLDivElement>(null);
+  const laatsteGeluid = useRef(0);
+  const stilteTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const lijst = useRef<HTMLDivElement>(null);
+  const sessie = useRef<Session | null>(null);
+  const typenRef = useRef(false);
+  const ctxIn = useRef<AudioContext | null>(null);
+  const ctxUit = useRef<AudioContext | null>(null);
+  const analyserIn = useRef<AnalyserNode | null>(null);
+  const analyserUit = useRef<AnalyserNode | null>(null);
+  const stream = useRef<MediaStream | null>(null);
+  const volgende = useRef(0);
+  const bronnen = useRef<AudioBufferSourceNode[]>([]);
+  const laatsteRol = useRef<"marleen" | "jij" | null>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const ronde = useRef(0); // wordt verhoogd bij elke stop, zodat een gesprek dat nog verbindt ook stopt
+
+  const verbonden = stand === "aan";
+  const bezig = stand === "verbinden";
+  const actief = verbonden || bezig;
+
+  function voegToe(rol: "marleen" | "jij", tekstDeel: string) {
+    laatsteGeluid.current = Date.now();
+    const vorige = laatsteRol.current;
+    laatsteRol.current = rol;
+    setBerichten((b) => {
+      if (vorige === rol && b.length > 0) {
+        const kopie = b.slice();
+        kopie[kopie.length - 1] = { rol, tekst: kopie[kopie.length - 1].tekst + tekstDeel };
+        return kopie;
+      }
+      return [...b, { rol, tekst: tekstDeel.trimStart() }];
+    });
+  }
+
+  function stopAfspelen() {
+    bronnen.current.forEach((s) => {
+      try {
+        s.stop();
+      } catch {}
+    });
+    bronnen.current = [];
+    volgende.current = 0;
+    setPraat(false);
+  }
+
+  // ---- De stem van Marleen: Gemini's voorleesstem, zin voor zin ----
+  const zinBuffer = useRef("");
+  const stemKetting = useRef<Promise<void>>(Promise.resolve());
+  const stemAfbreken = useRef<AbortController | null>(null);
+  const stemRonde = useRef(0);
+
+  function speelBytes(bytes: Uint8Array) {
+    let bin = "";
+    for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    speel(btoa(bin));
+  }
+
+  function zegZin(zin: string) {
+    const ronde = stemRonde.current;
+    stemKetting.current = stemKetting.current.then(async () => {
+      if (ronde !== stemRonde.current || !zin.trim()) return;
+      const ac = new AbortController();
+      stemAfbreken.current = ac;
+      try {
+        const r = await fetch("/api/marleen-stem", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ tekst: zin }),
+          signal: ac.signal,
+        });
+        if (!r.body) return;
+        const lezer = r.body.getReader();
+        let rest: number | null = null;
+        for (;;) {
+          const { done, value } = await lezer.read();
+          if (done || ronde !== stemRonde.current) break;
+          let stuk = value;
+          if (rest !== null) {
+            const samen = new Uint8Array(stuk.length + 1);
+            samen[0] = rest;
+            samen.set(stuk, 1);
+            stuk = samen;
+            rest = null;
+          }
+          if (stuk.length % 2) {
+            rest = stuk[stuk.length - 1];
+            stuk = stuk.subarray(0, stuk.length - 1);
+          }
+          if (stuk.length) speelBytes(stuk);
+        }
+      } catch {}
+    });
+  }
+
+  // Wat Marleen zegt komt als tekst binnen; elke hele zin gaat meteen naar de stem.
+  const eersteStukGezegd = useRef(false);
+  function bijMarleenTekst(deel: string, klaar: boolean) {
+    zinBuffer.current += deel;
+    for (;;) {
+      const m = zinBuffer.current.match(/^([\s\S]*?[.!?])(\s+|$)/);
+      const teLang = zinBuffer.current.length > 160 ? zinBuffer.current.lastIndexOf(" ", 160) : -1;
+      if (m && (m[2] || klaar)) {
+        eersteStukGezegd.current = true;
+        zegZin(m[1]);
+        zinBuffer.current = zinBuffer.current.slice(m[0].length);
+      } else if (teLang > 40) {
+        zegZin(zinBuffer.current.slice(0, teLang));
+        zinBuffer.current = zinBuffer.current.slice(teLang + 1);
+      } else break;
+    }
+    if (klaar && zinBuffer.current.trim()) {
+      zegZin(zinBuffer.current);
+      zinBuffer.current = "";
+    }
+    if (klaar) eersteStukGezegd.current = false;
+  }
+
+  function stopStem() {
+    stemRonde.current++;
+    eersteStukGezegd.current = false;
+    zinBuffer.current = "";
+    stemAfbreken.current?.abort();
+    stemKetting.current = Promise.resolve();
+  }
+
+  // ---- Directe reactie: een vooraf opgenomen woordje zodra de klant stopt, en "Momentje" als een actie even duurt ----
+  const vulGespeeld = useRef(false);
+  const afsluiten = useRef(false);
+  const laatsteUitGeluid = useRef(0);
+  const VULLERS_UIT = true as boolean;
+  function speelVuller(soort: "reactie" | "wacht") {
+    // Uitgezet op verzoek van Tom (22 nov 2026): de woordjes klonken als een andere stem.
+    if (VULLERS_UIT) return;
+    if (typenRef.current || bronnen.current.length) return; // ze praat al
+    const lijst = VULLERS[soort];
+    if (!lijst.length) return;
+    speel(lijst[Math.floor(Math.random() * lijst.length)].pcm);
+  }
+
+  function speel(b64: string) {
+    if (typenRef.current) return; // in typen-modus blijft het geluid uit
+    const ctx = ctxUit.current;
+    if (!ctx || !analyserUit.current) return;
+    const bin = atob(b64);
+    const n = bin.length >> 1;
+    const buf = ctx.createBuffer(1, n, 24000);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) {
+      const v = (bin.charCodeAt(i * 2) | (bin.charCodeAt(i * 2 + 1) << 8)) << 16 >> 16;
+      data[i] = v / 32768;
+    }
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.connect(analyserUit.current);
+    // Een klein voorsprongetje (150 ms) voorkomt haperen als er even geen geluid binnenkomt.
+    const eerste = bronnen.current.length === 0 || volgende.current < ctx.currentTime;
+    const t = eerste ? ctx.currentTime + 0.1 : volgende.current;
+    src.start(t);
+    volgende.current = t + buf.duration;
+    bronnen.current.push(src);
+    setPraat(true);
+    src.onended = () => {
+      bronnen.current = bronnen.current.filter((x) => x !== src);
+      if (bronnen.current.length === 0) setPraat(false);
+    };
+  }
+
+  const router = useRouter();
+
+  // Overdracht vanaf de website: de klant komt binnen met ?marleen=... (wat al besproken is).
+  const [overdracht, setOverdracht] = useState("");
+  const [autoStart, setAutoStart] = useState(false);
+  useEffect(() => {
+    // Blokkeert de browser het geluid na de doorstap, dan start een klik of aanraking het meteen.
+    const hervat = () => ctxUit.current?.resume().catch(() => {});
+    window.addEventListener("pointerdown", hervat);
+    window.addEventListener("keydown", hervat);
+    return () => {
+      window.removeEventListener("pointerdown", hervat);
+      window.removeEventListener("keydown", hervat);
+    };
+  }, []);
+  useEffect(() => {
+    if (autoStart && overdracht) {
+      setAutoStart(false);
+      verderPraten(); // geen knop: meteen verder praten
+    }
+  }, [autoStart, overdracht]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    try {
+      const p = new URLSearchParams(window.location.search).get("marleen");
+      if (p) {
+        setOverdracht(p);
+        setOpen(true);
+        setAutoStart(true);
+        window.history.replaceState(null, "", window.location.pathname);
+      }
+    } catch {}
+  }, []);
+  function verderPraten() {
+    if (!overdracht) return;
+    const tekst =
+      "[Overdracht van de website] De klant praatte net met je op de website van BartMooi en is nu doorgestuurd naar de offerte-app. Dit is al besproken: " +
+      overdracht +
+      ". Begroet de klant NIET opnieuw en stel je niet opnieuw voor. Ga direct door alsof het één gesprek is. Zet alleen in de calculator wat de klant echt heeft gezegd, met open_kozijn en zet_keuzes. Heeft de klant nog geen kozijntype genoemd, open dan niets en vraag welk kozijn hij wil. Verzin nooit een type of maat.";
+    setOverdracht("");
+    void begin(false, tekst, true);
+  }
+
+  /** Marleen bedient de calculator en het formulier. Prijzen worden niet teruggegeven: die noemt ze nooit. */
+  async function voerUit(naam: string, input: Record<string, unknown>): Promise<Record<string, unknown>> {
+    const zonderPrijs = (x: unknown) => {
+      if (!x || typeof x !== "object") return x;
+      const { prijsInEuro, prijsInclusief, horPrijs, ...rest } = x as Record<string, unknown>;
+      void prijsInEuro; void prijsInclusief;
+      return { ...rest, horrenBeschikbaar: typeof horPrijs === "number" && horPrijs > 0 };
+    };
+    const wacht = (ms: number) => new Promise((r) => setTimeout(r, ms));
+    const brug = () => brugRef.current;
+    if (naam === "ga_naar_product") {
+      const groepen = ["kozijnen", "aluminium-kozijnen", "deuren", "schuifpui", "harmonicadeur", "rolluiken", "horren"];
+      if (!groepen.includes(String(input.groep))) return { fout: "Onbekende productgroep." };
+      router.push(input.groep === "aluminium-kozijnen" ? "/aluminium/kozijnen" : `/${input.groep}`);
+      if (input.groep === "aluminium-kozijnen") {
+        return { ok: true, pagina: "aluminium kozijnen", let_op: "Bij aluminium kun je de calculator niet zelf invullen. Laat de klant zelf een type kiezen en help hem met uitleg." };
+      }
+      return { ok: true, pagina: String(input.groep) };
+    }
+    if (naam === "open_product") {
+      const prod = MARLEEN_PRODUCTEN[String(input.product)];
+      if (!prod) return { fout: "Onbekend product." };
+      const type = String(input.type ?? "");
+      if (!prod.typen[type]) return { fout: "Onbekend type. Kies uit: " + Object.keys(prod.typen).join(", ") };
+      // Staat deze calculator al open, dan alleen het type wisselen: niet navigeren en niet wachten.
+      if (window.location.pathname.startsWith(prod.pad) && brug()) {
+        brug()!.zet({ type });
+        await wacht(60);
+        return zonderPrijs(brug()!.staat()) as Record<string, unknown>;
+      }
+      router.push(prod.pad + type);
+      // Wachten tot de nieuwe calculator er staat (de oude koppeling verdwijnt eerst).
+      const oud = brug();
+      for (let i = 0; i < 80 && (!brug() || brug() === oud); i++) await wacht(60);
+      return (zonderPrijs(brug()?.staat()) as Record<string, unknown>) ?? { fout: "De calculator kon niet geopend worden." };
+    }
+    if (naam === "open_kozijn") {
+      if (!KOZIJN_TYPEN.some((t) => t.slug === input.type)) return { fout: "Onbekend kozijntype. Vraag de klant welk kozijn hij wil en kies een type uit de lijst." };
+      const slug = String(input.type);
+      if (window.location.pathname.startsWith("/kozijnconfigurator") && brug()) {
+        brug()!.zet({ type: slug }); // calculator staat al open: alleen het type wisselen
+      } else {
+        const oud = brug();
+        router.push(`/kozijnconfigurator/${slug}`);
+        for (let i = 0; i < 80 && (!brug() || brug() === oud); i++) await wacht(60);
+      }
+      await wacht(60);
+      return (zonderPrijs(brug()?.staat()) as Record<string, unknown>) ?? { fout: "De calculator kon niet geopend worden." };
+    }
+    if (naam === "lees_offerte") {
+      for (let i = 0; i < 40 && !document.querySelector("[data-marleen-product]"); i++) await wacht(250);
+      // Bedragen als vaste getallen, met precies hoe je ze uitspreekt: geen gereken en geen verwarring over punt en komma.
+      const zeg = (n: number) => {
+        const euro = Math.floor(n + 0.0001);
+        const cent = Math.round((n - euro) * 100);
+        return `${euro} euro${cent ? ` en ${cent} cent` : ""}`;
+      };
+      const producten = Array.from(document.querySelectorAll<HTMLElement>("[data-marleen-product]")).map((el) => {
+        const prijs = Number(el.dataset.marleenPrijs);
+        return { product: el.dataset.marleenProduct, prijsUitgesproken: zeg(prijs), btw: el.dataset.marleenBtw, specificaties: el.innerText.replace(/\n{2,}/g, "\n").trim().slice(0, 1200) };
+      });
+      if (!producten.length) return { fout: "De offerte is nog niet te zien." };
+      const totEl = document.querySelector<HTMLElement>("[data-marleen-totaal]");
+      const totaal = totEl ? Number(totEl.dataset.marleenTotaal) : Array.from(document.querySelectorAll<HTMLElement>("[data-marleen-product]")).reduce((a, el) => a + Number(el.dataset.marleenPrijs), 0);
+      return { producten, totaalUitgesproken: zeg(totaal), btw: producten[0].btw, let_op: "Noem bedragen precies zoals bij 'Uitgesproken' staat. Reken nooit zelf." };
+    }
+    if (naam === "ga_naar_akkoord") {
+      const el = document.getElementById("digitaal-akkoord");
+      if (!el) return { fout: "Het akkoordvak is hier niet te zien." };
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      return { ok: true };
+    }
+    if (naam === "lees_formulier") return { formulierOpen: formulier.open, ...formulier.waarden };
+    if (naam === "vul_formulier") {
+      if (!formulier.open) return { fout: "Het formulier is nog niet open. Gebruik eerst open_formulier." };
+      formulier.vul?.(input as never);
+      await wacht(120);
+      return { ok: true, ...formulier.waarden };
+    }
+    if (naam === "verstuur_formulier") {
+      if (!formulier.open || !formulier.verstuur) return { fout: "Het formulier is niet open." };
+      const r = await formulier.verstuur();
+      if (!r.ok) return { ...r };
+      if (r.offerteId) router.push(`/offerte/${r.offerteId}`);
+      afsluiten.current = true; // na de laatste zin ("Goedendag!") hangt Marleen vanzelf op
+      // Wacht tot de offerte op het scherm staat en geef de inhoud meteen mee, zodat Marleen hem direct kan bespreken.
+      const offerte = await voerUit("lees_offerte", {});
+      window.scrollTo({ top: 0, behavior: "smooth" }); // de offerte netjes vanaf boven tonen
+      return { ok: true, opmerking: "Aangevraagd. De offerte staat nu op het scherm.", offerte };
+    }
+    if (!brug()) return { fout: "Er is nog geen kozijn open. Gebruik eerst open_kozijn." };
+    if (naam === "open_formulier") {
+      brug()!.toonFormulier();
+      await wacht(200);
+      return { ok: true, formulierOpen: formulier.open };
+    }
+    if (naam === "zet_keuzes") {
+      brug()!.zet(input);
+      await wacht(150);
+      return zonderPrijs(brug()!.staat()) as Record<string, unknown>;
+    }
+    return { fout: "Onbekende functie" };
+  }
+
+  async function bijToolCall(m: LiveServerMessage) {
+    const calls = m.toolCall?.functionCalls;
+    if (!calls?.length) return;
+    const momentje = setTimeout(() => speelVuller("wacht"), 600);
+    if (ingebed) {
+      for (const c of calls) {
+        if (c.name !== "naar_offerte") continue;
+        const samenvatting = String((c.args as { samenvatting?: string } | undefined)?.samenvatting ?? "");
+        try {
+          sessie.current?.sendToolResponse({ functionResponses: [{ id: c.id, name: c.name, response: { output: { ok: true } } }] });
+        } catch {}
+        // Even wachten, zodat Marleen haar zin kan afmaken voordat de pagina wisselt.
+        setTimeout(() => {
+          try {
+            window.parent.postMessage({ soort: "marleen-ga", samenvatting }, "*");
+          } catch {}
+        }, 2500);
+      }
+      return;
+    }
+    const antwoorden: { id?: string; name?: string; response: Record<string, unknown> }[] = [];
+    for (const c of calls) {
+      let response: Record<string, unknown>;
+      try {
+        const uit = await voerUit(c.name ?? "", (c.args ?? {}) as Record<string, unknown>);
+        // Alleen bij testen op de eigen computer: elke actie en het resultaat in het logboek.
+        if (process.env.NODE_ENV !== "production") console.info("Marleen actie:", c.name, JSON.stringify(c.args ?? {}), "=>", JSON.stringify(uit).slice(0, 300));
+        response = { output: uit };
+      } catch (e) {
+        response = { fout: String((e as Error)?.message ?? e) };
+      }
+      // Achtergrond-acties: resultaat toevoegen en Marleen laten doorpraten zodra ze klaar is met haar zin (WHEN_IDLE).
+      const opAchtergrond = ["ga_naar_product", "open_product", "open_kozijn", "zet_keuzes", "open_formulier", "vul_formulier", "ga_naar_akkoord"].includes(c.name ?? "");
+      antwoorden.push({ id: c.id, name: c.name, response: opAchtergrond ? { ...response, scheduling: "WHEN_IDLE" } : response });
+    }
+    clearTimeout(momentje);
+    try {
+      sessie.current?.sendToolResponse({ functionResponses: antwoorden });
+    } catch {}
+  }
+
+  function bij(m: LiveServerMessage) {
+    if (m.toolCall) void bijToolCall(m);
+    const sc = m.serverContent;
+    if (!sc) return;
+    if (sc.interrupted) {
+      stopStem();
+      stopAfspelen();
+    }
+    // Marleen praat met de eigen stem van Gemini Live (de voorleesstem B heeft een limiet van 10 zinnen per minuut).
+    for (const p of sc.modelTurn?.parts ?? []) if (p.inlineData?.data) speel(p.inlineData.data);
+    if (sc.inputTranscription?.text) voegToe("jij", sc.inputTranscription.text);
+    if (sc.outputTranscription?.text) voegToe("marleen", sc.outputTranscription.text);
+    if (sc.turnComplete) {
+      laatsteRol.current = null;
+      vulGespeeld.current = false;
+      if (afsluiten.current) {
+        afsluiten.current = false;
+        const klaar = setInterval(() => {
+          if (bronnen.current.length || performance.now() - laatsteUitGeluid.current < 900) return; // ze praat nog
+          clearInterval(klaar);
+          setTimeout(() => sluit(), 400);
+        }, 300);
+      }
+    }
+  }
+
+  function opruimen() {
+    ronde.current++;
+    if (timer.current) clearTimeout(timer.current);
+    if (stilteTimer.current) clearInterval(stilteTimer.current);
+    stilteTimer.current = null;
+    timer.current = null;
+    try {
+      sessie.current?.close();
+    } catch {}
+    sessie.current = null;
+    stream.current?.getTracks().forEach((t) => t.stop());
+    stream.current = null;
+    ctxIn.current?.close().catch(() => {});
+    ctxIn.current = null;
+    stopStem();
+    stopAfspelen();
+    ctxUit.current?.close().catch(() => {});
+    ctxUit.current = null;
+    analyserIn.current = null;
+    analyserUit.current = null;
+    laatsteRol.current = null;
+    setStand("uit");
+  }
+
+  async function begin(modusTypen: boolean, eersteVraag?: string, verborgen = false) {
+    if (actief) return;
+    const mijn = ++ronde.current;
+    const afgebroken = () => ronde.current !== mijn;
+    setFout("");
+    setTypen(modusTypen);
+    typenRef.current = modusTypen;
+    setStand("verbinden");
+    try {
+      if (!modusTypen) {
+        try {
+          stream.current = await navigator.mediaDevices.getUserMedia({
+            audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+          });
+        } catch {
+          setFout("Zet je microfoon aan om te praten, of kies Liever typen.");
+          setStand("uit");
+          return;
+        }
+        if (afgebroken()) {
+          stream.current?.getTracks().forEach((t) => t.stop());
+          return;
+        }
+      }
+      const r = await fetch("/api/gemini-token?stem=" + stem + "&model=" + model + (ingebed ? "&widget=1" : ""), { method: "POST" });
+      const d = await r.json();
+      if (afgebroken()) return;
+      if (!d.token) throw new Error(d.fout || "Geen toegang");
+
+      ctxUit.current = new AudioContext({ sampleRate: 24000 });
+      analyserUit.current = ctxUit.current.createAnalyser();
+      analyserUit.current.fftSize = 256;
+      analyserUit.current.connect(ctxUit.current.destination);
+
+      const ai = new GoogleGenAI({ apiKey: d.token, httpOptions: { apiVersion: "v1alpha" } });
+      const s = await ai.live.connect({
+        model: d.model,
+        config: {
+          responseModalities: ["AUDIO" as never],
+          outputAudioTranscription: {},
+          inputAudioTranscription: { languageCodes: ["nl-NL"], customVocabulary: ["BartMooi", "Marleen", "kozijn", "kozijnen", "draai-kiepraam", "kiepraam", "schuifpui", "harmonicadeur", "rolluik", "hor", "HR++", "triple glas", "dubbel glas", "kunststof", "aluminium", "antraciet", "offerte", "inmeting"] },
+        },
+        callbacks: {
+          onmessage: bij,
+          onerror: (e: { message?: string }) => {
+            setFout("Fout: " + (e?.message || "de verbinding is verbroken"));
+            opruimen();
+          },
+          onclose: () => {
+            if (sessie.current) opruimen();
+          },
+        },
+      });
+      if (afgebroken()) {
+        try {
+          s.close();
+        } catch {}
+        return;
+      }
+      sessie.current = s;
+
+      if (!modusTypen && stream.current) {
+        const ctx = new AudioContext();
+        ctxIn.current = ctx;
+        const url = URL.createObjectURL(new Blob([CAPTURE_WORKLET], { type: "application/javascript" }));
+        await ctx.audioWorklet.addModule(url);
+        if (afgebroken()) {
+          ctx.close().catch(() => {});
+          return;
+        }
+        const bron = ctx.createMediaStreamSource(stream.current);
+        analyserIn.current = ctx.createAnalyser();
+        analyserIn.current.fftSize = 256;
+        const node = new AudioWorkletNode(ctx, "cap");
+        let spraak = false;
+        let stilSinds = 0;
+        node.port.onmessage = (e) => {
+          const buf = e.data as ArrayBuffer;
+          sessie.current?.sendRealtimeInput({
+            audio: { data: naarBase64(buf), mimeType: "audio/pcm;rate=16000" },
+          });
+          const pcm = new Int16Array(buf);
+          let som = 0;
+          for (let i = 0; i < pcm.length; i++) som += (pcm[i] / 32768) ** 2;
+          const luid = Math.sqrt(som / Math.max(1, pcm.length)) > 0.02;
+          const nu = performance.now();
+          if (luid) {
+            spraak = true;
+            stilSinds = 0;
+          } else if (spraak) {
+            if (!stilSinds) stilSinds = nu;
+            else if (nu - stilSinds > 300) {
+              spraak = false;
+              stilSinds = 0;
+              try {
+                sessie.current?.sendRealtimeInput({ audioStreamEnd: true });
+              } catch {}
+            }
+          }
+        };
+        bron.connect(analyserIn.current);
+        bron.connect(node);
+      }
+
+      ctxUit.current?.resume().catch(() => {});
+      setStand("aan");
+      timer.current = setTimeout(() => {
+        setFout("Het gesprek is na een kwartier gestopt. Start gerust opnieuw.");
+        opruimen();
+      }, MAX_SECONDEN * 1000);
+      laatsteGeluid.current = Date.now();
+      stilteTimer.current = setInterval(() => {
+        if (Date.now() - laatsteGeluid.current > STILTE_SECONDEN * 1000) {
+          setFout("Het gesprek is gestopt omdat het even stil was. Start gerust opnieuw.");
+          opruimen();
+        }
+      }, 5000);
+
+      if (eersteVraag) {
+        if (!verborgen) setBerichten((b) => [...b, { rol: "jij", tekst: eersteVraag }]);
+        laatsteRol.current = null;
+        s.sendRealtimeInput({ text: eersteVraag });
+      } else {
+        {
+          // Groet volgens de Nederlandse tijd: goedemorgen tot 12 uur, goedemiddag tot 18 uur, daarna goedenavond.
+          const uur = Number(new Intl.DateTimeFormat("nl-NL", { hour: "numeric", hour12: false, timeZone: "Europe/Amsterdam" }).format(new Date()));
+          const groet = uur < 6 ? "Goedenavond" : uur < 12 ? "Goedemorgen" : uur < 18 ? "Goedemiddag" : "Goedenavond";
+          s.sendRealtimeInput({ text: `Zeg nu precies deze openingszin: "${groet}, welkom bij BartMooi. Waarmee kan ik u helpen?"` });
+        }
+      }
+    } catch (e) {
+      setFout("Fout: " + (e instanceof Error ? e.message : "het lukte niet") + ". Probeer het opnieuw.");
+      opruimen();
+    }
+  }
+
+  const startPraten = () => begin(false);
+  const startTypen = (vraag?: string) => {
+    if (actief && vraag) {
+      setBerichten((b) => [...b, { rol: "jij", tekst: vraag }]);
+      laatsteRol.current = null;
+      sessie.current?.sendRealtimeInput({ text: vraag });
+    } else if (!actief) begin(true, vraag);
+  };
+
+  function stop() {
+    opruimen();
+    setTypen(false);
+  }
+
+  function sluit() {
+    setToonGesprek(false);
+    opruimen();
+    setTypen(false);
+    setUitgeklapt(false);
+    setOpen(false);
+  }
+
+  function verstuur(e: React.FormEvent) {
+    e.preventDefault();
+    const t = tekst.trim();
+    if (!t || !verbonden) return;
+    setBerichten((b) => [...b, { rol: "jij", tekst: t }]);
+    laatsteRol.current = null;
+    sessie.current?.sendRealtimeInput({ text: t });
+    setTekst("");
+  }
+
+  // Het gesprek stopt altijd als je de pagina sluit of verlaat.
+  useEffect(() => {
+    window.addEventListener("pagehide", opruimen);
+    return () => {
+      window.removeEventListener("pagehide", opruimen);
+      opruimen();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Escape stopt het gesprek ook.
+  useEffect(() => {
+    const toets = (e: KeyboardEvent) => {
+      if (e.key === "Escape") opruimen();
+    };
+    window.addEventListener("keydown", toets);
+    return () => window.removeEventListener("keydown", toets);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // De bal beweegt mee met het geluid.
+  useEffect(() => {
+    if (!verbonden || typen) {
+      if (bol.current) bol.current.style.transform = "";
+      return;
+    }
+    const buf = new Uint8Array(128);
+    let raf = 0;
+    let zacht = 0; // gladgestreken volume, zodat de bal rustig pulseert
+    const tick = () => {
+      const an = praat ? analyserUit.current : analyserIn.current;
+      let vol = 0;
+      if (an) {
+        an.getByteTimeDomainData(buf);
+        let max = 0;
+        for (let i = 0; i < buf.length; i++) max = Math.max(max, Math.abs(buf[i] - 128));
+        vol = Math.min(max / 128 / (praat ? 0.6 : 0.4), 1);
+      }
+      zacht += (vol - zacht) * 0.06;
+      if (bol.current) bol.current.style.transform = `scale(${1 + zacht * 0.07})`;
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [verbonden, typen, praat]);
+
+  useEffect(() => {
+    lijst.current?.scrollTo({ top: lijst.current.scrollHeight, behavior: "smooth" });
+  }, [berichten]);
+
+  const status = fout
+    ? fout
+    : bezig
+      ? "Verbinden…"
+      : verbonden
+        ? typen
+          ? "Typ je vraag hieronder"
+          : praat
+            ? "Marleen praat…"
+            : "Ik luister. Je kunt ook typen"
+        : "Stel je vraag hardop of typ hem";
+
+  const keyframes = <style>{`@keyframes orb-ademen{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}`}</style>;
+
+  // ---- Widget op een website: klein kaartje, daarna alleen de bal ----
+  const widgetModus = actief ? "bal" : klein && !fout ? "rust" : "kaart";
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  useEffect(() => {
+    if (!ingebed) return;
+    try {
+      if (sessionStorage.getItem("marleen-klein")) setKlein(true);
+    } catch {}
+  }, [ingebed]);
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  useEffect(() => {
+    if (!ingebed) return;
+    const maat = widgetModus === "kaart" ? { w: 360, h: fout ? 200 : 178 } : { w: 112, h: 112 };
+    try {
+      window.parent.postMessage({ soort: "marleen-maat", ...maat }, "*");
+    } catch {}
+  }, [ingebed, widgetModus, fout]);
+
+  if (ingebed) {
+    const naarRust = () => {
+      setKlein(true);
+      try {
+        sessionStorage.setItem("marleen-klein", "1");
+      } catch {}
+    };
+    const ophangen = () => {
+      opruimen();
+      naarRust();
+    };
+    if (widgetModus === "kaart") {
+      return (
+        <div className="fixed inset-0 p-1">
+          <style>{`html,body{background:transparent!important}`}</style>
+          <div className="relative flex h-full w-full gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-slate-900 shadow-lg">
+            <button
+              type="button"
+              onClick={naarRust}
+              aria-label="Sluiten"
+              className="absolute top-2 right-2 rounded-full p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700">
+              <X className="size-4" />
+            </button>
+            <div className="mt-0.5 size-11 shrink-0 rounded-full" style={{ background: BAL, boxShadow: "0 6px 16px rgba(39,146,220,0.35)" }} />
+            <div className="min-w-0 flex-1 pr-5">
+              <p className="text-[15px] font-bold leading-tight">Hallo, ik ben Marleen</p>
+              <p className={`mt-1 text-[13.5px] leading-snug ${fout ? "font-semibold text-red-700" : "text-slate-600"}`}>
+                {fout || "Zal ik je in één minuut aan een offerte helpen? Praat gewoon met me, dan loop ik met je door de calculator."}
+              </p>
+              <button
+                type="button"
+                onClick={startPraten}
+                className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-brand py-2.5 text-sm font-bold text-white transition hover:bg-brand-dark active:scale-[0.98]">
+                <Mic className="size-4" /> Praat met Marleen
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    return (
+      <div className="fixed inset-0 grid place-items-center">
+        <style>{`html,body{background:transparent!important}`}</style>
+        <button
+          type="button"
+          onClick={widgetModus === "rust" ? startPraten : undefined}
+          aria-label={widgetModus === "rust" ? "Praat met Marleen" : bezig ? "Verbinden" : praat ? "Marleen praat" : "Marleen luistert"}
+          className="relative transition active:scale-95">
+          <div
+            ref={bol}
+            className="size-[72px] rounded-full transition-transform duration-300 ease-out"
+            style={{
+              background: BAL,
+              boxShadow: "0 10px 26px rgba(39,146,220,0.4)",
+              animation: widgetModus === "rust" || bezig ? "orb-ademen 3.5s ease-in-out infinite" : undefined,
+            }}
+          />
+          {widgetModus === "rust" && <Mic className="absolute inset-0 m-auto size-7 text-white drop-shadow" />}
+        </button>
+        {widgetModus === "bal" && (
+          <button
+            type="button"
+            onClick={ophangen}
+            aria-label="Ophangen"
+            title="Ophangen"
+            className="absolute top-1.5 left-1.5 grid size-8 place-items-center rounded-full bg-red-600 text-white shadow-md hover:bg-red-700">
+            <PhoneOff className="size-4" />
+          </button>
+        )}
+        {keyframes}
+      </div>
+    );
+  }
+
+  // App: tijdens een gesproken gesprek alleen de bal rechtsonder.
+  if (open && actief && !typen && !toonGesprek) {
+    return (
+      <div className="fixed right-4 bottom-4 z-50 flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setToonGesprek(true)}
+          aria-label="Gesprek tonen"
+          title="Gesprek tonen"
+          className="grid size-10 place-items-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-md hover:bg-slate-50">
+          <Maximize2 className="size-4" />
+        </button>
+        <div className="relative">
+          <div
+            ref={bol}
+            className="size-[72px] rounded-full transition-transform duration-300 ease-out"
+            style={{ background: BAL, boxShadow: "0 10px 26px rgba(39,146,220,0.4)", animation: bezig ? "orb-ademen 3.5s ease-in-out infinite" : undefined }}
+          />
+          <button
+            type="button"
+            onClick={sluit}
+            aria-label="Ophangen"
+            title="Ophangen"
+            className="absolute -top-1 -left-1 grid size-8 place-items-center rounded-full bg-red-600 text-white shadow-md hover:bg-red-700">
+            <PhoneOff className="size-4" />
+          </button>
+        </div>
+        {keyframes}
+      </div>
+    );
+  }
+
+  // Gesloten: knopje, praatwolkje en de bal.
+  if (!open) {
+    if (ingebed) return null;
+    return (
+      <div className="fixed right-5 bottom-5 z-50 flex flex-col items-end gap-3">
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 shadow-xl hover:bg-slate-50">
+          <Sparkles className="size-4 text-brand-text" /> Stel een vraag
+        </button>
+        <button type="button" onClick={() => setOpen(true)} aria-label="Praat met Marleen" className="transition active:scale-95">
+          <Orb />
+        </button>
+        {keyframes}
+      </div>
+    );
+  }
+
+  const breedte = uitgeklapt ? "max-w-2xl h-[calc(100dvh-1.5rem)]" : "max-w-sm max-h-[calc(100dvh-1.5rem)]";
+
+  return (
+    <div
+      className={`fixed right-3 bottom-3 z-50 flex w-[calc(100vw-1.5rem)] ${breedte} flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white text-slate-900 shadow-2xl shadow-black/30`}>
+      <div className="flex items-start justify-between px-6 pt-5">
+        <div>
+          <p className="text-lg font-bold">Marleen</p>
+          <p className="text-sm text-slate-500">AI-assistent · praten of typen</p>
+        </div>
+        <div className="flex items-center gap-1">
+          {actief && (
+            <button
+              onClick={sluit}
+              aria-label="Ophangen"
+              title="Ophangen"
+              className="rounded-full p-2 text-red-600 hover:bg-red-50">
+              <PhoneOff className="size-5" />
+            </button>
+          )}
+          {actief && !typen && (
+            <button onClick={() => setToonGesprek(false)} aria-label="Alleen de bal" title="Alleen de bal" className="rounded-full p-2 text-slate-600 hover:bg-slate-100">
+              <Minimize2 className="size-5" />
+            </button>
+          )}
+          <button
+            onClick={() => setUitgeklapt((u) => !u)}
+            aria-label={uitgeklapt ? "Kleiner maken" : "Groter maken"}
+            className="rounded-full p-2 text-slate-600 hover:bg-slate-100">
+            {uitgeklapt ? <Minimize2 className="size-5" /> : <Maximize2 className="size-5" />}
+          </button>
+          <button onClick={sluit} aria-label="Sluiten en gesprek stoppen" className="rounded-full p-2 text-slate-600 hover:bg-slate-100">
+            <X className="size-5" />
+          </button>
+        </div>
+      </div>
+
+      <div className="grid place-items-center py-6">
+        <Orb refEl={bol} groot ademen={!(verbonden && !typen)} />
+      </div>
+
+      <p className={`px-6 pb-4 text-center text-[15px] ${fout ? "font-semibold text-red-700" : "text-slate-500"}`}>{status}</p>
+
+      {berichten.length > 0 && (
+        <div ref={lijst} className="min-h-0 flex-1 space-y-2 overflow-y-auto px-6 pb-3">
+          {berichten.map((b, i) => (
+            <div
+              key={i}
+              className={`max-w-[88%] rounded-2xl px-4 py-2.5 text-[15px] leading-snug ${
+                b.rol === "marleen" ? "bg-slate-100 text-slate-900" : "ml-auto bg-brand text-white"
+              }`}>
+              {b.tekst}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {verbonden && (
+        <form onSubmit={verstuur} className="mx-6 mb-3 flex items-center gap-2 rounded-full border border-slate-200 px-4 py-1.5">
+          <input
+            value={tekst}
+            onChange={(e) => setTekst(e.target.value)}
+            placeholder="Typ je vraag…"
+            autoFocus={typen}
+            className="min-w-0 flex-1 bg-transparent py-2 text-[15px] text-slate-900 outline-none placeholder:text-slate-400"
+          />
+          <button type="submit" disabled={!tekst.trim()} aria-label="Versturen" className="rounded-full p-1.5 text-slate-700 disabled:text-slate-300">
+            <Send className="size-5" />
+          </button>
+        </form>
+      )}
+
+      <div className="px-6">
+        {actief ? null : (
+          <button
+            type="button"
+            onClick={overdracht ? verderPraten : startPraten}
+            className="flex w-full items-center justify-center gap-2 rounded-full bg-brand py-4 text-base font-bold text-white transition hover:bg-brand-dark active:scale-[0.98]">
+            <Mic className="size-5" /> {overdracht ? "Verder praten met Marleen" : "Start gesprek"}
+          </button>
+        )}
+      </div>
+
+      {!actief && (
+        <>
+          <button type="button" onClick={() => startTypen()} className="py-4 text-center text-[15px] font-medium text-slate-600 hover:text-slate-900">
+            Liever typen
+          </button>
+          <div className="flex flex-wrap justify-center gap-2 px-6 pb-3">
+            {VOORBEELDEN.map((v) => (
+              <button
+                key={v.kort}
+                type="button"
+                onClick={() => startTypen(v.vraag)}
+                className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                <Sparkles className="size-3.5 text-brand-text" /> {v.kort}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+
+      <p className="px-6 pt-1 pb-5 text-center text-sm text-slate-400">
+        Je praat met een AI. Je microfoon wordt alleen gebruikt tijdens het gesprek.
+      </p>
+      {keyframes}
+    </div>
+  );
+}
+
+export function GeminiAssistent({ ingebed = false }: { ingebed?: boolean }) {
+  return <Chat ingebed={ingebed} />;
+}

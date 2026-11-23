@@ -8,6 +8,7 @@ import {
   LogOut,
   FilePlus,
   Link2,
+  Users,
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import { adminLogout } from "@/app/actions";
@@ -41,6 +42,7 @@ const GROEPEN = [
     label: "Werk",
     items: [
       { href: "/admin/offertes", label: "Aanvragen", icon: FileText },
+      { href: "/admin/bezoekers", label: "Bezoekers", icon: Users },
       { href: "/meten/inmeten", label: "Offerte maken", icon: FilePlus },
       { href: "/meten/reageer", label: "Link versturen", icon: Link2 },
     ],

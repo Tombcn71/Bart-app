@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BartMooi – testkopie van de homepage</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Overpass:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* Testpagina: nagemaakte bartmooi.nl hero om de offerte-knop te testen */
+    * { box-sizing: border-box; margin: 0; }
+    body { font-family: "Overpass", sans-serif; background: #F5F6F7; color: #1F1F1F; }
+    header { max-width: 1240px; margin: 0 auto; padding: 20px 24px; display: flex; align-items: center; }
+    header img { height: 44px; width: auto; }
+    .hero { max-width: 1240px; margin: 0 auto; padding: 32px 24px 64px; display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
+    h1 { font-size: 3.2rem; font-weight: 700; letter-spacing: -1.8px; line-height: 1.15; }
+    h1 span { color: #2B5C8F; }
+    p { margin-top: 28px; font-size: 1.15rem; line-height: 1.6; color: #7A7A7A; max-width: 520px; }
+    .btn { display: inline-block; margin-top: 40px; background: #1E5079; color: #fff; text-decoration: none; font-weight: 700; font-size: 0.95rem; letter-spacing: 2px; text-transform: uppercase; padding: 20px 48px; transition: background .2s; }
+    .btn:hover { background: #13334D; }
+    .foto { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; border-radius: 50% 50% 0 0 / 32% 32% 0 0; display: block; }
+    @media (max-width: 860px) {
+      header img { height: 36px; }
+      .hero { grid-template-columns: 1fr; gap: 32px; padding: 16px 16px 48px; }
+      h1 { font-size: 2.2rem; letter-spacing: -1px; }
+      p { margin-top: 20px; font-size: 1rem; }
+      .btn { display: block; text-align: center; margin-top: 28px; padding: 18px 20px; }
+      .foto { aspect-ratio: 1 / 1; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="/bartmooi-logo-1.png" alt="BartMooi" />
+  </header>
+  <section class="hero">
+    <div>
+      <h1>Kozijnen en deuren op maat. <span>Vakmanschap dat het verschil maakt voor jouw woning.</span></h1>
+      <p>Wij zijn gespecialiseerd in de levering en montage van energiezuinige kozijnen, deuren en zonweringssystemen. Poolse precisie gecombineerd met Duitse kwaliteit. Met jarenlange ervaring op de Nederlandse markt.</p>
+      <a class="btn" href="https://offerte.bartmooi.nl">Offerte in 3 minuten</a>
+    </div>
+    <img class="foto" src="/test/monteur.jpg" alt="Monteur aan het werk" />
+  </section>
+
+  <style>
+    section.blok { max-width: 1240px; margin: 0 auto; padding: 48px 24px; }
+    section.blok h2 { font-size: 2rem; letter-spacing: -1px; }
+    .rij { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 28px; }
+    .kaart { background: #fff; padding: 24px; border-radius: 6px; }
+    .kaart b { color: #2B5C8F; font-size: 1.6rem; }
+    .kaart p { margin-top: 10px; font-size: 1rem; }
+    footer { text-align: center; padding: 40px 16px 80px; color: #7A7A7A; font-size: .9rem; }
+    @media (max-width: 860px) { .rij { grid-template-columns: 1fr 1fr; } }
+  </style>
+  <section class="blok">
+    <h2>Waarom kiezen voor BartMooi?</h2>
+    <div class="rij">
+      <div class="kaart"><b>Op maat</b><p>Elk kozijn en elke deur precies naar jouw maten.</p></div>
+      <div class="kaart"><b>Energiezuinig</b><p>HR++ en triple glas voor een lager energieverbruik.</p></div>
+      <div class="kaart"><b>Eigen montage</b><p>Ervaren monteurs die het netjes plaatsen.</p></div>
+      <div class="kaart"><b>Garantie</b><p>Duidelijke garantie op product en montage.</p></div>
+    </div>
+  </section>
+  <section class="blok">
+    <h2>In 4 stappen naar nieuwe kozijnen</h2>
+    <div class="rij">
+      <div class="kaart"><b>1</b><p>Vraag een offerte aan, in een paar minuten.</p></div>
+      <div class="kaart"><b>2</b><p>Gratis inmeting bij jou thuis.</p></div>
+      <div class="kaart"><b>3</b><p>Productie en levering.</p></div>
+      <div class="kaart"><b>4</b><p>Montage en oplevering.</p></div>
+    </div>
+  </section>
+  <footer>Dit is een testkopie van de homepage, alleen om de assistent te proberen.</footer>
+  <script src="http://localhost:3100/widget.js" async></script>
+</body>
+</html>

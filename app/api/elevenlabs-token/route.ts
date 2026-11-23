@@ -1,4 +1,5 @@
 import { telGesprek } from "@/lib/roos-teller";
+import { noteer } from "@/lib/bezoek";
 
 /** Geeft de browser een tijdelijke sleutel voor één gesprek met de ElevenLabs-agent. De echte sleutel blijft op de server. */
 const bezoeken = new Map<string, number[]>();
@@ -29,6 +30,7 @@ export async function POST(req: Request) {
   // Getekende link voor een websocket-gesprek (werkt een kwartier, alleen voor deze agent).
   // Maximaal aantal gesprekken per maand: daarna geen nieuwe gesprekken meer.
   if (!(await telGesprek())) return Response.json({ fout: "Roos is nu even niet beschikbaar.", op: true }, { status: 403 });
+  await noteer("roos", req.headers);
   const r = await fetch(`https://api.elevenlabs.io/v1/convai/conversation/get-signed-url?agent_id=${encodeURIComponent(agent)}`, { headers: { "xi-api-key": key } });
   const d = await r.json().catch(() => ({}));
   if (!r.ok || !d.signed_url) return Response.json({ fout: "Geen toegang: " + JSON.stringify(d).slice(0, 200) }, { status: 502 });

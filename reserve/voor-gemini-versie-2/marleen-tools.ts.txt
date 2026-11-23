@@ -1,0 +1,154 @@
+import { Behavior, Type, type Tool } from "@google/genai";
+
+const tekst = (beschrijving: string) => ({
+  type: Type.STRING,
+  description: beschrijving,
+});
+
+/** De functies waarmee Marleen de calculator en het offerteformulier bedient. */
+export const MARLEEN_TOOLS: Tool[] = [
+  {
+    functionDeclarations: [
+      {
+        name: "ga_naar_product",
+        behavior: Behavior.NON_BLOCKING, // op de achtergrond: Marleen praat meteen door
+        description:
+          "Opent een productgroep in de catalogus. Gebruik dit alleen als het exacte kozijntype nog niet bekend is, of bij andere producten dan kunststof kozijnen.",
+        parameters: {
+          type: Type.OBJECT,
+          properties: {
+            groep: {
+              type: Type.STRING,
+              enum: [
+                "kozijnen",
+                "aluminium-kozijnen",
+                "deuren",
+                "schuifpui",
+                "harmonicadeur",
+                "rolluiken",
+                "horren",
+              ],
+              description: "De productgroep die geopend moet worden.",
+            },
+          },
+          required: ["groep"],
+        },
+      },
+      {
+        name: "open_product",
+        behavior: Behavior.NON_BLOCKING,
+        description:
+          "Opent direct de calculator van een ander product dan kunststof kozijnen (schuifpui, deur, hor, rolluik, harmonicadeur) met het gekozen type. Geeft de staat terug met de mogelijke keuzes (opties).",
+        parameters: {
+          type: Type.OBJECT,
+          properties: {
+            product: { type: Type.STRING, enum: ["schuifpui", "deur", "hor", "rolluik", "harmonicadeur"], description: "Het product." },
+            type: tekst("De slug van het type uit de lijst met producttypen in je instructies."),
+          },
+          required: ["product", "type"],
+        },
+      },
+      {
+        name: "open_kozijn",
+        behavior: Behavior.NON_BLOCKING, // op de achtergrond: Marleen praat meteen door
+        description:
+          "Opent direct de calculator met het gekozen kozijntype (of wisselt van type). Geeft de huidige staat, toegestane maten en geldige optie-ID's terug.",
+        parameters: {
+          type: Type.OBJECT,
+          properties: {
+            type: tekst("De slug van het kozijntype uit de lijst in je instructies."),
+          },
+          required: ["type"],
+        },
+      },
+      {
+        name: "zet_keuzes",
+        behavior: Behavior.NON_BLOCKING, // op de achtergrond: Marleen praat meteen door
+        description:
+          "Past een of meerdere keuzes aan in de calculator. Geef alleen de velden mee die wijzigen. Geeft de bijgewerkte staat terug.",
+        parameters: {
+          type: Type.OBJECT,
+          properties: {
+            type: tekst("De slug van het kozijntype, alleen meegeven als het type verandert."),
+            breedte: { type: Type.NUMBER, description: "Buitenwerkse breedte in millimeters (bijv. 1200 voor 120 cm). Reken zelf om; vraag de klant nooit om millimeters." },
+            hoogte: { type: Type.NUMBER, description: "Buitenwerkse hoogte in millimeters (bijv. 1500 voor 150 cm). Reken zelf om; vraag de klant nooit om millimeters." },
+            aantal: { type: Type.NUMBER, description: "Aantal stuks van dit kozijn." },
+            horren: { type: Type.NUMBER, description: "Aantal bijpassende horren (0 = geen)." },
+            kleurBinnen: tekst("Optie-ID voor de kleur aan de binnenzijde, exact zoals teruggegeven door open_kozijn."),
+            kleurBuiten: tekst("Optie-ID voor de kleur aan de buitenzijde, exact zoals teruggegeven door open_kozijn."),
+            glas: tekst("Optie-ID voor het glastype (bijv. HR++ of triple), exact zoals teruggegeven door open_kozijn."),
+            profiel: tekst("Optie-ID voor het profieltype, alleen invullen als de klant hierom vraagt."),
+            aanslag: tekst("Optie-ID voor aanslag, alleen invullen als de klant hierom vraagt."),
+            afstandshouder: tekst("Optie-ID voor afstandshouder, alleen invullen als de klant hierom vraagt."),
+            roeden: tekst("Optie-ID voor roeden, alleen invullen als de klant hierom vraagt."),
+            ventilatie: tekst("Optie-ID voor ventilatierooster, alleen invullen als de klant hierom vraagt."),
+            voorboren: tekst("Optie-ID voor voorboren, alleen invullen als de klant hierom vraagt."),
+            keuzes: {
+              type: Type.ARRAY,
+              description: "Keuzes voor andere producten (schuifpui, deur enz.): per keuzegroep het id uit opties in het resultaat.",
+              items: { type: Type.OBJECT, properties: { groep: tekst("Id van de keuzegroep uit opties."), id: tekst("Id van de keuze.") } },
+            },
+            viaDeTuinBereikbaar: { type: Type.BOOLEAN, description: "Alleen bij een schuifpui: kunnen de monteurs via de tuin bij de plek?" },
+            klantType: {
+              type: Type.STRING,
+              enum: ["particulier", "zakelijk"],
+              description: "Standaard particulier; alleen op zakelijk zetten als de klant dit expliciet zegt.",
+            },
+            weergave: {
+              type: Type.STRING,
+              enum: ["tekening", "foto"],
+              description: "Zet altijd op 'foto' zodra de klant een kleur of uitvoering kiest, zodat de foto op het scherm verschijnt.",
+            },
+          },
+        },
+      },
+      {
+        name: "open_formulier",
+        behavior: Behavior.NON_BLOCKING, // op de achtergrond: Marleen praat meteen door
+        description:
+          "Zet het samengestelde kozijn op de offerte en opent het contactformulier op het scherm. Gebruik dit zodra de klant aangeeft een offerte te willen.",
+        parameters: { type: Type.OBJECT, properties: {} },
+      },
+      {
+        name: "vul_formulier",
+        behavior: Behavior.NON_BLOCKING, // op de achtergrond: Marleen praat meteen door
+        description:
+          "Vult een of meer velden in het zichtbare offerteformulier in. Geef alleen de velden mee die de klant net heeft genoemd.",
+        parameters: {
+          type: Type.OBJECT,
+          properties: {
+            naam: tekst("Voor- en achternaam van de klant."),
+            woonplaats: tekst("Woonplaats van de klant."),
+            telefoon: tekst("Telefoonnummer zonder spaties of streepjes, bijvoorbeeld 0612345678."),
+            email: tekst("Geldig e-mailadres zonder spaties, bijvoorbeeld jan@voorbeeld.nl."),
+          },
+        },
+      },
+      {
+        name: "lees_formulier",
+        description:
+          "Leest de huidige waarden uit het formulier (inclusief wat de klant zelf heeft getypt) om te controleren of alle verplichte velden compleet zijn.",
+        parameters: { type: Type.OBJECT, properties: {} },
+      },
+      {
+        name: "verstuur_formulier",
+        description:
+          "Verstuurt het formulier en opent direct de offertepagina (bovenaan). Geeft de offertegegevens inclusief totaalUitgesproken terug. Roep dit pas aan nadat de klant ja heeft gezegd op het aanvragen.",
+        parameters: { type: Type.OBJECT, properties: {} },
+      },
+      {
+        name: "lees_offerte",
+        description:
+          "Haalt de gegevens van de huidige offerte op als de klant zelf op versturen heeft geklikt of vragen heeft over de offerte.",
+        parameters: { type: Type.OBJECT, properties: {} },
+      },
+      {
+        name: "ga_naar_akkoord",
+        behavior: Behavior.NON_BLOCKING, // op de achtergrond: Marleen praat meteen door
+        description:
+          "Scrolt de offertepagina naar het vak Digitaal akkoord als dit nog niet zichtbaar is. De klant vult zelf zijn naam in en klikt op Akkoord.",
+        parameters: { type: Type.OBJECT, properties: {} },
+      },
+    ],
+  },
+];

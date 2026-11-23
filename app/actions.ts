@@ -6,6 +6,7 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { Resend } from "resend";
 import { desc, eq } from "drizzle-orm";
 import { cookies } from "next/headers";
+import { noteer } from "@/lib/bezoek";
 import { generateOffertePdf } from "@/app/lib/generate-offerte-pdf";
 import { bedrijfsOpbouw, opbouwRegels } from "@/lib/opbouw";
 import { SITE_URL } from "@/lib/site";
@@ -286,6 +287,7 @@ export async function saveOffertes(
 
     const inserted = await db.insert(offertes).values({ email: klant.email, data }).returning({ id: offertes.id });
     const offerteId = inserted[0]?.id ?? "";
+    if (bron === "onlink") await noteer("offerte");
 
     // Geen bijlage: de klant opent de offerte online (daar kan hij hem delen, akkoord geven en de pdf downloaden).
     const offerteUrl = `${SITE_URL}/offerte/${offerteId}`;

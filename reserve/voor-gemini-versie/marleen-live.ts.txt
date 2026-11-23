@@ -1,0 +1,47 @@
+import { EndSensitivity, Modality, StartSensitivity } from "@google/genai";
+import { MARLEEN_PROMPT, BASIS, AFSLUITING } from "./marleen-prompt";
+import { MARLEEN_TOOLS } from "./marleen-tools";
+import { WIDGET_PROMPT, WIDGET_TOOLS } from "./marleen-widget";
+
+export const MODELLEN = ["gemini-3.8-live", "gemini-3.1-flash-live-preview"] as const;
+export const MARLEEN_MODEL = MODELLEN[0];
+
+export const STEMMEN = [
+  "Sulafat", "Gacrux", "Vindemiatrix", "Despina", "Achernar",
+  "Callirrhoe", "Erinome", "Kore", "Aoede", "Leda"
+] as const;
+
+export const DOMEIN_WOORDEN = [
+  "BartMooi", "Marleen", "kozijn", "kozijnen", "draai-kiepraam",
+  "kiepraam", "schuifpui", "harmonicadeur", "rolluik", "hor",
+  "HR++", "triple glas", "dubbel glas", "kunststof", "aluminium",
+  "offerte", "inmeting"
+];
+
+const WOORDEN_INSTRUCTIE = `\n# Herkenning en uitspraak\nBelangrijke woorden in dit gesprek: ${DOMEIN_WOORDEN.join(", ")}. Spreek "BartMooi" uit als één vloeiend woord en "HR++" als "H R plus plus".\n`;
+
+export function marleenConfig(stem: string = "Kore", model: string = MARLEEN_MODEL, widget = false) {
+  const baseInstruction = widget ? BASIS + WIDGET_PROMPT + AFSLUITING : MARLEEN_PROMPT;
+
+  return {
+    responseModalities: [Modality.AUDIO],
+    tools: widget ? WIDGET_TOOLS : MARLEEN_TOOLS,
+    systemInstruction: baseInstruction + WOORDEN_INSTRUCTIE,
+    speechConfig: {
+      languageCode: "nl-NL",
+      voiceConfig: { prebuiltVoiceConfig: { voiceName: stem } },
+    },
+    realtimeInputConfig: {
+      automaticActivityDetection: {
+        // Goedgekeurde waarden (Tom): lage gevoeligheid, zodat ze haar eigen stem niet als klant hoort.
+        startOfSpeechSensitivity: StartSensitivity.START_SENSITIVITY_LOW,
+        endOfSpeechSensitivity: EndSensitivity.END_SENSITIVITY_HIGH,
+        prefixPaddingMs: 100,
+        silenceDurationMs: 500,
+      },
+    },
+    contextWindowCompression: { slidingWindow: {} },
+    inputAudioTranscription: {},
+    outputAudioTranscription: {},
+  };
+}
