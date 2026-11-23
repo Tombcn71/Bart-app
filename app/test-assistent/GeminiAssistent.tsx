@@ -472,11 +472,11 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
           const q = new URLSearchParams(window.location.search);
           if (q.get("roos") !== "1") return "";
           const type = window.location.pathname.split("/").filter(Boolean).pop() ?? "";
-          const naam = KOZIJN_TYPEN.find((t) => t.slug === type)?.naam ?? type.replace(/-/g, " ");
-          const glas = q.get("glas") === "triple" ? "triple glas" : "dubbel glas (HR++)";
-          const kleur = (q.get("kleur") ?? "wit").replace(/-/g, " ");
+          const naam = KOZIJN_TYPEN.find((t) => t.slug === type)?.naam ?? Object.values(ROOS_PRODUCTEN).map((p) => p.typen[type]).find(Boolean) ?? type.replace(/-/g, " ");
+          const glasTekst = q.get("glas") ? `, ${q.get("glas") === "triple" ? "triple glas" : "dubbel glas (HR++)"}` : ", standaarduitvoering";
+          const kleurTekst = q.get("kleur") ? `, kleur buiten ${q.get("kleur")!.replace(/-/g, " ")}` : "";
           const meer = (q.get("meer") ?? "").slice(0, 200);
-          return `Ik kom uit de chat. Ik wil een offerte voor: ${q.get("n") ?? "1"} × ${naam}, ${q.get("b")} bij ${q.get("h")} mm, ${glas}, kleur buiten ${kleur}. Dit staat al ingevuld in de calculator, met de prijs.${meer ? ` Daarna wil ik er ook nog bij: ${meer}. Voeg dat na dit kozijn samen met mij toe aan de offerte.` : ""} Open de calculator niet opnieuw en vraag niet opnieuw naar type, maat, kamer of glas. Zeg in één korte zin wat je ziet en vraag dan meteen naar mijn naam, woonplaats en telefoonnummer, en daarna mijn e-mailadres.`;
+          return `Ik kom uit de chat. Ik wil een offerte voor: ${q.get("n") ?? "1"} × ${naam}, ${q.get("b")} bij ${q.get("h")} mm${glasTekst}${kleurTekst}. Dit staat al ingevuld in de calculator, met de prijs.${meer ? ` Daarna wil ik er ook nog bij: ${meer}. Voeg dat na dit kozijn samen met mij toe aan de offerte.` : ""} Open de calculator niet opnieuw en vraag niet opnieuw naar type, maat, kamer of glas. Zeg in één korte zin wat je ziet en vraag dan meteen naar mijn naam, woonplaats en telefoonnummer, en daarna mijn e-mailadres.`;
         } catch {
           return "";
         }

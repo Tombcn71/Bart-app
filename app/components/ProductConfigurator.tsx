@@ -94,6 +94,21 @@ export function ProductConfigurator({
     getMatrix(matrixSleutel).then((data: unknown) => setOpgehaald(isStandaardModel(data) ? data : startModelVoor(matrixSleutel)));
   }, [matrixProp, matrixSleutel]);
 
+  // Komt de bezoeker uit de chat met een product, dan staan maat en aantal al ingevuld: ?b=breedte&h=hoogte&n=aantal
+  const voorgevuld = useRef(false);
+  useEffect(() => {
+    if (voorgevuld.current || voorbeeld || typeof window === "undefined") return;
+    voorgevuld.current = true;
+    const q = new URLSearchParams(window.location.search);
+    const getal = (k: string) => {
+      const n = Number(q.get(k));
+      return Number.isFinite(n) && n > 0 ? Math.round(n) : 0;
+    };
+    if (getal("b")) setBreedte(getal("b"));
+    if (getal("h")) setHoogte(getal("h"));
+    if (getal("n")) setAantal(Math.min(50, getal("n")));
+  }, [voorbeeld]);
+
   // De koppeling met Roos bestaat alleen zolang deze calculator op het scherm staat.
   const ik = useRef({}).current;
   useEffect(() => () => { if (brugRef.current?.eigenaar === ik) brugRef.current = null; }, [ik]);
