@@ -1,7 +1,9 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { BEDRIJFSKENNIS } from "@/lib/bedrijfskennis";
-import { PRIJS_TOOL, berekenChatPrijs } from "@/lib/chat-prijs";
-import { PRODUCT_TOOL, berekenChatProduct } from "@/lib/chat-product";
+import { PRIJS_TOOL, berekenChatPrijs, offerteLink } from "@/lib/chat-prijs";
+import { PRODUCT_TOOL, berekenChatProduct, productLink } from "@/lib/chat-product";
+import { KOZIJN_TYPEN } from "@/lib/kozijntypen";
+import { ROOS_PRODUCTEN } from "@/lib/roos-producten";
 import { CHAT_KENNIS } from "@/lib/chat-kennis";
 
 const MODEL = "claude-haiku-5-5";
@@ -50,6 +52,34 @@ ${BEDRIJFSKENNIS.replace(/De prijs in de calculator is een indicatie;[^\n]*\n?/,
 Handboek en woordenlijst (algemene vakkennis)
 ${CHAT_KENNIS}`;
 
+type Item = { t: "k" | "p"; product?: string; type: string; b: number; h: number; n: number; glas?: string; kleur?: string };
+
+/** Per berekend product zetten we een verborgen merkteken in het antwoord, zodat het later nog bekend is wat er is uitgerekend. */
+function itemsUitGesprek(tekst: string[]): Item[] {
+  const uit: Item[] = [];
+  for (const t of tekst) {
+    for (const m of t.matchAll(/\[\[item:(.*?)\]\]/g)) {
+      try {
+        const i = JSON.parse(m[1]) as Item;
+        const sleutel = JSON.stringify([i.type, i.b, i.h, i.n, i.glas, i.kleur]);
+        if (!uit.some((x) => JSON.stringify([x.type, x.b, x.h, x.n, x.glas, x.kleur]) === sleutel)) uit.push(i);
+      } catch {}
+    }
+  }
+  return uit;
+}
+
+function naamVan(i: Item) {
+  return KOZIJN_TYPEN.find((t) => t.slug === i.type)?.naam ?? (i.product && ROOS_PRODUCTEN[i.product]?.typen[i.type]) ?? i.type;
+}
+
+function linkVoor(items: Item[]) {
+  const [eerste, ...rest] = items;
+  const meer = rest.map((i) => `${i.n} × ${naamVan(i)} ${i.b} bij ${i.h} mm${i.glas === "triple" ? " triple glas" : ""}`).join("; ");
+  const inv = { type: eerste.type, product: eerste.product, breedte_mm: eerste.b, hoogte_mm: eerste.h, aantal: eerste.n, glas: eerste.glas, kleur_buiten: eerste.kleur, andere_producten: meer };
+  return eerste.t === "k" ? offerteLink(inv) : productLink(inv);
+}
+
 export async function POST(req: Request) {
   if (!toegestaan(req)) return Response.json({ fout: "Te veel vragen. Probeer het later opnieuw." }, { status: 429 });
   const key = process.env.ANTHROPIC_API_KEY;
@@ -59,11 +89,18 @@ export async function POST(req: Request) {
     .slice(-12)
     .filter((b) => (b.rol === "klant" || b.rol === "chat") && typeof b.tekst === "string" && b.tekst.trim())
     .map((b) => ({ role: b.rol === "klant" ? ("user" as const) : ("assistant" as const), content: b.tekst.slice(0, 1000) }));
+  const alleTeksten = (body.berichten ?? []).filter((b) => b.rol === "chat" && typeof b.tekst === "string").map((b) => b.tekst);
+  const laatsteKlant = [...(body.berichten ?? [])].reverse().find((b) => b.rol === "klant")?.tekst ?? "";
+  const bekend = itemsUitGesprek(alleTeksten);
+  // "Dat is alles": meteen doorsturen naar Roos, zonder het model: sneller en altijd met de knop.
+  if (bekend.length > 0 && /\b(dat is alles|dat was alles|dat was het|dat is het|klaar|doorsturen|naar roos)\b/i.test(laatsteKlant) && !/\?/.test(laatsteKlant))
+    return Response.json({ tekst: `Prima, ik zet u door naar mijn collega Roos, zij heeft uw offerte in minder dan een minuut klaar.\n\nHier gaat u naar Roos:\n${linkVoor(bekend)}` });
   if (!berichten.length || berichten[berichten.length - 1].role !== "user") return Response.json({ fout: "Stel een vraag." }, { status: 400 });
   try {
     const client = new Anthropic({ apiKey: key });
     const gesprek: Anthropic.MessageParam[] = [...berichten];
     let tekst = "";
+    const nieuweItems: Item[] = [];
     for (let ronde = 0; ronde < 4; ronde++) {
       const r = await client.messages.create({
         model: MODEL,
@@ -85,11 +122,20 @@ export async function POST(req: Request) {
       gesprek.push({ role: "assistant", content: r.content });
       const uitkomsten: Anthropic.ToolResultBlockParam[] = [];
       for (const blok of r.content) {
-        if (blok.type === "tool_use") uitkomsten.push({ type: "tool_result", tool_use_id: blok.id, content: await (blok.name === "bereken_product" ? berekenChatProduct(blok.input) : berekenChatPrijs(blok.input)).catch(() => "De prijs kon niet berekend worden.") });
+        if (blok.type !== "tool_use") continue;
+        const uitkomst = await (blok.name === "bereken_product" ? berekenChatProduct(blok.input) : berekenChatPrijs(blok.input)).catch(() => "De prijs kon niet berekend worden.");
+        uitkomsten.push({ type: "tool_result", tool_use_id: blok.id, content: uitkomst });
+        if (uitkomst.includes("totaal €")) {
+          const inv = blok.input as Record<string, unknown>;
+          nieuweItems.push({ t: blok.name === "bereken_product" ? "p" : "k", product: typeof inv.product === "string" ? inv.product : undefined, type: String(inv.type), b: Math.round(Number(inv.breedte_mm)), h: Math.round(Number(inv.hoogte_mm)), n: Math.max(1, Math.round(Number(inv.aantal) || 1)), glas: inv.glas === "triple" ? "triple" : inv.glas === "dubbel" ? "dubbel" : undefined, kleur: typeof inv.kleur_buiten === "string" ? inv.kleur_buiten : undefined });
+        }
       }
       gesprek.push({ role: "user", content: uitkomsten });
     }
-    tekst = tekst.replace(/\[Tool call:[^\]]*\]/gi, "").trim();
+    tekst = tekst.replace(/\[Tool call:[^\]]*\]/gi, "").replace(/\[\[item:.*?\]\]/g, "").trim();
+    // Verborgen merktekens (worden in de chat niet getoond) zodat een volgende beurt weet wat er is uitgerekend.
+    const nieuw = nieuweItems.filter((i, x) => nieuweItems.findIndex((j) => JSON.stringify(j) === JSON.stringify(i)) === x);
+    if (nieuw.length) tekst = `${tekst}\n${nieuw.map((i) => `[[item:${JSON.stringify(i)}]]`).join("")}`;
     return Response.json({ tekst: tekst || "Daar kan ik u zo niet mee helpen. Mail gerust naar info@bartmooi.nl." });
   } catch (e) {
     console.error("chat fout", e);

@@ -18,7 +18,8 @@ function tel(soort: string) {
 }
 
 /** Haalt de keuzeknoppen uit het antwoord: de laatste regel [opties: A | B | C]. */
-function splitsOpties(t: string): { tekst: string; opties: string[] } {
+function splitsOpties(t0: string): { tekst: string; opties: string[] } {
+  const t = t0.replace(/\n?\[\[item:.*?\]\]/g, "").trim();
   const m = t.match(/\n?\[opties:\s*([^\]]+)\]\s*$/);
   if (!m) return { tekst: t, opties: [] };
   return { tekst: t.slice(0, m.index).trim(), opties: m[1].split("|").map((o) => o.trim()).filter(Boolean) };
