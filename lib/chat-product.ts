@@ -56,7 +56,7 @@ export function productLink(inv: any): string {
   const pad = ROOS_PRODUCTEN[inv.product]?.pad ?? "/";
   const q = new URLSearchParams({ b: String(Math.round(Number(inv.breedte_mm))), h: String(Math.round(Number(inv.hoogte_mm))), n: String(Math.max(1, Math.round(Number(inv.aantal) || 1))), uitchat: "1" });
   if (typeof inv.andere_producten === "string" && inv.andere_producten.trim()) q.set("meer", inv.andere_producten.trim().slice(0, 200));
-  return `https://offerte.bartmooi.nl${pad}${inv.type}?${q}`;
+  return `${process.env.NODE_ENV === "production" ? "https://offerte.bartmooi.nl" : "http://localhost:3100"}${pad}${inv.type}?${q}`;
 }
 
 export async function berekenChatProduct(inv: any): Promise<string> {
