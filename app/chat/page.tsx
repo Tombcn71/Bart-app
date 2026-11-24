@@ -56,7 +56,8 @@ export default function Chat() {
     const c = lijst.current;
     if (!c) return;
     const l = berichten[berichten.length - 1];
-    if (!bezig && l?.rol === "chat" && berichten.length > 1 && laatste.current) c.scrollTo({ top: Math.max(0, laatste.current.offsetTop - 12), behavior: "smooth" });
+    if (berichten.length === 1) c.scrollTo({ top: 0 });
+    else if (!bezig && l?.rol === "chat" && berichten.length > 1 && laatste.current) c.scrollTo({ top: Math.max(0, laatste.current.offsetTop - 12), behavior: "smooth" });
     else c.scrollTo({ top: c.scrollHeight, behavior: "smooth" });
   }, [berichten, bezig]);
 
