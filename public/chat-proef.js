@@ -38,4 +38,20 @@
   window.addEventListener("message", function (e) {
     if (e.origin === HOST && e.data && e.data.bmChat === "sluit" && open) wissel();
   });
+
+  // Op de echte homepage vervangt het script zelf de twee knoppen door de AI-knop: er hoeft in WordPress niets in Elementor te worden aangepast.
+  var KNOP = '<div class="bm-ai-wrap"><div role="button" tabindex="0" class="bm-ai-knop"><span class="bm-ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9L12 2zM19 14l.9 2.6 2.6.9-2.6.9L19 21l-.9-2.6-2.6-.9 2.6-.9L19 14z"/></svg></span><span class="bm-tx"><b>Prijs &amp; advies direct</b><small>Vraag het onze AI-assistent</small></span></div></div>';
+  function vervangKnoppen() {
+    if (document.querySelector(".bm-ai-wrap")) return;
+    var links = [].slice.call(document.querySelectorAll("a.elementor-button"));
+    var eerste = links.filter(function (a) { return /bereken direct jouw prijs/i.test(a.textContent); })[0];
+    if (!eerste) return;
+    var tweede = links.filter(function (a) { return /krijg vrijblijvend advies/i.test(a.textContent); })[0];
+    var w1 = eerste.closest(".elementor-widget-button") || eerste;
+    w1.insertAdjacentHTML("beforebegin", KNOP);
+    w1.style.display = "none";
+    if (tweede) (tweede.closest(".elementor-widget-button") || tweede).style.display = "none";
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", vervangKnoppen); else vervangKnoppen();
+  setTimeout(vervangKnoppen, 1200);
 })();
