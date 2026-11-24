@@ -74,6 +74,12 @@ export async function POST(req: Request) {
       });
       if (process.env.NODE_ENV !== "production") console.info("chat ronde", ronde, r.stop_reason, JSON.stringify(r.content).slice(0, 400));
       tekst = r.content.map((c) => (c.type === "text" ? c.text : "")).join("").trim();
+      // Soms schrijft het model een toolaanroep als tekst in plaats van hem echt uit te voeren: dan opnieuw, met een duwtje.
+      if (r.stop_reason !== "tool_use" && /\[Tool call:|\btool_use\b|bereken_(prijs|product)\s+with\b/i.test(tekst) && ronde < 3) {
+        gesprek.push({ role: "assistant", content: r.content });
+        gesprek.push({ role: "user", content: "Gebruik de rekentool echt (als aanroep), schrijf geen aanroep als tekst. Reken het nu uit en geef de klant het antwoord in gewone woorden." });
+        continue;
+      }
       if (r.stop_reason !== "tool_use") break;
       gesprek.push({ role: "assistant", content: r.content });
       const uitkomsten: Anthropic.ToolResultBlockParam[] = [];
@@ -82,6 +88,7 @@ export async function POST(req: Request) {
       }
       gesprek.push({ role: "user", content: uitkomsten });
     }
+    tekst = tekst.replace(/\[Tool call:[^\]]*\]/gi, "").trim();
     return Response.json({ tekst: tekst || "Daar kan ik u zo niet mee helpen. Mail gerust naar info@bartmooi.nl." });
   } catch (e) {
     console.error("chat fout", e);
