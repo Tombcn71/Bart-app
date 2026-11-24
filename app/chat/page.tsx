@@ -93,15 +93,17 @@ export default function Chat() {
 
   return (
     <div className="mx-auto flex h-[100dvh] max-w-sm flex-col bg-white sm:my-6 sm:h-[min(560px,calc(100dvh-3rem))] sm:overflow-hidden sm:rounded-2xl sm:shadow-xl">
-      <div className="flex items-center gap-3 bg-[#1E5079] px-4 py-3 text-white">
-        <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-lg font-black text-[#1E5079]">B
-          <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-[#1E5079] bg-[#4ade80]" />
+      <div className="relative flex items-center gap-3 overflow-hidden bg-[#1E5079] px-4 py-3 text-white">
+        <style>{`@keyframes bmglans{0%{left:-60%}55%,100%{left:140%}}`}</style>
+        <span aria-hidden className="pointer-events-none absolute top-0 h-full w-[40%] -skew-x-[20deg] bg-gradient-to-r from-transparent via-white/30 to-transparent" style={{ left: "-60%", animation: "bmglans 3.2s ease-in-out infinite" }} />
+        <div className="relative z-10 flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-[#1E5079]">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9L12 2zM19 14l.9 2.6 2.6.9-2.6.9L19 21l-.9-2.6-2.6-.9 2.6-.9L19 14z" /></svg>
         </div>
-        <div className="min-w-0 flex-1">
-          <p className="font-black leading-tight">De slimme assistent van BartMooi</p>
-          <p className="text-xs opacity-80">Kozijnen, glas en subsidie. Vraag maar raak.</p>
+        <div className="relative z-10 min-w-0 flex-1">
+          <p className="text-[15px] font-bold uppercase leading-tight tracking-[0.12em]">De slimme assistent</p>
+          <p className="mt-0.5 text-xs opacity-90">van BartMooi · Vraag maar raak</p>
         </div>
-        {ingebed && <button type="button" aria-label="Sluiten" onClick={() => { try { window.parent.postMessage({ bmChat: "sluit" }, "*"); } catch {} }} className="ml-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white/90 hover:bg-white/15">
+        {ingebed && <button type="button" aria-label="Sluiten" onClick={() => { try { window.parent.postMessage({ bmChat: "sluit" }, "*"); } catch {} }} className="relative z-10 ml-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white/90 hover:bg-white/15">
           <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
         </button>}
       </div>
