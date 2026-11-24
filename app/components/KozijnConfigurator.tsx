@@ -763,7 +763,8 @@ export function KozijnConfigurator({
       };
       if (p.weergave === "foto" || p.weergave === "tekening") {
         // Bij de gevel of tekening: het beeld netjes in beeld houden, geen vakken openklappen.
-        setTimeout(() => document.getElementById("roos-beeld")?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
+        // De foto laadt even later en verschuift dan de pagina: daarom een paar keer terug naar het beeld, zodat het netjes in beeld blijft.
+        [80, 500, 1100, 2000].forEach((ms) => setTimeout(() => document.getElementById("roos-beeld")?.scrollIntoView({ behavior: ms === 80 ? "smooth" : "auto", block: "start" }), ms));
       } else {
         const vakken = Array.from(new Set(Object.keys(p).map((k) => VAK[k]).filter(Boolean)));
         // Staat de gevelfoto in beeld, dan het vak wel openklappen maar niet wegscrollen van de foto.
