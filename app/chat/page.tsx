@@ -137,7 +137,7 @@ export default function Chat() {
         ))}
         {klaarMetTypen && !berichten.some((b) => b.rol === "klant") && (
           <div className="flex flex-wrap gap-2 pt-1">
-            {["Ik wil mijn prijs weten", "Ik wil subsidie aanvragen", "Ik wil een offerte in 2 minuten"].map((v) => (
+            {["Ik wil een offerte in 2 minuten", "Ik wil subsidie aanvragen"].map((v) => (
               <button key={v} type="button" onClick={() => stuur(null, v)} className="rounded-full border border-[#1E5079]/40 bg-white px-3 py-1.5 text-sm font-semibold text-[#1E5079] hover:bg-[#1E5079] hover:text-white">{v}</button>
             ))}
           </div>
