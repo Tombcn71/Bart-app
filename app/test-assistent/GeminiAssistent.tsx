@@ -481,27 +481,27 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
         ]),
       );
       // Komt de bezoeker uit de chat met een kozijn (?uitchat=1&b=..&h=..), dan weet Roos dat na haar begroeting.
+      let vanChatOpening = "";
       const vanChat = (() => {
         try {
           const q = new URLSearchParams(window.location.search);
           if (q.get("uitchat") !== "1") return "";
           const type = window.location.pathname.split("/").filter(Boolean).pop() ?? "";
           const naam = KOZIJN_TYPEN.find((t) => t.slug === type)?.naam ?? Object.values(ROOS_PRODUCTEN).map((p) => p.typen[type]).find(Boolean) ?? type.replace(/-/g, " ");
-          const glasTekst = q.get("glas") ? `, ${q.get("glas") === "triple" ? "triple glas" : "dubbel glas (HR++)"}` : ", standaarduitvoering";
+          const glasTekst = q.get("glas") ? `, ${q.get("glas") === "triple" ? "triple glas" : "dubbel glas (HR++)"}` : "";
           const kleurTekst = q.get("kleur") ? `, kleur buiten ${q.get("kleur")!.replace(/-/g, " ")}` : "";
           const meer = (q.get("meer") ?? "").slice(0, 200);
-          return `Ik kom uit de chat en heb daar al alles uitgerekend. Hiervoor wil ik een vrijblijvende prijsopgave (offerte): ${q.get("n") ?? "1"} × ${naam}, ${q.get("b")} bij ${q.get("h")} mm${glasTekst}${kleurTekst}.${meer ? ` Daarnaast wil ik: ${meer}.` : ""} Het eerste product staat al ingevuld in de calculator, met de prijs. Volg precies deze volgorde. Eerst blijft alleen de calculator in beeld, met de technische tekening: zet de weergave op foto en weer terug op tekening als dat helpt, maar open nog géén formulier, géén offerte en geen pop-up. Zeg kort en vrolijk, zonder jezelf voor te stellen: "Hier wilt u een vrijblijvende prijsopgave voor, klopt dat?" en noem het product. Heb ik meer producten, laat die dan één voor één zien met open_kozijn of open_product en de maten die ik noemde, en vraag aan het eind: "Klopt dit allemaal?" Wacht op mijn antwoord. Pas als ik zeg dat het klopt, ga je verder: open het formulier en vraag mijn naam, woonplaats, telefoonnummer en e-mailadres met je stem, achter elkaar. Vul alles zelf in met vul_formulier, ook mijn e-mailadres, zonder dat ik het hoef in te tikken. Vraag daarna: "Heb ik alles goed geschreven? Anders verbeter je het even zelf." Wacht dan even, en verstuur de offerte zodra het klopt. Vraag níet opnieuw naar type, maat, kamer, glas of kleur. Houd het gesprek zo kort mogelijk.`;
+          const wat = `${q.get("n") ?? "1"} × ${naam}, ${q.get("b")} bij ${q.get("h")} mm${glasTekst}${kleurTekst}`;
+          vanChatOpening = `Hallo, ik ben Roos, ik help je verder met je offerte. Hier wil je een vrijblijvende prijsopgave voor${meer ? " (en nog meer)" : ""}, klopt dat?`;
+          return `De klant komt uit de chat. Je begroeting en de vraag "klopt dat?" zijn al gesteld. Dit wil de klant laten uitrekenen: ${wat}.${meer ? ` Daarnaast wil hij: ${meer}.` : ""} Het eerste product staat al ingevuld in de calculator, met de prijs. Wacht op zijn antwoord.`;
         } catch {
           return "";
         }
       })();
-      let contextVerstuurd = false;
-      let begroetGehoord = false;
-      let gesprekRef: { sendUserMessage: (t: string) => void } | null = null;
       const conv = await Conversation.startSession({
         signedUrl: d.signedUrl,
         connectionType: "websocket",
-        dynamicVariables: { groet },
+        dynamicVariables: { groet, opening: vanChatOpening || `${groet}, welkom bij BartMooi. Waarmee kan ik u helpen?` },
         clientTools,
         onMessage: ({ message, source }: { message: string; source: "user" | "ai" }) => {
           laatsteRol.current = null;
@@ -510,12 +510,6 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
         },
         onModeChange: ({ mode }: { mode: string }) => {
           setPraat(mode === "speaking");
-          if (mode === "speaking") begroetGehoord = true;
-          if (mode === "listening" && begroetGehoord && vanChat && !contextVerstuurd && gesprekRef) {
-            contextVerstuurd = true;
-            const g = gesprekRef;
-            setTimeout(() => g.sendUserMessage(vanChat), 400);
-          }
           if (mode === "speaking") laatsteUitGeluid.current = performance.now();
         },
         onDisconnect: () => {
@@ -531,7 +525,7 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
         conv.endSession().catch(() => {});
         return;
       }
-      gesprekRef = conv;
+      if (vanChat) conv.sendContextualUpdate(vanChat);
       if (modusTypen) conv.setVolume({ volume: 0 });
       // Kleine vertaler: de rest van de code (tekst sturen, ophangen) blijft gewoon werken.
       const meter = setInterval(() => {
