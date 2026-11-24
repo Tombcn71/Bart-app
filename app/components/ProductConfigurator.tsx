@@ -221,7 +221,8 @@ export function ProductConfigurator({
       if (p.weergave === "foto" || p.weergave === "tekening") {
         // Bij de foto: het beeld netjes in beeld houden, vakken wel openklappen maar niet wegscrollen.
         // De foto laadt even later en verschuift dan de pagina: daarom een paar keer terug naar het beeld, zodat het netjes in beeld blijft.
-        [80, 500, 1100, 2000].forEach((ms) => setTimeout(() => document.getElementById("roos-beeld")?.scrollIntoView({ behavior: ms === 80 ? "smooth" : "auto", block: "start" }), ms));
+        // Het beeld blijft staan waar het staat. Alleen als het uit beeld is (of nog niet bovenin staat) scrolt het erheen, en dat controleren we nog een paar keer omdat de foto later laadt.
+        [80, 500, 1100, 2000].forEach((ms) => setTimeout(() => { const e = document.getElementById("roos-beeld"); if (!e) return; const t = e.getBoundingClientRect().top; if (t < 40 || t > window.innerHeight * 0.45) e.scrollIntoView({ behavior: ms === 80 ? "smooth" : "auto", block: "start" }); }, ms));
         setTimeout(() => vakken.forEach((v) => window.dispatchEvent(new CustomEvent("roos-open-vak", { detail: { label: v, scroll: false } }))), 50);
       } else {
         const scroll = weergave !== "foto";

@@ -14,3 +14,5 @@ export type AssistentBrug = {
 
 /** Het scherm waar de assistent op kan werken. De kozijncalculator zet hier zijn functies neer zodra hij open is. */
 export const brugRef: { current: AssistentBrug | null } = { current: null };
+
+if (typeof window !== "undefined" && process.env.NODE_ENV !== "production") (window as unknown as { __brugRef?: unknown }).__brugRef = brugRef;
