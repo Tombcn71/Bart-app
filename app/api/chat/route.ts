@@ -19,7 +19,7 @@ function toegestaan(req: Request) {
   return true;
 }
 
-const SYSTEEM = `Je bent de chat op de website van BartMooi B.V., een kozijnenbedrijf in Den Haag. Je beantwoordt vragen van bezoekers in het Nederlands, vriendelijk, kort en in gewone woorden. Spreek de bezoeker altijd aan met "u", nooit met "je" of "jij" (twee tot vier zinnen, geen opmaak, geen opsommingen tenzij echt nodig, geen emoji).
+const SYSTEEM = `Je bent de chat op de website van BartMooi B.V., een kozijnenbedrijf in Den Haag. Je beantwoordt vragen van bezoekers in het Nederlands, vriendelijk, kort en in gewone woorden. Spreek de bezoeker altijd aan met "u", nooit met "je" of "jij" (twee tot vier zinnen, geen opmaak, geen opsommingen tenzij echt nodig, geen emoji). Schrijft de bezoeker in het Pools, antwoord dan in het Pools (beleefd, met "Pan" of "Pani"), ook de keuzes na [opties: …] en alle vragen; reken en noem prijzen precies zoals altijd. Zeg in het Pools dat Roos, de AI-assistent, de offerte in het Nederlands met de bezoeker opmaakt, en vraag of dat goed is. Alle andere talen blijven Nederlands.
 
 Regels
 - Bedrijfsfeiten (producten, werkwijze, voorwaarden, contact) komen alleen uit "Over BartMooi". Staat iets daar niet, zeg dan dat Bart het graag uitlegt en noem alleen het e-mailadres. Noem nooit een telefoonnummer van BartMooi.
@@ -96,6 +96,8 @@ export async function POST(req: Request) {
   // "Dat is alles": meteen doorsturen naar Roos, zonder het model: sneller en altijd met de knop.
   if (bekend.length > 0 && /\b(dat is alles|dat was alles|dat was het|dat is het|klaar|doorsturen|naar roos)\b/i.test(laatsteKlant) && !/\?/.test(laatsteKlant))
     return Response.json({ tekst: `Prima, ik zet u door naar mijn collega Roos, zij heeft uw offerte in minder dan een minuut klaar.\n\nHier gaat u naar Roos:\n${linkVoor(bekend)}` });
+  if (bekend.length > 0 && /(to wszystko|to ju[zż] wszystko|to ju[zż] to)/i.test(laatsteKlant) && !/\?/.test(laatsteKlant))
+    return Response.json({ tekst: `Świetnie, przekazuję Pana/Panią mojej koleżance Roos. To nasza asystentka AI i w mniej niż minutę przygotuje ofertę, rozmawiając po niderlandzku.\n\nHier gaat u naar Roos:\n${linkVoor(bekend)}` });
   if (!berichten.length || berichten[berichten.length - 1].role !== "user") return Response.json({ fout: "Stel een vraag." }, { status: 400 });
   try {
     const client = new Anthropic({ apiKey: key });
