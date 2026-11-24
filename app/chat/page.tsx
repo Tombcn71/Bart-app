@@ -17,6 +17,13 @@ function tel(soort: string) {
   } catch {}
 }
 
+/** Haalt de keuzeknoppen uit het antwoord: de laatste regel [opties: A | B | C]. */
+function splitsOpties(t: string): { tekst: string; opties: string[] } {
+  const m = t.match(/\n?\[opties:\s*([^\]]+)\]\s*$/);
+  if (!m) return { tekst: t, opties: [] };
+  return { tekst: t.slice(0, m.index).trim(), opties: m[1].split("|").map((o) => o.trim()).filter(Boolean) };
+}
+
 type Bericht = { rol: "klant" | "chat"; tekst: string };
 
 export default function Chat() {
@@ -72,6 +79,20 @@ export default function Chat() {
     else c.scrollTo({ top: c.scrollHeight, behavior: "smooth" });
   }, [berichten, bezig]);
 
+  // Komt de bezoeker via de knop "Prijs & advies direct" (?start=prijs), dan begint het prijsgesprek meteen.
+  const gestart = useRef(false);
+  useEffect(() => {
+    if (gestart.current) return;
+    try {
+      if (new URLSearchParams(window.location.search).get("start") !== "prijs") return;
+    } catch {
+      return;
+    }
+    gestart.current = true;
+    setGetypt(welkom.length);
+    setTimeout(() => void stuur(null, "Ik wil mijn prijs uitrekenen"), 350);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   async function stuur(e: React.FormEvent | null, vraag?: string) {
     e?.preventDefault();
     const tekst = (vraag ?? invoer).trim();
@@ -110,7 +131,7 @@ export default function Chat() {
       <div ref={lijst} className="relative flex-1 space-y-3 overflow-y-auto bg-[#f4f7fa] p-4">
         {berichten.map((b, i) => (
           <div key={i} ref={i === berichten.length - 1 ? laatste : undefined} className={`flex ${b.rol === "klant" ? "justify-end" : "justify-start"}`}>
-            <p className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-[15px] leading-snug ${b.rol === "klant" ? "bg-[#dbe8f4] text-[#13334D]" : "bg-white text-[#13334D] shadow-sm"}`}>{i === 0 ? <>{linkjes(welkom.slice(0, getypt))}{!klaarMetTypen && <span className="ml-0.5 inline-block h-4 w-0.5 translate-y-0.5 animate-pulse bg-[#1E5079]" />}</> : linkjes(b.tekst)}</p>
+            <p className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-[15px] leading-snug ${b.rol === "klant" ? "bg-[#dbe8f4] text-[#13334D]" : "bg-white text-[#13334D] shadow-sm"}`}>{i === 0 ? <>{linkjes(welkom.slice(0, getypt))}{!klaarMetTypen && <span className="ml-0.5 inline-block h-4 w-0.5 translate-y-0.5 animate-pulse bg-[#1E5079]" />}</> : linkjes(splitsOpties(b.tekst).tekst)}</p>
           </div>
         ))}
         {klaarMetTypen && !berichten.some((b) => b.rol === "klant") && (
@@ -120,10 +141,16 @@ export default function Chat() {
             ))}
           </div>
         )}
+        {!bezig && berichten.length > 1 && berichten[berichten.length - 1].rol === "chat" && splitsOpties(berichten[berichten.length - 1].tekst).opties.length > 0 && (
+          <div className="flex flex-wrap gap-2 pt-1">
+            {splitsOpties(berichten[berichten.length - 1].tekst).opties.map((v) => (
+              <button key={v} type="button" onClick={() => stuur(null, v)} className="rounded-full border border-[#1E5079]/40 bg-white px-3.5 py-2 text-sm font-semibold text-[#1E5079] hover:bg-[#1E5079] hover:text-white">{v}</button>
+            ))}
+          </div>
+        )}
         {bezig && <p className="text-sm text-black/40">Even denken…</p>}
         <div ref={onder} />
       </div>
-      <div className="border-t border-black/5 bg-white px-3 pt-2"><a href="https://offerte.bartmooi.nl" target="_top" onClick={() => tel("chat_roos")} className="block rounded-full border border-[#1E5079] py-2 text-center text-sm font-bold text-[#1E5079]">Prijs berekenen met Roos</a></div>
       <form onSubmit={stuur} className="flex gap-2 bg-white p-3">
         <input value={invoer} onChange={(e) => setInvoer(e.target.value)} placeholder="Typ uw vraag…" className="min-w-0 flex-1 rounded-full border border-black/15 px-4 py-2.5 text-[15px] outline-none focus:border-[#1E5079]" />
         {kanSpraak && (

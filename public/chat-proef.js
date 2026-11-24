@@ -24,7 +24,7 @@
   var open = false;
   function wissel() {
     open = !open;
-    if (open && !venster.src) venster.src = HOST + "/chat?ingebed=1";
+    if (open && !venster.src) venster.src = HOST + "/chat?ingebed=1&start=prijs";
     venster.style.display = open ? "block" : "none";
   }
   document.addEventListener("click", function (e) {
