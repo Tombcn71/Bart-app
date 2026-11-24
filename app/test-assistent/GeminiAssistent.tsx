@@ -504,6 +504,8 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
         dynamicVariables: { groet, opening: vanChatOpening || `${groet}, welkom bij BartMooi. Waarmee kan ik u helpen?` },
         clientTools,
         onMessage: ({ message, source }: { message: string; source: "user" | "ai" }) => {
+          // Bezoeker uit de chat: zodra Roos "zo ziet het eruit" zegt, gaat de foto in beeld. De app doet dat zelf, Roos hoeft er niets voor aan te roepen.
+          if (vanChat && source === "ai" && /zo ziet het eruit/i.test(message)) brugRef.current?.zet({ weergave: "foto" });
           laatsteRol.current = null;
           voegToe(source === "ai" ? "roos" : "jij", message);
           laatsteRol.current = null;
