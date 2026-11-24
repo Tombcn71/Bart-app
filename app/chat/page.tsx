@@ -50,6 +50,8 @@ export default function Chat() {
     h.start();
   }
   // De begroeting wordt letter voor letter getypt, als een echte assistent.
+  const [ingebed, setIngebed] = useState(false);
+  useEffect(() => { setIngebed(window.parent !== window); }, []);
   const [getypt, setGetypt] = useState(0);
   const welkom = berichten[0].tekst;
   useEffect(() => {
@@ -95,10 +97,13 @@ export default function Chat() {
         <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-lg font-black text-[#1E5079]">B
           <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-[#1E5079] bg-[#4ade80]" />
         </div>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className="font-black leading-tight">De slimme assistent van BartMooi</p>
           <p className="text-xs opacity-80">Kozijnen, glas en subsidie. Vraag maar raak.</p>
         </div>
+        {ingebed && <button type="button" aria-label="Sluiten" onClick={() => { try { window.parent.postMessage({ bmChat: "sluit" }, "*"); } catch {} }} className="ml-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white/90 hover:bg-white/15">
+          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+        </button>}
       </div>
       <div ref={lijst} className="relative flex-1 space-y-3 overflow-y-auto bg-[#f4f7fa] p-4">
         {berichten.map((b, i) => (
