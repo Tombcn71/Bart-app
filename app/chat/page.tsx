@@ -49,6 +49,15 @@ export default function Chat() {
     setLuistert(true);
     h.start();
   }
+  // De begroeting wordt letter voor letter getypt, als een echte assistent.
+  const [getypt, setGetypt] = useState(0);
+  const welkom = berichten[0].tekst;
+  useEffect(() => {
+    if (getypt >= welkom.length) return;
+    const t = setTimeout(() => setGetypt((n) => Math.min(welkom.length, n + 2)), 28);
+    return () => clearTimeout(t);
+  }, [getypt, welkom]);
+  const klaarMetTypen = getypt >= welkom.length;
   const lijst = useRef<HTMLDivElement>(null);
   const laatste = useRef<HTMLDivElement>(null);
   // Een nieuw antwoord begint bovenaan in beeld, zodat je het van het begin af leest; eigen vraag en "even denken" gaan naar onder.
@@ -94,10 +103,10 @@ export default function Chat() {
       <div ref={lijst} className="relative flex-1 space-y-3 overflow-y-auto bg-[#f4f7fa] p-4">
         {berichten.map((b, i) => (
           <div key={i} ref={i === berichten.length - 1 ? laatste : undefined} className={`flex ${b.rol === "klant" ? "justify-end" : "justify-start"}`}>
-            <p className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-[15px] leading-snug ${b.rol === "klant" ? "bg-[#dbe8f4] text-[#13334D]" : "bg-white text-[#13334D] shadow-sm"}`}>{linkjes(b.tekst)}</p>
+            <p className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-[15px] leading-snug ${b.rol === "klant" ? "bg-[#dbe8f4] text-[#13334D]" : "bg-white text-[#13334D] shadow-sm"}`}>{i === 0 ? <>{linkjes(welkom.slice(0, getypt))}{!klaarMetTypen && <span className="ml-0.5 inline-block h-4 w-0.5 translate-y-0.5 animate-pulse bg-[#1E5079]" />}</> : linkjes(b.tekst)}</p>
           </div>
         ))}
-        {!berichten.some((b) => b.rol === "klant") && (
+        {klaarMetTypen && !berichten.some((b) => b.rol === "klant") && (
           <div className="flex flex-wrap gap-2 pt-1">
             {["Wat kost een kozijn?", "Krijg ik subsidie?", "Dubbel of triple glas?", "Hoe vraag ik subsidie aan?"].map((v) => (
               <button key={v} type="button" onClick={() => stuur(null, v)} className="rounded-full border border-[#1E5079]/40 bg-white px-3 py-1.5 text-sm font-semibold text-[#1E5079] hover:bg-[#1E5079] hover:text-white">{v}</button>
