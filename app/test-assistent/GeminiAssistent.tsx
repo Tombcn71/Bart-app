@@ -481,6 +481,7 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
         ]),
       );
       // Komt de bezoeker uit de chat met een kozijn (?uitchat=1&b=..&h=..), dan weet Roos dat na haar begroeting.
+      const fotoPlan: { klaar: boolean; timer: ReturnType<typeof setTimeout> | null } = { klaar: false, timer: null };
       let vanChatOpening = "";
       const vanChat = (() => {
         try {
@@ -505,10 +506,27 @@ function Chat({ ingebed = false }: { ingebed?: boolean }) {
         clientTools,
         onMessage: ({ message, source }: { message: string; source: "user" | "ai" }) => {
           // Bezoeker uit de chat: zodra Roos "zo ziet het eruit" zegt, gaat de foto in beeld. De app doet dat zelf, Roos hoeft er niets voor aan te roepen.
-          if (vanChat && source === "ai" && /zo ziet het eruit/i.test(message)) brugRef.current?.zet({ weergave: "foto" });
+          if (vanChat && source === "ai") {
+            const plek = message.toLowerCase().indexOf("zo ziet het eruit");
+            if (plek >= 0 && !fotoPlan.klaar) {
+              // De tekst komt binnen voordat Roos het zegt. Zonder tijdsinformatie van de stem schatten we wanneer het woord klinkt (ongeveer 13 tekens per seconde, vanaf het begin van haar zin).
+              fotoPlan.klaar = true;
+              fotoPlan.timer = setTimeout(() => { brugRef.current?.zet({ weergave: "foto" }); fotoPlan.klaar = false; }, Math.round((plek / 13) * 1000) + 600);
+            }
+          }
           laatsteRol.current = null;
           voegToe(source === "ai" ? "roos" : "jij", message);
           laatsteRol.current = null;
+        },
+        onAudioAlignmentPlayback: ({ alignment }: { alignment: { chars?: string[]; char_start_times_ms?: number[] } }) => {
+          if (!vanChat) return;
+          const tekst = (alignment.chars ?? []).join("").toLowerCase();
+          const i = tekst.indexOf("zo ziet het eruit");
+          if (i < 0) return;
+          // Het geluid met die zin gaat nu spelen: de schatting vervalt en de foto komt op het exacte moment.
+          if (fotoPlan.timer) clearTimeout(fotoPlan.timer);
+          fotoPlan.klaar = true;
+          fotoPlan.timer = setTimeout(() => { brugRef.current?.zet({ weergave: "foto" }); fotoPlan.klaar = false; }, Math.max(0, alignment.char_start_times_ms?.[i] ?? 0));
         },
         onModeChange: ({ mode }: { mode: string }) => {
           setPraat(mode === "speaking");
