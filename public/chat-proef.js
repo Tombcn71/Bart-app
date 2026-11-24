@@ -1,6 +1,6 @@
 /* Proef: één AI-knop in de pagina (klas "bm-ai-knop") die de chat opent. */
 (function () {
-  var HOST = "https://offerte.bartmooi.nl";
+  var HOST = /^(localhost|127\.0\.0\.1)$/.test(location.hostname) ? location.origin : "https://offerte.bartmooi.nl";
   var css = document.createElement("style");
   css.textContent =
     ".bm-ai-wrap{display:block;margin:8px 0}" +
