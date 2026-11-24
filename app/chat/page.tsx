@@ -6,7 +6,7 @@ function linkjes(t: string) {
     if (!/^https?:\/\//.test(d)) return d;
     const url = d.replace(/[.,)]+$/, "");
     if (url.includes("uitchat=1"))
-      return <a key={i} href={url} target="_top" onClick={() => tel("chat_roos")} className="mt-2 block rounded-full bg-[#1E5079] px-4 py-2 text-center text-sm font-bold text-white no-underline">Naar Roos voor uw offerte</a>;
+      return <a key={i} href={url} target="_top" onClick={() => tel("chat_roos")} className="mt-2 flex items-center justify-center gap-2 rounded-full bg-[#1E5079] px-4 py-2 text-center text-sm font-bold text-white no-underline"><svg width="18" height="18" viewBox="0 0 24 24" fill="#ffffff" aria-hidden="true"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9L12 2zM19 14l.9 2.6 2.6.9-2.6.9L19 21l-.9-2.6-2.6-.9 2.6-.9L19 14z" /></svg>Naar Roos voor uw offerte</a>;
     return <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="underline break-all">{d}</a>;
   });
 }
