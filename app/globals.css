@@ -183,3 +183,6 @@
     padding-bottom: 5rem;
   }
 }
+
+/* De pagina springt niet mee als een afbeelding later laadt. */
+html { overflow-anchor: none; }

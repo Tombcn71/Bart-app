@@ -764,8 +764,12 @@ export function KozijnConfigurator({
       if (p.weergave === "foto" || p.weergave === "tekening") {
         // Bij de gevel of tekening: het beeld netjes in beeld houden, geen vakken openklappen.
         // De foto laadt even later en verschuift dan de pagina: daarom een paar keer terug naar het beeld, zodat het netjes in beeld blijft.
-        // Het beeld blijft strak op zijn plek staan. Alleen als het helemaal uit beeld is, scrolt het er met de kleinst mogelijke beweging heen.
-        [80, 600].forEach((ms) => setTimeout(() => { const e = document.getElementById("roos-beeld"); if (!e) return; const r = e.getBoundingClientRect(); if (r.bottom < 120 || r.top > window.innerHeight - 120) e.scrollIntoView({ behavior: "smooth", block: "nearest" }); }, ms));
+        // Het beeld blijft strak op zijn plek staan: de pagina wordt vastgezet op de plek van vlak voor de wissel, ook als de foto later laadt. Alleen als het beeld helemaal uit beeld is, scrolt het er met de kleinst mogelijke beweging heen.
+        const vastY = window.scrollY;
+        const e0 = document.getElementById("roos-beeld");
+        let doel = vastY;
+        if (e0) { const r0 = e0.getBoundingClientRect(); if (r0.bottom < 120 || r0.top > window.innerHeight - 120) doel = Math.max(0, vastY + (r0.top < 0 ? r0.top - 20 : r0.top - window.innerHeight * 0.25)); }
+        [0, 60, 150, 350, 700, 1200, 2000].forEach((ms) => setTimeout(() => { if (Math.abs(window.scrollY - doel) > 2) window.scrollTo({ top: doel, behavior: "instant" as ScrollBehavior }); }, ms));
       } else {
         const vakken = Array.from(new Set(Object.keys(p).map((k) => VAK[k]).filter(Boolean)));
         // Staat de gevelfoto in beeld, dan het vak wel openklappen maar niet wegscrollen van de foto.
