@@ -92,7 +92,7 @@ export default function Chat() {
   }
 
   return (
-    <div className="mx-auto flex h-[100dvh] max-w-sm flex-col bg-white sm:my-6 sm:h-[min(560px,calc(100dvh-3rem))] sm:overflow-hidden sm:rounded-2xl sm:shadow-xl">
+    <div className="fixed inset-0 mx-auto flex max-w-sm flex-col bg-white sm:static sm:inset-auto sm:my-6 sm:h-[min(560px,calc(100dvh-3rem))] sm:overflow-hidden sm:rounded-2xl sm:shadow-xl">
       <div className="relative flex items-center gap-3 overflow-hidden bg-[#1E5079] px-4 py-3 text-white">
         <style>{`@keyframes bmglans{0%{left:-60%}55%,100%{left:140%}}`}</style>
         <span aria-hidden className="pointer-events-none absolute top-0 h-full w-[40%] -skew-x-[20deg] bg-gradient-to-r from-transparent via-white/30 to-transparent" style={{ left: "-60%", animation: "bmglans 3.2s ease-in-out infinite" }} />
