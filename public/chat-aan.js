@@ -14,7 +14,7 @@
     "#bm-chat-knop.open{padding:0;width:56px;height:56px;justify-content:center;gap:0}" +
     "#bm-chat-knop.open .bm-tekst{display:none}" +
     "#bm-chat-venster{position:fixed;right:20px;bottom:88px;z-index:2147483000;width:340px;height:min(480px,calc(100vh - 120px));border:0;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.3);background:#fff;display:none;overflow:hidden}" +
-    "@media(max-width:600px){#bm-chat-venster{right:10px;left:10px;top:70px;bottom:10px;width:calc(100% - 20px);height:calc(100% - 80px);max-height:none;border-radius:16px}#bm-chat-knop.open{display:none}}";
+    "@media(max-width:600px){#bm-chat-venster{right:0;left:0;top:0;bottom:0;width:100%;height:100%;max-height:none;border-radius:0}#bm-chat-knop.open{display:none}}";
   document.head.appendChild(css);
   var sterren = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9L12 2zM19 14l.9 2.6 2.6.9-2.6.9L19 21l-.9-2.6-2.6-.9 2.6-.9L19 14z"/></svg>';
   var kruis = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" style="width:24px;height:24px"><path d="M6 6l12 12M18 6L6 18"/></svg>';
